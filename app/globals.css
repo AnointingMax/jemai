@@ -1,0 +1,266 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-assistant);
+  --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-classico);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
+/* ---------------------------------------------------------------------------
+   JEMAI design tokens — mirrored from the Figma "JEMAI / Style Guide" page.
+   Names track the Figma variable paths (color/surface/page -> surface-page).
+   --------------------------------------------------------------------------- */
+
+@theme {
+  /* color/surface */
+  --color-surface-page: #f7f5f3;
+  --color-surface-subtle: #ece5e2;
+  --color-surface-tint: #eddfe3;
+  --color-surface-inverse: #160507;
+  /* Footer ground — sampled from the Figma frame export; the file has no
+     published variable for it. */
+  --color-surface-footer: #320b11;
+
+  /* color/text */
+  --color-text-primary: #160507;
+  --color-text-secondary: #160507ad;
+  --color-text-inverse: #f7f5f3;
+
+  /* color/border */
+  --color-border-default: #16050729;
+  --color-border-strong: #1605076b;
+  --color-border-inverse: #f7f5f3;
+  --color-border-action: #701926;
+
+  /* color/action */
+  --color-action-primary: #701926;
+  --color-action-primary-content: #f7f5f3;
+  --color-action-secondary: transparent;
+  --color-action-secondary-content: #701926;
+  --color-action-link: #701926;
+
+  /* color/icon */
+  --color-icon-primary: #160507;
+  --color-icon-action: #701926;
+  --color-icon-inverse: #f7f5f3;
+
+  /* type/desktop — Classico on --font-heading, Assistant on --font-sans */
+  --text-display: 64px;
+  --text-display--line-height: 68px;
+  --text-display--letter-spacing: 0.02em;
+  --text-display--font-weight: 700;
+
+  --text-h2: 40px;
+  --text-h2--line-height: 46px;
+  --text-h2--letter-spacing: 0px;
+  --text-h2--font-weight: 700;
+
+  --text-h3: 28px;
+  --text-h3--line-height: 34px;
+  --text-h3--letter-spacing: 0px;
+  --text-h3--font-weight: 700;
+
+  --text-h4: 22px;
+  --text-h4--line-height: 28px;
+  --text-h4--letter-spacing: 0px;
+  --text-h4--font-weight: 600;
+
+  --text-body-lg: 18px;
+  --text-body-lg--line-height: 28px;
+  --text-body-lg--font-weight: 400;
+
+  --text-body: 16px;
+  --text-body--line-height: 24px;
+  --text-body--font-weight: 400;
+
+  --text-body-sm: 14px;
+  --text-body-sm--line-height: 20px;
+  --text-body-sm--font-weight: 400;
+
+  --text-body-xs: 12px;
+  --text-body-xs--line-height: 18px;
+  --text-body-xs--font-weight: 400;
+
+  --text-label: 15px;
+  --text-label--line-height: 20px;
+  --text-label--font-weight: 600;
+
+  --text-eyebrow: 10px;
+  --text-eyebrow--line-height: 14px;
+  --text-eyebrow--letter-spacing: 0.08em;
+  --text-eyebrow--font-weight: 600;
+
+  --text-eyebrow-lg: 12px;
+  --text-eyebrow-lg--line-height: 16px;
+  --text-eyebrow-lg--letter-spacing: 0.08em;
+  --text-eyebrow-lg--font-weight: 600;
+
+  --text-numeral: 96px;
+  --text-numeral--line-height: 0.9;
+  --text-numeral--letter-spacing: -0.04em;
+  --text-numeral--font-weight: 400;
+
+  /* layout/* — page rhythm */
+  --spacing-page-gutter: 64px;
+  --spacing-section-gap-default: 64px;
+  --spacing-section-gap-editorial: 80px;
+  --spacing-section-padding-default: 64px;
+  --spacing-section-padding-editorial: 80px;
+  --spacing-grid-gutter: 24px;
+  --spacing-grid-gutter-compact: 16px;
+  --spacing-grid-gutter-editorial: 40px;
+  --spacing-cart-gutter: 24px;
+  --spacing-footer-top: 80px;
+  --spacing-footer-bottom: 40px;
+  --spacing-stack-compact: 12px;
+  --spacing-stack-copy: 16px;
+  --spacing-stack-default: 24px;
+  --spacing-stack-heading: 32px;
+  --spacing-stack-feature: 48px;
+  --spacing-stack-loose: 40px;
+}
+
+/* Point the shadcn/ui semantic layer at the JEMAI palette so primitives
+   inherit the brand instead of the default neutral scale. */
+:root {
+  --background: var(--color-surface-page);
+  --foreground: var(--color-text-primary);
+  --card: var(--color-surface-page);
+  --card-foreground: var(--color-text-primary);
+  --popover: var(--color-surface-page);
+  --popover-foreground: var(--color-text-primary);
+  --primary: var(--color-action-primary);
+  --primary-foreground: var(--color-action-primary-content);
+  --secondary: var(--color-surface-subtle);
+  --secondary-foreground: var(--color-text-primary);
+  --muted: var(--color-surface-subtle);
+  --muted-foreground: var(--color-text-secondary);
+  --accent: var(--color-surface-tint);
+  --accent-foreground: var(--color-text-primary);
+  --border: var(--color-border-default);
+  --input: var(--color-border-default);
+  --ring: var(--color-action-primary);
+  --radius: 0px;
+}
