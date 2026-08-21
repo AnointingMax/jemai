@@ -74,15 +74,16 @@ export const CuratorCarousel = ({ picks }: CuratorCarouselProps) => {
             { label: "Previous", delta: -1, icon: "/figma/icons/arrow-left.svg" },
             { label: "Next", delta: 1, icon: "/figma/icons/arrow-right.svg" },
           ] as const).map(({ label, delta, icon }) => (
-            <button
+            <Button
               key={label}
               type="button"
+              variant="quiet"
               onClick={() => go(delta)}
               aria-label={`${label} artwork`}
-              className="flex size-10 items-center justify-center rounded-full border border-white bg-transparent text-white transition-colors hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none"
+              className="size-10 rounded-full border border-white bg-transparent text-white hover:bg-white/10 hover:text-white focus-visible:border-white focus-visible:ring-white/50"
             >
               <Image src={icon} alt="" width={14} height={14} unoptimized />
-            </button>
+            </Button>
           ))}
           <span className="sr-only" aria-live="polite">
             Artwork {index + 1} of {count}

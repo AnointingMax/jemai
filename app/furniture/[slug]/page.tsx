@@ -104,11 +104,7 @@ const ProductDetailPage = async ({ params }: PageProps<"/furniture/[slug]">) => 
                 {product.summary}
               </p>
 
-              <ProductPurchase
-                colourway={product.colourway}
-                sizes={product.sizes}
-                variants={product.variants}
-              />
+              <ProductPurchase product={product} />
 
               {/* The frame insets this block 20px further than the block above
                   it; kept as a `lg:` nudge rather than a second measure. */}

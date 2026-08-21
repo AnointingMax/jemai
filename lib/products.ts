@@ -20,7 +20,7 @@ const naira = (amount: number) =>
  * Prices on the detail frame carry kobo (₦150,851.19) while the catalogue cards
  * are whole naira, so the two formatters are kept apart rather than reconciled.
  */
-const nairaExact = (amount: number) => {
+export const nairaExact = (amount: number) => {
   const [whole, fraction] = amount.toFixed(2).split(".");
   return `₦${whole.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}.${fraction}`;
 };
@@ -141,6 +141,8 @@ export type ProductDetail = {
   category: string;
   /** Formatted with kobo, as the detail frame draws it. */
   price: string;
+  /** The same figure unformatted, so the cart can total it. */
+  amount: number;
   summary: string;
   /**
    * Main shot first. The frame draws four alternate views; only the catalogue
@@ -283,6 +285,7 @@ export const productDetails: ProductDetail[] = detailSeeds.map((seed) => ({
   name: seed.name,
   category: seed.category,
   price: nairaExact(seed.amount),
+  amount: seed.amount,
   summary: seed.summary,
   gallery: [seed.image, ...alternates.filter((src) => src !== seed.image)].slice(
     0,

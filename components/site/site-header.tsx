@@ -5,6 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import { BagIcon, ChevronDownIcon, SearchIcon } from "@/components/icons";
+import { Button } from "@/components/ui/button";
+import { useCart } from "@/lib/cart";
 import { cn } from "@/lib/utils";
 
 type NavItem = {
@@ -34,12 +36,9 @@ const navItems: NavItem[] = [
 
 const localizations = ["NGN", "EN"];
 
-type SiteHeaderProps = {
-  bagCount?: number;
-};
-
-export const SiteHeader = ({ bagCount = 0 }: SiteHeaderProps) => {
+export const SiteHeader = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { count, setOpen } = useCart();
 
   return (
     <div className="w-full px-4 sm:px-6 lg:px-page-gutter">
@@ -75,16 +74,18 @@ export const SiteHeader = ({ bagCount = 0 }: SiteHeaderProps) => {
         </nav>
 
         {/* Mobile menu toggle */}
-        <button
+        <Button
           type="button"
+          variant="quiet"
+          size="icon-touch"
           onClick={() => setMobileOpen((open) => !open)}
           aria-expanded={mobileOpen}
           aria-controls="mobile-nav"
           aria-label={mobileOpen ? "Close menu" : "Open menu"}
-          className="text-icon-primary -ml-2 flex size-11 items-center justify-center lg:hidden"
+          className="text-icon-primary -ml-2 lg:hidden"
         >
           {mobileOpen ? <X className="size-6" /> : <Menu className="size-6" />}
-        </button>
+        </Button>
 
         <Link href="/" aria-label="JEMAI home" className="shrink-0 py-[12.375px]">
           <Image
@@ -100,33 +101,39 @@ export const SiteHeader = ({ bagCount = 0 }: SiteHeaderProps) => {
         <div className="flex flex-1 items-center justify-end">
           <div className="hidden h-[60px] items-center gap-2 md:flex">
             {localizations.map((code) => (
-              <button
+              <Button
                 key={code}
                 type="button"
-                className="text-label text-text-primary flex min-h-8 min-w-8 items-center justify-between gap-1"
+                variant="quiet"
+                className="text-label min-h-8 min-w-8 justify-between gap-1 px-0"
               >
                 {code}
                 <ChevronDownIcon className="text-icon-primary w-[9px]" />
-              </button>
+              </Button>
             ))}
           </div>
 
           <div className="flex items-center pl-2 md:pl-4">
             <div className="hidden h-6 w-px bg-[#dfdfdf] md:block" />
-            <button
+            <Button
               type="button"
+              variant="quiet"
+              size="icon-touch"
               aria-label="Search"
-              className="text-icon-primary flex size-11 items-center justify-center md:ml-4"
+              className="text-icon-primary md:ml-4"
             >
               <SearchIcon className="size-8" />
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
-              className="bg-surface-inverse text-text-inverse text-label flex h-11 items-center justify-center gap-1.5 rounded-[2px] px-3.5 py-2 backdrop-blur-[7px] sm:px-[14px]"
+              variant="inverse"
+              onClick={() => setOpen(true)}
+              aria-label={`Open cart, ${count} ${count === 1 ? "item" : "items"}`}
+              className="text-label h-11 gap-1.5 px-3.5 py-2 sm:px-[14px]"
             >
               <BagIcon className="size-4" />
-              <span className="whitespace-nowrap">Bag ({bagCount})</span>
-            </button>
+              <span className="whitespace-nowrap">Bag ({count})</span>
+            </Button>
           </div>
         </div>
       </header>
@@ -168,14 +175,15 @@ export const SiteHeader = ({ bagCount = 0 }: SiteHeaderProps) => {
           </ul>
           <div className={cn("flex items-center gap-4 pt-2 md:hidden")}>
             {localizations.map((code) => (
-              <button
+              <Button
                 key={code}
                 type="button"
-                className="text-label text-text-primary flex items-center gap-1"
+                variant="quiet"
+                className="text-label gap-1 px-0"
               >
                 {code}
                 <ChevronDownIcon className="text-icon-primary w-[9px]" />
-              </button>
+              </Button>
             ))}
           </div>
         </nav>

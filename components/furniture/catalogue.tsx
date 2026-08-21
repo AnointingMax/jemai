@@ -3,9 +3,17 @@
 import { useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
-import { ChevronDownIcon } from "@/components/icons";
 import { ProductCard } from "@/components/site/product-card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cn } from "@/lib/utils";
 import { catalogue, collections, colours } from "@/lib/products";
 
@@ -23,7 +31,7 @@ type SortKey = keyof typeof sorts;
 
 /** Shared field chrome: 34px tall, sitting on a hairline rather than in a box. */
 const fieldClass =
-  "border-border-default text-body-sm text-text-primary focus-visible:border-border-strong h-[34px] w-full border-b bg-transparent outline-none transition-colors";
+  "border-border-default text-body-sm text-text-primary focus-visible:border-border-strong h-[34px] w-full rounded-none border-0 border-b bg-transparent px-0 shadow-none ring-0 transition-colors focus-visible:ring-0 dark:bg-transparent";
 
 type FieldProps = {
   label: string;
@@ -33,23 +41,20 @@ type FieldProps = {
 };
 
 const Field = ({ label, value, onChange, children }: FieldProps) => (
-  <div className="relative">
-    <label className="sr-only" htmlFor={`catalogue-${label}`}>
-      {label}
-    </label>
-    <select
-      id={`catalogue-${label}`}
-      value={value}
-      onChange={(event) => onChange(event.target.value)}
-      className={cn(fieldClass, "cursor-pointer appearance-none pr-6")}
+  <Select value={value} onValueChange={onChange}>
+    <SelectTrigger
+      aria-label={label}
+      className={cn(
+        fieldClass,
+        // The trigger renders its own chevron; the frame draws a narrow one in
+        // the primary ink rather than shadcn's 16px muted glyph.
+        "data-[size=default]:h-[34px] [&>svg]:size-2.5 [&>svg]:text-text-primary",
+      )}
     >
-      {children}
-    </select>
-    <ChevronDownIcon
-      aria-hidden
-      className="text-text-primary pointer-events-none absolute top-1/2 right-1 w-[10px] -translate-y-1/2"
-    />
-  </div>
+      <SelectValue />
+    </SelectTrigger>
+    <SelectContent>{children}</SelectContent>
+  </Select>
 );
 
 export const Catalogue = () => {
@@ -99,29 +104,28 @@ export const Catalogue = () => {
 
   return (
     <>
+      {/* The tabs are one-of-many, so `ToggleGroup` in single mode gets the
+          roving tab stop and arrow-key nav for free. "All" is the floor —
+          re-clicking the active tab hands back "" and must not clear the rail. */}
       <nav
         aria-label="Product categories"
         className="mt-8 w-full px-4 sm:px-6 lg:mt-9 lg:px-page-gutter"
       >
-        <ul className="mx-auto flex w-full max-w-[1728px] items-center gap-5 overflow-x-auto lg:justify-center [&::-webkit-scrollbar]:hidden [scrollbar-width:none]">
+        <ToggleGroup
+          type="single"
+          variant="tab"
+          size="tab"
+          spacing={5}
+          value={collection}
+          onValueChange={(value) => repage(setCollection)(value || "All")}
+          className="mx-auto w-full max-w-[1728px] justify-start overflow-x-auto lg:justify-center [&::-webkit-scrollbar]:hidden [scrollbar-width:none]"
+        >
           {["All", ...collections].map((item) => (
-            <li key={item} className="flex">
-              <button
-                type="button"
-                aria-current={collection === item ? "true" : undefined}
-                onClick={() => repage(setCollection)(item)}
-                className={cn(
-                  "text-label border-b pb-1 font-normal whitespace-nowrap transition-colors",
-                  collection === item
-                    ? "border-text-primary text-text-primary"
-                    : "text-text-primary/40 hover:text-text-primary/70 border-transparent",
-                )}
-              >
-                {item}
-              </button>
-            </li>
+            <ToggleGroupItem key={item} value={item} className="whitespace-nowrap">
+              {item}
+            </ToggleGroupItem>
           ))}
-        </ul>
+        </ToggleGroup>
       </nav>
 
       {/* Filter bar — its rules run the full width of the viewport */}
@@ -133,7 +137,7 @@ export const Catalogue = () => {
                 <label className="sr-only" htmlFor="catalogue-search">
                   Search catalogue
                 </label>
-                <input
+                <Input
                   id="catalogue-search"
                   type="search"
                   value={query}
@@ -151,16 +155,16 @@ export const Catalogue = () => {
                 value={availability}
                 onChange={repage(setAvailability)}
               >
-                <option value="in-stock">In Stock</option>
-                <option value="made-to-order">Made To Order</option>
+                <SelectItem value="in-stock">In Stock</SelectItem>
+                <SelectItem value="made-to-order">Made To Order</SelectItem>
               </Field>
 
               <Field label="Colour" value={colour} onChange={repage(setColour)}>
-                <option value="all">Color</option>
+                <SelectItem value="all">Color</SelectItem>
                 {colours.map((item) => (
-                  <option key={item} value={item}>
+                  <SelectItem key={item} value={item}>
                     {item}
-                  </option>
+                  </SelectItem>
                 ))}
               </Field>
 
@@ -170,19 +174,21 @@ export const Catalogue = () => {
                 onChange={(value) => repage(setSort)(value as SortKey)}
               >
                 {Object.entries(sorts).map(([value, label]) => (
-                  <option key={value} value={value}>
+                  <SelectItem key={value} value={value}>
                     {label}
-                  </option>
+                  </SelectItem>
                 ))}
               </Field>
 
-              <button
+              <Button
                 type="button"
+                variant="chip"
+                size="field"
                 onClick={reset}
-                className="border-border-default text-eyebrow-lg text-text-primary hover:border-border-strong h-[34px] rounded-[4px] border uppercase transition-colors"
+                className="border"
               >
                 Clear
-              </button>
+              </Button>
             </div>
 
             <p className="text-eyebrow-lg text-text-secondary uppercase">
@@ -217,8 +223,9 @@ export const Catalogue = () => {
                   <Button
                     type="button"
                     size="cta"
+                    variant="jemai-ink"
                     onClick={() => setVisible((count) => count + PAGE_SIZE)}
-                    className="mt-[30px] h-[47px] bg-[#333639] px-[30px] hover:bg-[#333639]/90"
+                    className="mt-[30px] h-[47px] px-[30px]"
                   >
                     Load more
                   </Button>
@@ -230,13 +237,14 @@ export const Catalogue = () => {
               <p className="text-body text-text-secondary">
                 Nothing in the catalogue matches these filters yet.
               </p>
-              <button
+              <Button
                 type="button"
+                variant="link"
                 onClick={reset}
-                className="text-label text-action-link underline-offset-4 hover:underline"
+                className="text-label text-action-link h-auto p-0 underline-offset-4"
               >
                 Clear filters
-              </button>
+              </Button>
             </div>
           )}
         </div>

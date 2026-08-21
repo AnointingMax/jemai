@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 type ProductGalleryProps = {
   name: string;
@@ -35,17 +35,14 @@ export const ProductGallery = ({ name, images }: ProductGalleryProps) => {
         <ul className="flex gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {images.map((src, index) => (
             <li key={src} className="shrink-0">
-              <button
+              <Button
                 type="button"
+                variant="chip"
+                size="thumb"
                 onClick={() => setActive(index)}
                 aria-label={`View ${index + 1} of ${images.length}`}
                 aria-current={index === active ? "true" : undefined}
-                className={cn(
-                  "relative block size-20 overflow-hidden border bg-white transition-colors",
-                  index === active
-                    ? "border-border-strong"
-                    : "border-border-default hover:border-border-strong/60",
-                )}
+                className="relative border bg-white"
               >
                 <Image
                   src={src}
@@ -54,7 +51,7 @@ export const ProductGallery = ({ name, images }: ProductGalleryProps) => {
                   sizes="80px"
                   className="object-cover"
                 />
-              </button>
+              </Button>
             </li>
           ))}
         </ul>

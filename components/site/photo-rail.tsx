@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export type RailPhoto = {
@@ -145,14 +146,15 @@ export const PhotoRail = ({ photos, label }: PhotoRailProps) => {
         aria-label={label}
       >
         {Array.from({ length: pages }, (_, index) => (
-          <button
+          <Button
             key={index}
             type="button"
             role="tab"
+            variant="quiet"
             aria-selected={index === page}
             aria-label={`Go to slide group ${index + 1} of ${pages}`}
             onClick={() => goToPage(index)}
-            className="flex items-center justify-center px-1.5"
+            className="h-auto px-1.5 py-0"
           >
             <span
               className={cn(
@@ -162,7 +164,7 @@ export const PhotoRail = ({ photos, label }: PhotoRailProps) => {
                   : "h-[3px] w-[30px] bg-[rgba(51,51,51,0.25)]",
               )}
             />
-          </button>
+          </Button>
         ))}
       </div>
     </div>

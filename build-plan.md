@@ -28,7 +28,11 @@ One page per session. Work top-down unless told otherwise.
 - [ ] Consultation — `252:20009` (1440 × 3230)
 - [ ] About Page — `182:10993` (1440 × 5917)
 - [ ] Contact — `247:18961` (1440 × 2504)
-- [ ] Cart Drawer — empty `1:1508`, filled/consent-off `1:1588`, filled/consent-on `1:1527` (500 × 900)
+- [x] Cart Drawer — empty `1:1508`, filled/consent-off `1:1588`, filled/consent-on
+      `1:1527` (500 × 900). Built from the three frame exports in
+      `design-reference/`. Header, rule, item row and footer rhythm land within
+      1px of the frames; only the item title is off (3px of ink width).
+      Verified at 500 (design parity), 1440, 768 and 390.
 - [ ] Checkout — `1:1664`, plus modals: processing `257:20543`, success `267:23442`, payment issue `267:23955` (1440 × 1004)
 
 Shared reference frames (not pages): `246:18783` intro, `247:18801` semantic colour,
@@ -290,3 +294,67 @@ Shared reference frames (not pages): `246:18783` intro, `247:18801` semantic col
   `node_modules` ("points out of the filesystem root") because `next.config.ts`
   pins `turbopack.root` to `__dirname`. `cp -Rc` (APFS clone) into the worktree
   works and costs a minute.
+
+
+## Cart drawer notes
+
+- **Not a page — an overlay, plus the state behind it.** `lib/cart.tsx` holds an
+  in-memory `CartProvider` (lines, count, subtotal, open/close) mounted in
+  `app/layout.tsx`; `components/cart/cart-drawer.tsx` is the panel. The header's
+  "Bag (n)" button opens it and reads its count from the same context — the
+  `bagCount` prop it used to take is gone — and the detail page's **Add To Cart**
+  now actually adds the selected colour/size and opens the drawer, which is the
+  only way to reach the filled frames. Nothing survives a reload; swap the
+  `useState` in `CartProvider` for the real cart service and every consumer
+  follows.
+- **Built on `radix-ui`'s Dialog**, not a new primitive: `components/ui` has no
+  sheet, and Dialog already brings the scrim, focus trap, Escape and scroll lock.
+  Radix focuses the close button on open, which is why the frame's bare X renders
+  with a focus ring on the first paint.
+- **Panel is 500 × viewport, square corners, pure white** — `#ffffff`, not
+  `--color-surface-page`. The export's alpha shows a soft ~16px shadow on the
+  left and bottom only.
+- **This frame is a second block pasted in from another design system.** Four of
+  its colours are cool neutrals with no JEMAI counterpart: rules `#dee2e6`,
+  primary copy `#202025`, secondary copy `#636366`. They are literal hex
+  constants at the top of the component rather than invented tokens — same call
+  as the catalogue's Load-more block. The badge, the empty-state CTA border, the
+  checkout fill and its 32% disabled tint are all `action-primary`, so those *are*
+  tokens. Worth raising with the designer.
+- **The measure is 24px** (`--spacing-cart-gutter`, which the style guide already
+  publishes): header, rules, totals and the checkout button all run 24 → 475.
+  **Item rows are inset 14px further** (image at x=38, "Remove" ending at 461),
+  so the list carries `px-[38px]` rather than the gutter.
+- **The close X sits 6px inside the measure** where everything else is flush
+  (ink 451–464 against a content edge of 475). Reproduced with `mr-1.5` since it
+  is only 6px, but it looks like a Figma nudge rather than intent.
+- **Type, all pinned by matching ink extents against the exports:**
+  - "YOUR CART" is **16px at weight 500** — cap height 12 fixes the size, and ink
+    mass fixes the weight (400 renders 9% light, 500 6% heavy; a known-matching
+    16/400 run calibrates the two rasterisers to within 1%). No `--text-*` token
+    carries 16/500.
+  - "Your bag is empty" is `text-body` — 118px of ink at x191–308, identical.
+  - Item title is Classico ~17px; the frame is 126 wide by 14 tall and no single
+    size satisfies both (17px lands 123 × 15). Left at 17px with the top edge
+    exact — the residual is 3px of tracking the export does not explain.
+  - "Color: …", the line price and the consent line are `text-body-sm`; the taxes
+    line is `text-body-xs` (209px of ink, exact); "Sub Total:" is 16px Classico;
+    the subtotal figure is 17px semibold (87px, exact).
+  - "CHECKOUT" is 14px semibold at **0.04em**, not the eyebrow token's 0.08em —
+    cap height 10 fixes the size, ink width 70 the tracking.
+- **The quantity stepper is 75 × 29 with a 2px radius and three equal cells.**
+  The frame draws the minus at a much lighter value than the plus: it is the
+  disabled state at quantity 1, so the build disables decrement there.
+- **Two links the frame draws are not wired**, because the pages do not exist:
+  "View Cart" is **removed outright** (asked for during the build), and "terms
+  and conditions" keeps its drawn treatment as plain text rather than a dead
+  link. Point both at real routes when they exist. Removing View Cart shortens
+  the footer, so its top rule sits ~44px lower than the frame's while every gap
+  *within* the footer matches exactly (+23 / +57 / +89 / +131 from the rule).
+- **The frame's line item cannot be reproduced from the catalogue data.** It
+  draws Palma in "Brown", which is not in Palma's colourway (Cream/Tan/Amber/
+  Olive), so parity was checked against a Tan line — same geometry, different
+  string.
+- **Responsive.** The panel is `w-full max-w-[500px]`, so it is full-bleed below
+  500px and the drawer geometry is otherwise viewport-independent; the item list
+  scrolls when the lines outgrow the panel. Checked at 1440, 768, 500 and 390.
