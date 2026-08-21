@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import { SectionIntro } from "@/components/site/section-intro";
+import { ConsultationCta } from "@/components/site/consultation-cta";
 
 const spaces = [
   {
@@ -72,41 +72,6 @@ export const ArchitectureSection = () => (
       </div>
     </div>
 
-    {/* Begin a project */}
-    <div className="flex w-full flex-col items-center justify-center px-4 py-12 sm:px-6 lg:px-page-gutter lg:py-0">
-      <div className="flex w-full flex-col justify-center lg:flex-row lg:items-stretch">
-        <div className="bg-surface-subtle flex flex-col items-start justify-between gap-stack-loose overflow-hidden p-6 sm:p-stack-loose lg:w-[560px] lg:shrink-0">
-          <p className="text-eyebrow-lg max-w-[500px] uppercase text-[#ad3a00]">
-            Begin A Project
-          </p>
-          <div className="flex flex-col items-start gap-stack-default">
-            <div className="flex flex-col items-start gap-stack-compact">
-              <h3 className="font-heading text-text-primary max-w-[445px] text-3xl leading-tight sm:text-[40px] sm:leading-[46px]">
-                Let&rsquo;s Shape A Space That Feels Entirely Your Own.
-              </h3>
-              <p className="text-body-lg max-w-[375px] text-[#6d6d6d]">
-                From an individual room to a complete property, JEMAI brings
-                architecture, interiors, furniture and art together in one
-                considered process.
-              </p>
-            </div>
-            <Button asChild size="cta" className="px-6">
-              <Link href="/consultation">Request a consultation</Link>
-            </Button>
-          </div>
-        </div>
-
-        <div className="relative h-[280px] w-full overflow-hidden sm:h-[360px] lg:h-[445px] lg:flex-1">
-          <Image
-            src="/figma/home/consultation.jpg"
-            alt="A contemporary interior with a framed artwork and staircase"
-            fill
-            sizes="(min-width: 1024px) 50vw, 100vw"
-            className="object-cover"
-          />
-          <div aria-hidden className="absolute inset-0 bg-[rgba(19,19,19,0.1)]" />
-        </div>
-      </div>
-    </div>
+    <ConsultationCta />
   </section>
 );

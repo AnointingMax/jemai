@@ -138,3 +138,56 @@ export const HouseIcon = (props: IconProps) => (
     />
   </svg>
 );
+
+/* --------------------------------------------------------------------------
+   Catalogue assurance marks — traced off the Furniture Catalogue frame export
+   (32px artwork, 2px stroke, `color/icon/action`). Replace with the Figma SVG
+   exports when the MCP quota allows.
+   -------------------------------------------------------------------------- */
+
+/** Free shipping — globe with two latitudes and one meridian. */
+export const GlobeIcon = (props: IconProps) => (
+  <svg
+    viewBox="0 0 32 32"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    aria-hidden
+    {...props}
+  >
+    <circle cx="16" cy="16" r="15" />
+    <ellipse cx="16" cy="16" rx="6" ry="15" />
+    <path d="M2 11h28M2 21h28" />
+  </svg>
+);
+
+/** Free returns — an arrow doubling back on itself. */
+export const ReturnIcon = (props: IconProps) => (
+  <svg
+    viewBox="0 0 32 32"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    aria-hidden
+    {...props}
+  >
+    <path d="M11 3.5 4 11l7 7.5" />
+    <path d="M4 11h17a8.5 8.5 0 0 1 0 17H8" />
+  </svg>
+);
+
+/** Secure payment — padlock with a keyhole. */
+export const LockIcon = (props: IconProps) => (
+  <svg
+    viewBox="0 0 32 32"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    aria-hidden
+    {...props}
+  >
+    <rect x="4" y="13" width="24" height="17" rx="1" />
+    <path d="M9 13V9a7 7 0 0 1 14 0v4" />
+    <circle cx="16" cy="21.5" r="3" fill="currentColor" stroke="none" />
+  </svg>
+);
