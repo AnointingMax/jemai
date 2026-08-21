@@ -1,0 +1,69 @@
+import Image from "next/image";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
+type ConsultationCtaProps = {
+  /**
+   * Panel width at desktop. The frames disagree — the home section draws it at
+   * 560px, the furniture page at 526px — so each caller passes its own.
+   */
+  panelClassName?: string;
+  className?: string;
+};
+
+/**
+ * "Begin a project" — the split consultation band. Copy panel on
+ * `surface/subtle`, photograph filling the rest of the row; both stack on
+ * mobile with the photograph below.
+ */
+export const ConsultationCta = ({
+  panelClassName = "lg:w-[560px]",
+  className,
+}: ConsultationCtaProps) => (
+  <div
+    className={cn(
+      "flex w-full flex-col items-center justify-center px-4 py-12 sm:px-6 lg:px-page-gutter lg:py-0",
+      className,
+    )}
+  >
+    <div className="flex w-full max-w-[1728px] flex-col justify-center lg:flex-row lg:items-stretch">
+      <div
+        className={cn(
+          "bg-surface-subtle flex flex-col items-start justify-between gap-stack-loose overflow-hidden p-6 sm:p-stack-loose lg:shrink-0",
+          panelClassName,
+        )}
+      >
+        <p className="text-eyebrow-lg max-w-[500px] uppercase text-[#ad3a00]">
+          Begin A Project
+        </p>
+        <div className="flex flex-col items-start gap-stack-default">
+          <div className="flex flex-col items-start gap-stack-compact">
+            <h2 className="font-heading text-text-primary max-w-[445px] text-3xl font-bold leading-tight sm:text-h2">
+              Let&rsquo;s Shape A Space That Feels Entirely Your Own.
+            </h2>
+            <p className="text-body-lg max-w-[375px] text-[#6d6d6d]">
+              From an individual room to a complete property, JEMAI brings
+              architecture, interiors, furniture and art together in one
+              considered process.
+            </p>
+          </div>
+          <Button asChild size="cta" className="px-6">
+            <Link href="/consultation">Request a consultation</Link>
+          </Button>
+        </div>
+      </div>
+
+      <div className="relative h-[280px] w-full overflow-hidden sm:h-[360px] lg:h-[445px] lg:flex-1">
+        <Image
+          src="/figma/home/consultation.jpg"
+          alt="A contemporary interior with a framed artwork and staircase"
+          fill
+          sizes="(min-width: 1024px) 50vw, 100vw"
+          className="object-cover"
+        />
+        <div aria-hidden className="absolute inset-0 bg-[rgba(19,19,19,0.1)]" />
+      </div>
+    </div>
+  </div>
+);

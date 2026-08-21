@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { Assistant } from "next/font/google";
 import localFont from "next/font/local";
+import { AnnouncementBar } from "@/components/site/announcement-bar";
+import { SiteHeader } from "@/components/site/site-header";
+import { Newsletter } from "@/components/site/newsletter";
+import { SiteFooter } from "@/components/site/site-footer";
 import "./globals.css";
 
 const assistant = Assistant({
@@ -46,7 +50,15 @@ const RootLayout = ({ children }: LayoutProps<"/">) => (
     className={`${assistant.variable} ${classico.variable} h-full antialiased`}
   >
     <body className="bg-surface-page text-text-primary flex min-h-full flex-col">
-      {children}
+      <AnnouncementBar />
+      <SiteHeader />
+      {/* Pages supply their sections as siblings; the 80px editorial gap and the
+          closing newsletter are the same on every one of them. */}
+      <main className="flex flex-col gap-section-gap-editorial">
+        {children}
+        <Newsletter />
+      </main>
+      <SiteFooter />
     </body>
   </html>
 );

@@ -34,7 +34,7 @@ export const SectionIntro = ({
             {numeral}
           </span>
         )}
-        <h2 className="font-heading text-text-primary flex-1 text-3xl leading-tight sm:text-[40px] sm:leading-[46px]">
+        <h2 className="font-heading text-text-primary flex-1 text-3xl font-bold leading-tight sm:text-h2">
           {heading}
         </h2>
       </div>
