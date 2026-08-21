@@ -14,7 +14,11 @@ One page per session. Work top-down unless told otherwise.
       the shared Newsletter and Footer. Every landmark within 1–3px of its frame;
       page total 4449 vs 4462. Verified at 1440 / 768 / 390 and swept 390–1920
       for overflow.
-- [ ] Furniture Details — `166:9708` (1440 × 2822)
+- [x] Furniture Details — `166:9708` (1440 × 2822) — `/furniture/[slug]`. Built
+      from two frame exports (`Header - Product Detail`, `Related Products`)
+      plus the shared Newsletter and Footer. Every landmark within 1–1.5px of
+      its frame; page total 2804 vs 2822. Verified at 1440 / 768 / 390 and
+      swept 360–1920 for overflow.
 - [ ] Artworks — `166:10393` (1440 × 6696)
 - [ ] Artwork Details — `164:8295`, variant `278:28837` (1440 × 3512)
 - [ ] Exhibitions / Upcoming — `186:12088`, with modal `278:28420` (1440 × 3251)
@@ -198,3 +202,91 @@ Shared reference frames (not pages): `246:18783` intro, `247:18801` semantic col
   session for this whole build, so verification ran against headless Chrome over
   CDP (`--remote-debugging-port`, driven by Node's built-in `WebSocket`).
   `--virtual-time-budget` hangs against `next dev` — leave it off.
+
+## Furniture Details notes
+
+- **Route.** `app/furniture/[slug]/page.tsx`, which is where the product cards
+  already pointed. `params` is a promise in Next 16 — `await` it. Five slugs are
+  prerendered via `generateStaticParams`; an unknown slug 404s.
+
+- **The frame details a piece that is not in the catalogue.** It draws "Palma
+  Side Chair" at ₦150,851.19 over the *Mila* photograph. Palma is carried in
+  `productDetails` so the page can be checked against the frame directly, and
+  kept out of `rotation` so the catalogue grid still matches its own frame.
+  The four catalogue pieces get detail pages too, with written summaries.
+
+- **Two columns of 660 / 652 `fr`**, summing to the 1312px inner width, so each
+  `fr` resolves to 1px at 1440 and scales everywhere else — the same trick the
+  footer grid uses. The gallery panel is `items-start` so it closes at its own
+  750px rather than stretching to the taller info column, as the frame draws it.
+
+- **The divider at x=723 is two coincident strokes.** Its composited alpha is
+  0x4b, which is `border-default` (0x29) over itself — not `border-strong`
+  (0x6b). So the panel's right border and the info column's left border are both
+  drawn. The info column's *top* rule really is `border-strong`, and it starts at
+  724, i.e. right of the divider, not at the page gutter.
+
+- **Panel geometry is exact.** 40px padding all round, a 578 × 580 main image
+  (`aspect-[578/580]`, fluid rather than a hard width), an 8px gap, then four
+  80px thumbnails 8px apart on a white ground with a `border-default` hairline.
+  Panel, image and thumbnails all land pixel-identical to the frame.
+
+- **Both headings are `text-h3` — 28px Classico Bold.** The page H1 and "You May
+  Also Like" each measure 191/201 of ink at 23/29 tall; Classico Regular at 26px
+  matches the widths (190.3 / 203.1) but is ~2 units short on the ink height,
+  while 28/700 lands on both (191.6 / 22.1 and 201.5 / 27.9). Note this is the
+  *opposite* of the catalogue H1, which is Regular at 48px — the two pages
+  genuinely differ, so don't unify them without measuring.
+- Other type, all confirmed by matching ink extents: price and summary are
+  `text-body-lg`; the COLOR / SELECT SIZE eyebrows are `text-eyebrow-lg` (12px);
+  the size-chip labels are `text-eyebrow` (10px — "CUSTOM" measures 40, which
+  only 10px semibold at 0.08em gives); the shipping lines are `text-body-xs`
+  (12px, "Pay in your local currency…" measures 221 against a rendered 222).
+
+- **This page's breadcrumb uses "/" separators**, not the chevron the catalogue
+  breadcrumb uses. The run measures 201 against the frame's 202. Two frames,
+  two treatments — left as drawn rather than unified.
+
+- **Variants cross-filter both ways** (`components/furniture/product-purchase.tsx`).
+  `ProductVariant` is a colour × size × stock row. With a colour picked, only
+  sizes in stock in that colour stay selectable; with a size picked, only the
+  colours that carry it. Re-clicking the current chip clears it — without that
+  escape, gating both axes can strand a selection with no way back. The stock
+  matrix is placeholder but deliberately uneven (Amber runs in 14/15 only,
+  Custom in Cream only, Olive down to a single 12) and **sums to 14, so the pill
+  reads "14 Items In Stock" on load exactly as the frame draws it.**
+
+- **Two deliberate departures from the frame, both because it draws a state that
+  cannot exist.** The frame shows a live maroon "Add To Cart" with nothing
+  selected; the label is kept but the button is disabled until a colour and size
+  are chosen, so it renders at reduced opacity on load. And the frame's four
+  thumbnails are alternate shots that were never exported — the other catalogue
+  photographs stand in. Both are data/state problems, not layout ones.
+
+- **The accordion block is inset 20px further than everything above it** (right
+  edge 1335 vs 1355). That reads as a Figma artifact rather than intent, so it
+  is a single `lg:mr-5` on the block rather than a second measure threaded
+  through the column. Rows are 64px plus a 1px rule = the frame's 65px pitch,
+  with no rule above the first. Built on `radix-ui`'s Accordion; the
+  `accordion-down`/`accordion-up` keyframes come from `tw-animate-css`, already
+  imported in `globals.css`. **No frame draws an expanded panel**, so the open
+  state and all four bodies of copy are written, not transcribed.
+
+- **The stock pill's green is `#74aa5b`**, sampled off the frame. Like the
+  catalogue's Load-more block, nothing in the JEMAI palette is close, so it is a
+  literal hex with a comment rather than an invented token.
+
+- **Page total is 2804 against the frame's 2822.** Everything this page owns
+  matches within 1–1.5px, and the residual 18px sits in the shared Newsletter and
+  Footer, which render slightly taller than their own exports. Worth noting that
+  the frame's own arithmetic does not close either: the five section frames plus
+  two 80px editorial gaps come to 2727, 95 short of 2822.
+
+- **`flex-1` must be breakpoint-scoped inside a column.** The Add To Cart button
+  stacks above `sm:`, where `flex-1` resolves flex-basis against the *height* and
+  flattened it to a sliver. It is `sm:flex-1` with `w-full` below that.
+
+- **Running the dev server from a git worktree.** Turbopack rejects a symlinked
+  `node_modules` ("points out of the filesystem root") because `next.config.ts`
+  pins `turbopack.root` to `__dirname`. `cp -Rc` (APFS clone) into the worktree
+  works and costs a minute.
