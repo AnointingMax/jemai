@@ -19,7 +19,7 @@ export const ProductCard = ({ product, sizes }: ProductCardProps) => (
     href={product.href}
     className="border-border-default group flex flex-col border-r border-b"
   >
-    <div className="relative flex h-[260px] w-full items-center justify-center overflow-hidden bg-[#efede9] sm:h-[300px] lg:h-[340px]">
+    <div className="relative flex h-65 w-full items-center justify-center overflow-hidden bg-[#efede9] sm:h-75 lg:h-85">
       <Image
         src={product.image}
         alt={product.name}

@@ -45,12 +45,12 @@ const contacts = [
  */
 export const SiteFooter = () => (
   <footer className="bg-surface-footer text-text-inverse mt-section-gap-editorial w-full bg-[url('/figma/brand/footer-pattern.png')] bg-[length:300px_514px] bg-left-top bg-repeat">
-    <div className="mx-auto flex w-full max-w-[1728px] flex-col px-4 pt-14 pb-10 sm:px-6 lg:px-page-gutter lg:pt-footer-top lg:pb-footer-bottom">
+    <div className="mx-auto flex w-full max-w-432 flex-col px-4 pt-14 pb-10 sm:px-6 lg:px-page-gutter lg:pt-footer-top lg:pb-footer-bottom">
       <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[341fr_164fr_164fr_292fr_345fr_6fr] lg:gap-0">
         {/* Brand */}
         <div className="flex flex-col gap-7">
           <Link href="/" aria-label="JEMAI home" className="w-fit">
-            <span className="flex flex-col gap-[5px]">
+            <span className="flex flex-col gap-1.25">
               <Image
                 src="/figma/brand/wordmark-inverse.svg"
                 alt="JEMAI"
@@ -60,13 +60,13 @@ export const SiteFooter = () => (
               />
               <span
                 aria-hidden
-                className="text-surface-tint block pl-[30px] text-[9px] leading-none tracking-[0.07em] whitespace-nowrap"
+                className="text-surface-tint block pl-7.5 text-[9px] leading-none tracking-[0.07em] whitespace-nowrap"
               >
                 DESIGN | FURNITURE | ART
               </span>
             </span>
           </Link>
-          <p className="text-body-sm text-text-inverse max-w-[249px]">
+          <p className="text-body-sm text-text-inverse max-w-62.25">
             JEMAI brings furniture, contemporary art, architecture and interior
             design together to create spaces that reflect the people and
             businesses they belong to.
@@ -74,11 +74,11 @@ export const SiteFooter = () => (
         </div>
 
         {/* Explore */}
-        <nav className="flex flex-col gap-[18px]" aria-labelledby="footer-explore">
+        <nav className="flex flex-col gap-4.5" aria-labelledby="footer-explore">
           <h2 id="footer-explore" className="text-body text-text-inverse">
             Explore
           </h2>
-          <ul className="flex flex-col gap-[9px] lg:max-w-[72px]">
+          <ul className="flex flex-col gap-2.25 lg:max-w-18">
             {explore.map((item) => (
               <li key={item.label}>
                 <Link
@@ -93,11 +93,11 @@ export const SiteFooter = () => (
         </nav>
 
         {/* Company */}
-        <nav className="flex flex-col gap-[18px]" aria-labelledby="footer-company">
+        <nav className="flex flex-col gap-4.5" aria-labelledby="footer-company">
           <h2 id="footer-company" className="text-body text-text-inverse">
             Company
           </h2>
-          <ul className="flex flex-col gap-[9px] lg:max-w-[72px]">
+          <ul className="flex flex-col gap-2.25 lg:max-w-18">
             {company.map((item) => (
               <li key={item.label}>
                 <Link
@@ -114,7 +114,7 @@ export const SiteFooter = () => (
         {/* Contacts */}
         <div className="flex flex-col gap-4">
           <h2 className="text-body text-text-inverse">Contacts</h2>
-          <ul className="flex flex-col gap-[13px]">
+          <ul className="flex flex-col gap-3.25">
             {contacts.map(({ Icon, label, href }) => (
               <li key={`${label}-${href}`}>
                 <a
@@ -128,7 +128,7 @@ export const SiteFooter = () => (
             ))}
             <li className="text-body-sm text-text-inverse flex items-start gap-2.5">
               <HouseIcon className="mt-0.5 size-4 shrink-0" />
-              <span className="lg:max-w-[150px]">
+              <span className="lg:max-w-37.5">
                 Plot 1194, Hamza Sakwa Close, Guzape, Abuja, FCT
               </span>
             </li>

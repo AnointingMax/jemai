@@ -27,12 +27,12 @@ const assurances: Assurance[] = [
 
 export const FurnitureSection = () => (
   <section className="flex w-full flex-col items-center gap-section-gap-editorial">
-    <div className="flex w-full max-w-[1728px] flex-col gap-stack-loose px-4 sm:px-6 lg:px-page-gutter">
-      <hr className="border-border-strong w-full border-t-[3px]" />
+    <div className="flex w-full max-w-432 flex-col gap-stack-loose px-4 sm:px-6 lg:px-page-gutter">
+      <hr className="border-border-strong w-full border-t-3" />
 
       <div className="flex w-full flex-col items-center gap-stack-loose py-8">
         <SectionIntro
-          className="max-w-[1080px]"
+          className="max-w-270"
           eyebrow="02 / JEMAI Furniture"
           numeral="12"
           heading="New Pieces For The Way You Live Now"

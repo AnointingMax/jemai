@@ -10,14 +10,14 @@ import { Eyebrow } from "@/components/site/eyebrow";
  */
 export const Newsletter = () => (
   <section className="flex w-full flex-col items-center gap-stack-loose pt-8 lg:pt-16">
-    <div className="flex w-full max-w-[1728px] flex-col gap-stack-loose px-4 sm:px-6 lg:px-page-gutter">
-      <hr className="border-border-strong w-full border-t-[3px]" />
+    <div className="flex w-full max-w-432 flex-col gap-stack-loose px-4 sm:px-6 lg:px-page-gutter">
+      <hr className="border-border-strong w-full border-t-3" />
 
       <div className="flex w-full flex-col items-center py-8">
-        <div className="flex w-full max-w-[1080px] flex-col gap-2.5">
+        <div className="flex w-full max-w-270 flex-col gap-2.5">
           <Eyebrow className="text-eyebrow-lg">06 / The JEMAI Journal</Eyebrow>
 
-          <div className="flex flex-col gap-stack-heading lg:flex-row lg:gap-[30px]">
+          <div className="flex flex-col gap-stack-heading lg:flex-row lg:gap-7.5">
             <h2 className="font-heading text-text-primary flex-1 text-3xl font-bold leading-tight sm:text-h2">
               Stay Close To The World Of JEMAI.
             </h2>
@@ -28,7 +28,7 @@ export const Newsletter = () => (
                 considered ideas for the spaces you live and work in.
               </p>
 
-              <form className="flex flex-col gap-2 lg:max-w-[484px]">
+              <form className="flex flex-col gap-2 lg:max-w-121">
                 <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-start">
                   <label htmlFor="newsletter-email" className="sr-only">
                     Your E-mail
@@ -39,12 +39,12 @@ export const Newsletter = () => (
                     name="email"
                     autoComplete="email"
                     placeholder="Your E-mail"
-                    className="text-body placeholder:text-text-secondary h-[50px] w-full bg-white px-3.5 lg:max-w-[328px]"
+                    className="text-body placeholder:text-text-secondary h-12.5 w-full bg-white px-3.5 lg:max-w-82"
                   />
                   <Button
                     type="submit"
                     size="cta"
-                    className="h-[52px] w-full sm:w-[148px]"
+                    className="h-13 w-full sm:w-37"
                   >
                     Subscribe
                   </Button>

@@ -79,7 +79,7 @@ export const ProductPurchase = ({ product }: ProductPurchaseProps) => {
       {/* Reads the current selection, so it lives with the chips rather than
           with the static copy above it. */}
       <span
-        className="border-border-default bg-surface-page text-body-sm mt-2.5 inline-flex h-[35px] w-fit items-center gap-3 border px-4"
+        className="border-border-default bg-surface-page text-body-sm mt-2.5 inline-flex h-8.75 w-fit items-center gap-3 border px-4"
         style={{ color: stockGreen }}
       >
         <CheckCheck aria-hidden className="size-4" strokeWidth={1.75} />
@@ -178,7 +178,7 @@ export const ProductPurchase = ({ product }: ProductPurchaseProps) => {
               quantity,
             })
           }
-          className="h-[57px] w-full sm:w-auto sm:flex-1"
+          className="h-14.25 w-full sm:w-auto sm:flex-1"
         >
           Add To Cart
         </Button>

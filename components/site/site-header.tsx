@@ -42,9 +42,9 @@ export const SiteHeader = () => {
 
   return (
     <div className="w-full px-4 sm:px-6 lg:px-page-gutter">
-      <header className="mx-auto flex min-h-[60px] w-full max-w-[1728px] items-center justify-between gap-4">
+      <header className="mx-auto flex min-h-15 w-full max-w-432 items-center justify-between gap-4">
         {/* Desktop navigation */}
-        <nav className="hidden h-[60px] lg:flex lg:w-[608.5px]" aria-label="Main">
+        <nav className="hidden h-15 lg:flex lg:w-[608.5px]" aria-label="Main">
           <ul className="flex h-full flex-wrap items-stretch">
             {navItems.map((item) => (
               <li key={item.label} className="group relative flex items-center px-2">
@@ -55,7 +55,7 @@ export const SiteHeader = () => {
                   {item.label}
                 </Link>
                 {item.children && (
-                  <ul className="invisible absolute top-full left-2 z-20 w-[200px] max-w-[300px] min-w-[200px] rounded-b-[4px] bg-white py-4 opacity-0 shadow-[0_20px_20px_rgba(0,0,0,0.1)] transition-opacity group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
+                  <ul className="invisible absolute top-full left-2 z-20 w-50 max-w-75 min-w-50 rounded-b-[4px] bg-white py-4 opacity-0 shadow-[0_20px_20px_rgba(0,0,0,0.1)] transition-opacity group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
                     {item.children.map((child) => (
                       <li key={child.label}>
                         <Link
@@ -99,7 +99,7 @@ export const SiteHeader = () => {
         </Link>
 
         <div className="flex flex-1 items-center justify-end">
-          <div className="hidden h-[60px] items-center gap-2 md:flex">
+          <div className="hidden h-15 items-center gap-2 md:flex">
             {localizations.map((code) => (
               <Button
                 key={code}
@@ -108,7 +108,7 @@ export const SiteHeader = () => {
                 className="text-label min-h-8 min-w-8 justify-between gap-1 px-0"
               >
                 {code}
-                <ChevronDownIcon className="text-icon-primary w-[9px]" />
+                <ChevronDownIcon className="text-icon-primary w-2.25" />
               </Button>
             ))}
           </div>
@@ -129,7 +129,7 @@ export const SiteHeader = () => {
               variant="inverse"
               onClick={() => setOpen(true)}
               aria-label={`Open cart, ${count} ${count === 1 ? "item" : "items"}`}
-              className="text-label h-11 gap-1.5 px-3.5 py-2 sm:px-[14px]"
+              className="text-label h-11 gap-1.5 px-3.5 py-2 sm:px-3.5"
             >
               <BagIcon className="size-4" />
               <span className="whitespace-nowrap">Bag ({count})</span>
@@ -182,7 +182,7 @@ export const SiteHeader = () => {
                 className="text-label gap-1 px-0"
               >
                 {code}
-                <ChevronDownIcon className="text-icon-primary w-[9px]" />
+                <ChevronDownIcon className="text-icon-primary w-2.25" />
               </Button>
             ))}
           </div>

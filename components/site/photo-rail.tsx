@@ -127,7 +127,7 @@ export const PhotoRail = ({ photos, label }: PhotoRailProps) => {
           <li
             key={`${photo.src}-${index}`}
             aria-label={`Slide ${index + 1} of ${photos.length}`}
-            className="relative h-[240px] w-[70%] shrink-0 snap-start overflow-hidden sm:w-[251px] lg:h-[320px]"
+            className="relative h-60 w-[70%] shrink-0 snap-start overflow-hidden sm:w-62.75 lg:h-80"
           >
             <Image
               src={photo.src}
@@ -141,7 +141,7 @@ export const PhotoRail = ({ photos, label }: PhotoRailProps) => {
       </ul>
 
       <div
-        className="flex h-[30px] items-center justify-center"
+        className="flex h-7.5 items-center justify-center"
         role="tablist"
         aria-label={label}
       >
@@ -160,8 +160,8 @@ export const PhotoRail = ({ photos, label }: PhotoRailProps) => {
               className={cn(
                 "block transition-all",
                 index === page
-                  ? "h-[4.5px] w-[45px] bg-[#666]"
-                  : "h-[3px] w-[30px] bg-[rgba(51,51,51,0.25)]",
+                  ? "h-[4.5px] w-11.25 bg-[#666]"
+                  : "h-0.75 w-7.5 bg-[rgba(51,51,51,0.25)]",
               )}
             />
           </Button>

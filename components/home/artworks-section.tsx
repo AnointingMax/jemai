@@ -49,11 +49,11 @@ const curatorPicks: CuratorPick[] = [
 
 export const ArtworksSection = () => (
   <section className="flex w-full flex-col items-center">
-    <div className="flex w-full max-w-[1728px] flex-col gap-stack-loose px-4 sm:px-6 lg:px-page-gutter">
-      <hr className="border-border-strong w-full border-t-[3px]" />
+    <div className="flex w-full max-w-432 flex-col gap-stack-loose px-4 sm:px-6 lg:px-page-gutter">
+      <hr className="border-border-strong w-full border-t-3" />
       <div className="flex w-full flex-col items-center py-8">
         <SectionIntro
-          className="max-w-[1080px]"
+          className="max-w-270"
           eyebrow="03 / JEMAI Art"
           heading="Art That Changes the Feeling of a Space"
           copy="Explore contemporary works selected for their material, emotion and ability to bring a distinct point of view into the spaces around them."
@@ -64,7 +64,7 @@ export const ArtworksSection = () => (
 
     {/* Curator's pick — copy panel over a gallery photograph, with the framed work alongside */}
     <div className="relative w-full bg-white">
-      <div className="relative flex min-h-[520px] w-full flex-col justify-center px-4 sm:px-6 lg:h-[621px] lg:px-page-gutter">
+      <div className="relative flex min-h-130 w-full flex-col justify-center px-4 sm:px-6 lg:h-155.25 lg:px-page-gutter">
         <Image
           src="/figma/home/art-gallery.jpg"
           alt=""

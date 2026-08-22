@@ -45,22 +45,22 @@ const CartItem = ({ line }: { line: CartLine; }) => {
         />
       </Link>
 
-      <div className="min-w-0 flex-1 pt-[6px]">
+      <div className="min-w-0 flex-1 pt-1.5">
         <Link
           href={`/furniture/${line.slug}`}
-          className="font-heading text-text-primary block text-[17px] leading-[20px]"
+          className="font-sans text-text-primary block text-[17px] leading-5"
         >
           {line.name}
         </Link>
-        <p className="text-body-sm text-text-secondary mt-[3px]">
+        <p className="text-body-sm text-text-secondary mt-0.75">
           Color: {line.colour}
           {line.size && <span className="ml-2">Size: {line.size}</span>}
         </p>
-        <p className="text-body-sm mt-[3px]" style={{ color: inkMuted }}>
+        <p className="text-body-sm mt-0.75" style={{ color: inkMuted }}>
           {nairaExact(line.amount)}
         </p>
 
-        <div className="mt-[5px] flex items-center justify-between gap-4">
+        <div className="mt-1.25 flex items-center justify-between gap-4">
           <QuantityStepper
             size="sm"
             label={line.name}
@@ -72,7 +72,7 @@ const CartItem = ({ line }: { line: CartLine; }) => {
             variant="link"
             type="button"
             onClick={() => remove(line.id)}
-            className="text-body-xs underline underline-offset-[3px]"
+            className="text-body-xs underline underline-offset-3"
             style={{ color: inkMuted }}
           >
             Remove
@@ -94,17 +94,13 @@ export const CartDrawer = () => {
         side="right"
         aria-describedby={undefined}
         showCloseButton={false}
-        // Full-bleed below the 500px panel width the frame draws, rather than
-        // shadcn's 3/4-viewport default.
-        className="gap-0 border-0 bg-white p-0 shadow-[-6px_0_24px_rgba(22,5,7,0.10)] data-[side=right]:w-full sm:max-w-[500px]"
+        className="gap-0 border-0 bg-white p-0 shadow-[-6px_0_24px_rgba(22,5,7,0.10)] data-[side=right]:w-full sm:max-w-125"
       >
-        {/* Header — the rule below it is inset to the cart gutter, not bled
-            to the panel edge. */}
-        <div className="px-cart-gutter shrink-0 pt-[30px] pb-[22px]">
+        <div className="px-cart-gutter shrink-0 pt-7.5 pb-5.5">
           <div className="flex h-6 items-center justify-between">
-            <SheetTitle className="text-body flex items-center gap-[9px] font-medium uppercase">
-              <span style={{ color: inkStrong }}>Your Cart</span>
-              <span className="bg-action-primary text-action-primary-content flex size-5 items-center justify-center rounded-full text-[11px] font-semibold">
+            <SheetTitle className="text-body flex items-center gap-2.25 font-medium uppercase">
+              <span className="font-sans" style={{ color: inkStrong }}>Your Cart</span>
+              <span className="bg-action-primary text-action-primary-content font-sans flex size-5 items-center justify-center rounded-full text-[11px] font-semibold">
                 {count}
               </span>
             </SheetTitle>
@@ -133,7 +129,7 @@ export const CartDrawer = () => {
               asChild
               size="cta"
               variant="jemai-outline"
-              className="mt-[15px] h-[51px] px-8"
+              className="mt-3.75 h-12.75 px-8"
             >
               <Link href="/furniture" onClick={() => setOpen(false)}>
                 Shop our products
@@ -142,37 +138,33 @@ export const CartDrawer = () => {
           </div>
         ) : (
           <>
-            {/* Item rows sit 14px inside the cart gutter — the frame insets
-                them from the header rule and the totals below. */}
-            <ul className="flex flex-1 flex-col gap-8 overflow-y-auto px-[20px] pt-[29px] pb-6">
+            <ul className="flex flex-1 flex-col gap-8 overflow-y-auto px-5 pt-7.25 pb-6">
               {lines.map((line) => (
                 <CartItem key={line.id} line={line} />
               ))}
             </ul>
 
             <div className="px-cart-gutter shrink-0 pb-6">
-              <div className="border-t pt-[16px]" style={{ borderColor: rule }}>
+              <div className="border-t pt-4" style={{ borderColor: rule }}>
                 <div className="flex items-baseline justify-between">
                   <span
-                    className="font-heading text-[16px] leading-[20px]"
+                    className="font-heading text-[16px] leading-5"
                     style={{ color: inkStrong }}
                   >
                     Sub Total:
                   </span>
                   <span
-                    className="text-[17px] leading-[24px] font-semibold"
+                    className="text-[17px] leading-6 font-semibold"
                     style={{ color: inkStrong }}
                   >
                     {nairaExact(subtotal)}
                   </span>
                 </div>
-                <p className="text-body-xs mt-[11px]" style={{ color: inkMuted }}>
+                <p className="text-body-xs mt-2.75" style={{ color: inkMuted }}>
                   Taxes and shipping calculated at checkout
                 </p>
 
-                {/* The frame draws a square 16px box in the near-black, so the
-                    shadcn 4px corners and `--primary` fill are overridden. */}
-                <div className="mt-[17px] flex items-center gap-5">
+                <div className="mt-4.25 flex items-center gap-5">
                   <Checkbox
                     id="cart-terms"
                     checked={consented}
@@ -198,7 +190,7 @@ export const CartDrawer = () => {
                     setOpen(false);
                     router.push("/checkout");
                   }}
-                  className="mt-[23px] h-[52px] w-full text-[14px] tracking-[0.04em]"
+                  className="mt-5.75 h-13 w-full text-[14px] tracking-[0.04em]"
                 >
                   CHECKOUT
                 </Button>

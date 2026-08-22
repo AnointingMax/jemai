@@ -18,7 +18,7 @@ type ConsultationCtaProps = {
  * mobile with the photograph below.
  */
 export const ConsultationCta = ({
-  panelClassName = "lg:w-[560px]",
+  panelClassName = "lg:w-140",
   className,
 }: ConsultationCtaProps) => (
   <div
@@ -27,22 +27,22 @@ export const ConsultationCta = ({
       className,
     )}
   >
-    <div className="flex w-full max-w-[1728px] flex-col justify-center lg:flex-row lg:items-stretch">
+    <div className="flex w-full max-w-432 flex-col justify-center lg:flex-row lg:items-stretch">
       <div
         className={cn(
           "bg-surface-subtle flex flex-col items-start justify-between gap-stack-loose overflow-hidden p-6 sm:p-stack-loose lg:shrink-0",
           panelClassName,
         )}
       >
-        <p className="text-eyebrow-lg max-w-[500px] uppercase text-[#ad3a00]">
+        <p className="text-eyebrow-lg max-w-125 uppercase text-[#ad3a00]">
           Begin A Project
         </p>
         <div className="flex flex-col items-start gap-stack-default">
           <div className="flex flex-col items-start gap-stack-compact">
-            <h2 className="font-heading text-text-primary max-w-[445px] text-3xl font-bold leading-tight sm:text-h2">
+            <h2 className="font-heading text-text-primary max-w-111.25 text-3xl font-bold leading-tight sm:text-h2">
               Let&rsquo;s Shape A Space That Feels Entirely Your Own.
             </h2>
-            <p className="text-body-lg max-w-[375px] text-[#6d6d6d]">
+            <p className="text-body-lg max-w-93.75 text-[#6d6d6d]">
               From an individual room to a complete property, JEMAI brings
               architecture, interiors, furniture and art together in one
               considered process.
@@ -54,7 +54,7 @@ export const ConsultationCta = ({
         </div>
       </div>
 
-      <div className="relative h-[280px] w-full overflow-hidden sm:h-[360px] lg:h-[445px] lg:flex-1">
+      <div className="relative h-70 w-full overflow-hidden sm:h-90 lg:h-111.25 lg:flex-1">
         <Image
           src="/figma/home/consultation.jpg"
           alt="A contemporary interior with a framed artwork and staircase"
