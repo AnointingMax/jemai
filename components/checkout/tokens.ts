@@ -14,8 +14,6 @@
 
 /** Hairline around the delivery fields, the radio and the checkboxes. */
 export const fieldBorder = "#e3e1e1";
-/** Border on the discount input in the summary column. */
-export const summaryRule = "#dedede";
 /** Placeholder copy inside the fields. Also hard-coded in `delivery-form.tsx`
  *  and `order-summary.tsx` as `placeholder:text-[#808080]`, which Tailwind
  *  needs as a literal class. */

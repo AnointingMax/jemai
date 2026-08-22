@@ -552,21 +552,33 @@ Shared reference frames (not pages): `246:18783` intro, `247:18801` semantic col
   on the transparent export. Note this is *not* the checkout flow's `#808080`
   placeholder — a third contact-form treatment in the file.
 
-- **The map panel is live Mapbox with the frame's own still behind it.**
-  `components/contact/location-map.tsx` renders `mapbox-gl` when
-  `NEXT_PUBLIC_MAPBOX_TOKEN` is set, and otherwise falls back to
-  `public/figma/contact/map.jpg` — which is not a stand-in but the frame's own
-  map, cropped straight out of the export where it sits unobstructed at full
-  alpha (444, 842 at 932 × 480). So the panel renders as designed with no token
-  configured and upgrades in place once there is one. **No token is set in this
-  repo**, so what renders today is the still.
-- **The map lives behind a client boundary on purpose.** `mapbox-gl` needs
-  `"use client"`, and marking the whole page client breaks `export const
-  metadata` — Next rejects it outright with a 500. The page stays a Server
-  Component and only `LocationMap` is a client component.
-- **The map is centred on Lagos Island / Ikoyi**, which is the extent the frame
-  draws — i.e. it follows the drawn map rather than the "Visit" address, which
-  is the New York one.
+- **The map panel is live Leaflet**, via `react-leaflet` on OpenStreetMap tiles
+  (`components/contact/{location-map,leaflet-map}.tsx`). It lands on the frame's
+  own geometry — 444, 842 at 932 × 480 — so the block still measures 1322
+  against the frame's 1323. Zoom controls sit top-left, which is where the frame
+  draws them too.
+- **Two files, and the split is load-bearing.** Leaflet touches `window` at
+  module scope, so the map is loaded with `ssr: false`; that option is only
+  legal inside a Client Component, and marking the *page* client breaks
+  `export const metadata` outright (Next 500s on it). So `location-map.tsx` is a
+  thin client wrapper that dynamic-imports `leaflet-map.tsx`, and the page stays
+  a Server Component.
+- **The marker is a `divIcon`, not Leaflet's default.** The default marker
+  resolves its icon from relative image paths that bundlers break; a `divIcon`
+  sidesteps that and lets the pin carry `action-primary` instead of shipping a
+  PNG.
+- **`overflow-hidden` on the map wrapper is required**, not cosmetic — Leaflet
+  always paints tiles past the edge of its pane, and without the clip they widen
+  the page on mobile. The wrapper also carries a `min-h-65` floor, since
+  932/480 leaves the map only 184px tall at 390 and the frame has no mobile
+  layout to follow.
+- **`scrollWheelZoom` is off.** A full-width map that swallows page scroll is
+  hostile; zoom stays on the controls and double-click.
+- **One constant holds the location.** `LOCATION` in `leaflet-map.tsx` centres
+  on Lagos Island — the extent the frame draws, and the city the block's own
+  "City" label names. The design's address data contradicts itself (New York
+  under "Visit", Murray Hill under "Neighborhood", Lagos under "City", Abuja in
+  the footer), so pointing this at the real address is a one-line change.
 
 - **The frame's own address data contradicts itself.** It draws a New York
   street address under "Visit", "Lagos" under "City", and the footer carries an
