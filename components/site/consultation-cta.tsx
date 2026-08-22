@@ -4,19 +4,10 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 type ConsultationCtaProps = {
-  /**
-   * Panel width at desktop. The frames disagree — the home section draws it at
-   * 560px, the furniture page at 526px — so each caller passes its own.
-   */
   panelClassName?: string;
   className?: string;
 };
 
-/**
- * "Begin a project" — the split consultation band. Copy panel on
- * `surface/subtle`, photograph filling the rest of the row; both stack on
- * mobile with the photograph below.
- */
 export const ConsultationCta = ({
   panelClassName = "lg:w-140",
   className,

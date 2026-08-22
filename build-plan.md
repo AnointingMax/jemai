@@ -26,8 +26,22 @@ One page per session. Work top-down unless told otherwise.
 - [ ] Upcoming Exhibition Details — `164:8752`, variant `267:24736`, paid event `278:26966` (1440 × 3307)
 - [ ] Past Exhibition Details — `166:9228` (1440 × 6097)
 - [ ] Consultation — `252:20009` (1440 × 3230)
-- [ ] About Page — `182:10993` (1440 × 5917)
-- [ ] Contact — `247:18961` (1440 × 2504)
+- [x] About Page — `182:10993` (1440 × 5893) — `/about`. Built from frame
+      *metadata* plus one export (`design-reference/1.png`, the founder note).
+      The Figma quota died one call in, so five of the six blocks have no
+      screenshot behind them and were solved from geometry alone; each lands
+      within 3–4px of its frame, and the founder note — the one block that was
+      measurable — lands within 2px on every landmark. **Page total 5889 against
+      the frame's 5893.** Verified at 1440 / 768 / 390 and swept for overflow at
+      390 / 1024 / 1050 / 1920. Colours outside the founder note are inferred
+      rather than sampled; see the notes.
+- [x] Contact — `247:18961` (1440 × 2504) — `/contact`. Built entirely from
+      frame exports (`Container.png` and the three shell frames), since the
+      Figma quota was gone before this frame could be read. Every landmark lands
+      within 1px: the four form rules at 182 / 274 / 366 / 532, the directory
+      rules at 214 / 268 / 321 / 374 / 427 against 214 / 267 / 320 / 373 / 426,
+      the map at 444, 842 at 932 × 480, and the container 1322 against 1323.
+      Verified at 1440 / 768 / 390 and swept for overflow at 390 / 1024 / 1920.
 - [x] Cart Drawer — empty `1:1508`, filled/consent-off `1:1588`, filled/consent-on
       `1:1527` (500 × 900). Built from the three frame exports in
       `design-reference/`. Header, rule, item row and footer rhythm land within
@@ -363,3 +377,201 @@ Shared reference frames (not pages): `246:18783` intro, `247:18801` semantic col
 - **Responsive.** The panel is `w-full max-w-[500px]`, so it is full-bleed below
   500px and the drawer geometry is otherwise viewport-independent; the item list
   scrolls when the lines outgrow the panel. Checked at 1440, 768, 500 and 390.
+
+
+## About page notes
+
+- **Built from `get_metadata` alone.** The Figma Starter quota (20 calls/month)
+  ran out one call into this session, so there is no screenshot, no
+  `get_design_context` and no `get_variable_defs` behind this page — only the
+  XML geometry dump, which gives every frame's x/y/w/h and every text node's
+  string and box. That turns out to carry most of the layout, but it carries
+  **no colour and no font information at all**, so everything below that names a
+  colour or a typeface is inference. Re-verify against a frame export before
+  treating this page as done.
+
+- **What the geometry did pin, and how.** A text node's box height is
+  lines × line-height, and its width is the ink advance, so sizes can be solved
+  by matching a rendered run against the frame's box:
+  - Page H1 is **48px Classico Regular on a 56px line** — the frame's box is
+    550 × 112 and the render is 550 × 112 exactly. Same treatment as the
+    Furniture catalogue H1, and the opposite of Furniture Details, which is
+    Bold at 28.
+  - The values panel h2 is `text-h2` (40/46): the frame's box is 568 × 92, i.e.
+    two lines at 46. **`section-intro.tsx`'s heading class string carries
+    `leading-tight`, which resolves 40px to a 50px line** and rendered 100 here;
+    the class was copied, so the `leading-tight` had to come back out. Worth
+    checking whether the home sections want the same removal.
+  - The value kickers ("01 / CONSIDERED") are **15px semibold at 0.08em on a
+    28px line** — `text-label`'s size, not either eyebrow token. The three runs
+    measure 130 / 122 / 126 in the frame and 127 / 122 / 123 rendered; 14px
+    comes out ~9% short and 16px ~5% long.
+  - The discipline rows are **18px Classico on a 28px line**. Design / Furniture
+    / Art / Exhibitions measure 51 / 69 / 22 / 83 in the frame and 53 / 67 / 23
+    / 84 rendered — within 2px on all four, which is what fixes both the size
+    and the serif face.
+
+- **`182:11208` is "A Note From Our Founder"** — a 1440 × 565 full-bleed band
+  between the mosaic and the disciplines. The metadata dump exposes no children
+  for it, so it was initially left out; it was built from a PNG export dropped
+  into `design-reference/1.png`. Being the one block with an export, it is also
+  the one block that is measured rather than inferred:
+  - The scrim panel is x 64 → 742 (678 wide), top y=64, flush to the bottom of
+    the band, with 48px of padding — so the copy measure is 582px. Ink starts at
+    112/113 against a panel edge of 64, and the longest line ends at 690 against
+    a content edge of 694.
+  - The panel fill is **`surface-inverse` at 87%**. Un-scrimming the region with
+    those two values recovers the photograph underneath cleanly, which is what
+    fixes both the colour and the alpha — a flat-alpha guess against a single
+    boundary crossing does not, because the photo changes across the edge.
+  - Heading is `text-h2` — Classico **Bold** at 40 measures 418.3 against the
+    frame's 418, where Regular measures 452. Body is `text-body` (573/542
+    against 572/540, on the 24px pitch the bands read off directly). Signature
+    is `text-label` (107.4 against 108).
+  - Copy is `text-inverse` (peak pixel 247,245,243 = #f7f5f3). The signature is
+    the same ink at **~72%** — solving its 182,177,177 peak against the panel
+    gives 0.716 / 0.717 / 0.723 across the three channels, consistent enough to
+    be real transparency rather than a second colour.
+  - **The photograph is a stand-in.** The frame's own image exists in the export
+    only underneath the scrim *and the baked text*, and the text crosses a
+    brightly lit painting, so un-scrimming leaves a smear that cannot be
+    inpainted cleanly. `art-gallery.jpg` stands in; the band reads lighter than
+    the frame because that photo is brighter than the frame's, not because the
+    scrim is wrong. Swap in the real export when it lands.
+
+- **This page runs a 64px section gap, not the shell's 80px editorial gap.**
+  Every seam in the frame — between all six blocks, and into the Newsletter — is
+  64. The page therefore returns **one wrapper** with `gap-16` rather than
+  sibling sections, so the internal rhythm stays at 64 and the shell's 80 is
+  spent once, on the seam into the Newsletter. That one seam is 16px looser than
+  the frame, which is most of the page's 4px total drift once the prose block's
+  short wrap (below) is netted off it.
+
+- **Outside the founder note, colours are inferred from the site's own language,
+  not measured.** The hero's
+  copy half and the two mosaic copy panels are `surface-subtle`, on the
+  precedent of the consultation panel, which is the same shape of block. The
+  value-row rules are `border-border-default`. If a frame export ever lands,
+  these are the first things to check.
+
+- **The frame's own photography is a single placeholder.** All six image nodes
+  reference the same `4vMrbP9mgswGaZpXigc0L7nbBQ.jpg`, so the design has no real
+  photography here either. Existing `public/figma/home` shots stand in; asset
+  download needs the MCP anyway.
+
+- **One paragraph wraps a line short.** The first paragraph of the "Who We Are"
+  measure is a 800 × 84 box — three lines on a 28px line, which is
+  `text-body-lg`'s line-height exactly. At 18px the string's advance is 1505px,
+  so it takes two lines in an 800px measure, not three; forcing three would need
+  ~20px, which matches no token and no line-height. `text-body-lg` is kept and
+  the block renders 272 against the frame's 300. Most likely a Figma wrap
+  artifact, but an export would settle it.
+
+- **The hidden "Who We Are" and "Our Values" labels.** Both are `hidden="true"`
+  in the frame, so neither is drawn. "Who We Are" is carried as an `sr-only`
+  heading so the section is still labelled; "Our Values" is not, since the
+  panel's own h2 already labels it.
+
+- **The disciplines accordion is the `/about#design` target** the footer already
+  links to, so each row carries its `id` and `scroll-mt-24`. The frame draws
+  Furniture open and gives copy for that row only — the other three bodies are
+  written, the same call `ProductSections` made. The frame also draws no rule
+  between rows; the hairline is borrowed from `ProductSections` because four
+  bare labels read as one block.
+
+- **Nav.** About and Contact are gone from the desktop bar and kept in the
+  mobile menu, via a `mobileOnly` flag on the nav item and a `desktopNavItems`
+  filter. The desktop `<nav>` keeps its `lg:w-[608.5px]` measure so the wordmark
+  stays where every other frame draws it. Both pages are already linked from the
+  footer's Company column.
+
+- **Verified at 1440 / 768 / 390**, and checked for horizontal overflow at 390,
+  1024, 1050 and 1920. The mosaic's middle row keeps its pair from `sm:` up; the
+  two rows with a copy panel need the full measure and stack until `lg:`.
+
+
+## Contact page notes
+
+- **The only page built purely from exports.** No metadata, no design context —
+  `design-reference/Container.png` (1440 × 1323) plus the three shell frames.
+  The export is **transparent**, which makes it the easiest one to measure yet:
+  the alpha channel is a perfect content mask, so text bands, rules and boxes
+  all fall out of a threshold pass with no photograph to fight.
+
+- **Two grids, both `fr` tracks that sum to the 1312 inner measure.** The
+  contact/form row is `384fr` / 196px gutter / `732fr`; the map row is `380fr` /
+  `932fr` with no gutter. Both resolve to exactly 1px per `fr` at 1440.
+
+- **The form's rhythm is a 92px rule pitch** (y=90, 182, 274, 366): 34px of
+  lead, a 14px eyebrow label, 6px, then a 37px control closing on the rule.
+  That lands the label ink at 127 against the frame's 127 and the input ink at
+  159 against 159. The rules are per column, not full width — 354px each with a
+  24px gutter — which the export shows directly.
+
+- **The form column is offset 53px from the top of its row.** The frame aligns
+  the "01 · THE BRIEF" eyebrow with the *H1's ink*, not with the breadcrumb
+  above it, so the two columns do not share a top edge.
+
+- **Type, all pinned by ink extents:**
+  - Every uppercase label on the page is `text-eyebrow` (10px semibold, 0.08em).
+    Twelve separate runs were checked and all twelve land within 3px — including
+    "COMPANY OR AGENCY (OPTIONAL)" at 167 against 166.
+  - The page H1 is `text-h2` — **40px Classico Bold**, 337 against the frame's
+    335, where Regular measures 359. Not a larger display size.
+  - "Where to find us" is `text-h3` — 28px Bold, 188.3 against 188.
+  - The intro copy, the directory rows and the input text are all `text-body-sm`
+    (14/20); "875 Washington St, New York, NY 10014" measures 225 against 225.
+  - **The message placeholder is `text-body` (16px) while the input placeholders
+    are 14px** — the one place the form changes size. Its run measures 455
+    against 450, where 14px gives 398.
+  - "Murray Hill" and "Lagos" are `text-body-lg` (18px): 80.5 / 43.6 against
+    79 / 42, where 16px gives 71.5 / 38.8.
+  - The disclaimer is `text-body-xs` (12px): 667 against 666.
+
+- **Two runs needed a narrower measure than their column**, both because the
+  frame breaks them a word early: the intro copy is `max-w-80` (320px, not the
+  column's 384) or "day." rides up onto line two; the disclaimer is `max-w-172`
+  (688px, not 732) or "jemai.co." does the same. Both were caught by comparing
+  the *widest rendered line* against the frame's, not the block height.
+
+- **Three different rule weights, and only one is a token.** The form rules
+  measure `#16050729` — `border-default` exactly. The textarea rule and the
+  Get Directions underline measure black at 15%, which composites within a level
+  of the same token, so they use it too. **The directory rules are black at
+  10%**, which composites 11 levels lighter than any published border token, so
+  they are literal `border-black/10` with a comment — the same call the
+  catalogue's Load-more block and the cart drawer made.
+
+- **The placeholder ink is `text-primary/25`**, solved from a peak alpha of 64
+  on the transparent export. Note this is *not* the checkout flow's `#808080`
+  placeholder — a third contact-form treatment in the file.
+
+- **The map panel is live Mapbox with the frame's own still behind it.**
+  `components/contact/location-map.tsx` renders `mapbox-gl` when
+  `NEXT_PUBLIC_MAPBOX_TOKEN` is set, and otherwise falls back to
+  `public/figma/contact/map.jpg` — which is not a stand-in but the frame's own
+  map, cropped straight out of the export where it sits unobstructed at full
+  alpha (444, 842 at 932 × 480). So the panel renders as designed with no token
+  configured and upgrades in place once there is one. **No token is set in this
+  repo**, so what renders today is the still.
+- **The map lives behind a client boundary on purpose.** `mapbox-gl` needs
+  `"use client"`, and marking the whole page client breaks `export const
+  metadata` — Next rejects it outright with a 500. The page stays a Server
+  Component and only `LocationMap` is a client component.
+- **The map is centred on Lagos Island / Ikoyi**, which is the extent the frame
+  draws — i.e. it follows the drawn map rather than the "Visit" address, which
+  is the New York one.
+
+- **The frame's own address data contradicts itself.** It draws a New York
+  street address under "Visit", "Lagos" under "City", and the footer carries an
+  Abuja address. Transcribed as drawn rather than reconciled; worth raising with
+  the designer.
+
+- **Written, not transcribed:** the inquiry-type options beyond "Book a Space"
+  (the frame draws the closed select only), and the submitted state. There is no
+  endpoint, so the form acknowledges in place via `react-hook-form` — the same
+  library the checkout flow already uses — and `onSubmit` is the seam to point
+  at a real handler.
+
+- **`Field` is declared at module scope on purpose.** Inside the form component
+  it remounts on every render and drops focus mid-keystroke.

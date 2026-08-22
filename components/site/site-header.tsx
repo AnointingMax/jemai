@@ -4,15 +4,15 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
-import { BagIcon, ChevronDownIcon, SearchIcon } from "@/components/icons";
+import { BagIcon, SearchIcon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/lib/cart";
-import { cn } from "@/lib/utils";
 
 type NavItem = {
   label: string;
   href: string;
-  children?: { label: string; href: string }[];
+  children?: { label: string; href: string; }[];
+  mobileOnly?: boolean;
 };
 
 const navItems: NavItem[] = [
@@ -29,12 +29,12 @@ const navItems: NavItem[] = [
     ],
   },
   { label: "Exhibitions", href: "/exhibitions" },
-  { label: "About", href: "/about" },
+  { label: "About", href: "/about", mobileOnly: true },
   { label: "Consultations", href: "/consultation" },
-  { label: "Contact", href: "/contact" },
+  { label: "Contact", href: "/contact", mobileOnly: true },
 ];
 
-const localizations = ["NGN", "EN"];
+const desktopNavItems = navItems.filter((item) => !item.mobileOnly);
 
 export const SiteHeader = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -44,9 +44,9 @@ export const SiteHeader = () => {
     <div className="w-full px-4 sm:px-6 lg:px-page-gutter">
       <header className="mx-auto flex min-h-15 w-full max-w-432 items-center justify-between gap-4">
         {/* Desktop navigation */}
-        <nav className="hidden h-15 lg:flex lg:w-[608.5px]" aria-label="Main">
+        <nav className="hidden h-15 lg:flex flex-1" aria-label="Main">
           <ul className="flex h-full flex-wrap items-stretch">
-            {navItems.map((item) => (
+            {desktopNavItems.map((item) => (
               <li key={item.label} className="group relative flex items-center px-2">
                 <Link
                   href={item.href}
@@ -99,20 +99,6 @@ export const SiteHeader = () => {
         </Link>
 
         <div className="flex flex-1 items-center justify-end">
-          <div className="hidden h-15 items-center gap-2 md:flex">
-            {localizations.map((code) => (
-              <Button
-                key={code}
-                type="button"
-                variant="quiet"
-                className="text-label min-h-8 min-w-8 justify-between gap-1 px-0"
-              >
-                {code}
-                <ChevronDownIcon className="text-icon-primary w-2.25" />
-              </Button>
-            ))}
-          </div>
-
           <div className="flex items-center pl-2 md:pl-4">
             <div className="hidden h-6 w-px bg-[#dfdfdf] md:block" />
             <Button
@@ -173,19 +159,6 @@ export const SiteHeader = () => {
               </li>
             ))}
           </ul>
-          <div className={cn("flex items-center gap-4 pt-2 md:hidden")}>
-            {localizations.map((code) => (
-              <Button
-                key={code}
-                type="button"
-                variant="quiet"
-                className="text-label gap-1 px-0"
-              >
-                {code}
-                <ChevronDownIcon className="text-icon-primary w-2.25" />
-              </Button>
-            ))}
-          </div>
         </nav>
       )}
     </div>
