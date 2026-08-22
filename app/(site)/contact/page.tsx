@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 type DirectoryRow = {
   label: string;
-  links?: { label: string; href: string; }[];
+  links?: { label: string; href: string }[];
   text?: string;
 };
 
@@ -52,7 +52,10 @@ const ContactPage = () => (
             <span aria-hidden className="text-body-xs text-text-secondary">
               /
             </span>
-            <span className="text-body-xs text-text-primary" aria-current="page">
+            <span
+              className="text-body-xs text-text-primary"
+              aria-current="page"
+            >
               Contact
             </span>
           </nav>

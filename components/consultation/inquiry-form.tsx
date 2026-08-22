@@ -1,0 +1,318 @@
+"use client";
+
+import { useState, type ComponentProps } from "react";
+import {
+  Controller,
+  useForm,
+  type Control,
+  type Path,
+  type UseFormRegister,
+} from "react-hook-form";
+import { Calendar, Mail } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
+
+type InquiryValues = {
+  name: string;
+  email: string;
+  phone: string;
+  projectType: string;
+  startDate: string;
+  endDate: string;
+  budget: string;
+  summary: string;
+};
+
+/** The frame draws "Interior Decor" selected; the rest of the list is written. */
+const projectTypes = [
+  "Interior Decor",
+  "Architecture",
+  "Full Renovation",
+  "Furniture Selection",
+  "Art Curation",
+  "Other",
+];
+
+/** The frame draws only the "Select range" placeholder — all ranges written. */
+const budgets = [
+  "Under ₦5,000,000",
+  "₦5,000,000 – ₦15,000,000",
+  "₦15,000,000 – ₦50,000,000",
+  "₦50,000,000 – ₦150,000,000",
+  "Above ₦150,000,000",
+];
+
+/**
+ * Same field recipe as the Contact form on a tighter lead: 26px, a 14px eyebrow
+ * label, 6px, then a 37px control closing on the rule. That gives the frame's
+ * 84px rule pitch (284 / 368 / 456 / 540) and puts each label's ink where the
+ * export has it.
+ */
+const fieldClass = "border-border-default border-b pt-[26px]";
+const labelClass = "text-eyebrow text-text-secondary block uppercase";
+const controlClass =
+  "mt-1.5 h-[37px] rounded-none border-0 bg-transparent px-0 text-body-sm text-text-primary shadow-none placeholder:text-text-primary/30 focus-visible:border-0 focus-visible:ring-0";
+
+type FieldProps = ComponentProps<typeof Input> & {
+  label: string;
+  name: Path<InquiryValues>;
+  register: UseFormRegister<InquiryValues>;
+  required?: boolean;
+};
+
+/** Module scope — inside the form it would remount and drop focus per keystroke. */
+const Field = ({
+  label,
+  name,
+  register,
+  required,
+  className,
+  ...props
+}: FieldProps) => (
+  <div className={fieldClass}>
+    <span className={labelClass}>
+      {label}
+      {required && " *"}
+    </span>
+    <Input
+      aria-label={label}
+      className={cn(controlClass, className)}
+      {...register(name, required ? { required: true } : undefined)}
+      {...props}
+    />
+  </div>
+);
+
+/**
+ * The frame draws "Select date" with a calendar glyph, which a native date
+ * input cannot show — it has no placeholder. So the control starts as text and
+ * swaps to `date` on focus, and the browser's own indicator is made
+ * transparent so the drawn glyph is what you click.
+ */
+const DateField = ({
+  label,
+  name,
+  register,
+}: {
+  label: string;
+  name: Path<InquiryValues>;
+  register: UseFormRegister<InquiryValues>;
+}) => {
+  const { onBlur, ...rest } = register(name);
+  // `pb-1`: the frame gives the date row 88px where every other row is 84.
+  return (
+    <div className={cn(fieldClass, "relative pb-1")}>
+      <span className={labelClass}>{label}</span>
+      <Input
+        type="text"
+        aria-label={label}
+        placeholder="Select date"
+        onFocus={(event) => {
+          event.target.type = "date";
+        }}
+        onBlur={(event) => {
+          if (!event.target.value) event.target.type = "text";
+          return onBlur(event);
+        }}
+        className={cn(
+          controlClass,
+          "[&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:h-5 [&::-webkit-calendar-picker-indicator]:w-5 [&::-webkit-calendar-picker-indicator]:opacity-0",
+        )}
+        {...rest}
+      />
+      <Calendar
+        aria-hidden
+        className="text-text-secondary pointer-events-none absolute right-0 bottom-[11px] size-3.5"
+      />
+    </div>
+  );
+};
+
+const Picker = ({
+  label,
+  name,
+  control,
+  options,
+  placeholder,
+}: {
+  label: string;
+  name: Path<InquiryValues>;
+  control: Control<InquiryValues>;
+  options: string[];
+  placeholder?: string;
+}) => (
+  <div className={fieldClass}>
+    <span className={labelClass}>{label}</span>
+    <Controller
+      control={control}
+      name={name}
+      render={({ field }) => (
+        <Select value={field.value || undefined} onValueChange={field.onChange}>
+          <SelectTrigger
+            aria-label={label}
+            className={cn(
+              controlClass,
+              "w-full justify-between px-0 data-[size=default]:h-[37px] data-placeholder:text-text-primary/30",
+            )}
+          >
+            <SelectValue placeholder={placeholder} />
+          </SelectTrigger>
+          <SelectContent>
+            {options.map((option) => (
+              <SelectItem key={option} value={option}>
+                {option}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
+    />
+  </div>
+);
+
+type InquiryFormProps = {
+  eyebrow: string;
+  heading: string;
+  copy: string;
+  email: string;
+};
+
+export const InquiryForm = ({
+  eyebrow,
+  heading,
+  copy,
+  email,
+}: InquiryFormProps) => {
+  const { register, control, handleSubmit } = useForm<InquiryValues>({
+    defaultValues: {
+      name: "",
+      email: "",
+      phone: "",
+      projectType: projectTypes[0],
+      startDate: "",
+      endDate: "",
+      budget: "",
+      summary: "",
+    },
+  });
+  const [sent, setSent] = useState(false);
+
+  /** No endpoint yet and no frame draws a sent state — acknowledges in place. */
+  const onSubmit = () => setSent(true);
+
+  return (
+    <section className="bg-surface-subtle w-full px-4 pt-[83px] pb-[85px] sm:px-6">
+      <div className="mx-auto w-full max-w-160">
+        <div className="text-center">
+          <p className="text-eyebrow text-text-secondary uppercase">
+            {eyebrow}
+          </p>
+          <h2 className="font-heading text-text-primary mt-[11px] text-2xl font-bold sm:text-h3">
+            {heading}
+          </h2>
+          <p className="text-body text-text-secondary mt-[13px]">{copy}</p>
+        </div>
+
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          noValidate
+          className="mt-[21px]"
+        >
+          <div className="grid gap-x-6 sm:grid-cols-2">
+            <Field
+              register={register}
+              label="Name"
+              name="name"
+              required
+              placeholder="Full name"
+            />
+            <Field
+              register={register}
+              label="Email"
+              name="email"
+              type="email"
+              required
+              placeholder="your@email.com"
+            />
+            <Field
+              register={register}
+              label="Phone Number"
+              name="phone"
+              type="tel"
+              placeholder="+234 000 000 0000"
+            />
+            <Picker
+              label="Project Type"
+              name="projectType"
+              control={control}
+              options={projectTypes}
+            />
+            <DateField
+              label="Start Date"
+              name="startDate"
+              register={register}
+            />
+            <DateField label="End Date" name="endDate" register={register} />
+          </div>
+
+          <Picker
+            label="Estimated Budget"
+            name="budget"
+            control={control}
+            options={budgets}
+            placeholder="Select range"
+          />
+          <p className="text-body-xs text-text-secondary mt-[9px]">
+            Optional, but useful for shaping the right proposal.
+          </p>
+
+          <div className={fieldClass}>
+            <span className={labelClass}>Project Summary</span>
+            <Textarea
+              aria-label="Project Summary"
+              placeholder="Tell us what you are creating, changing or solving."
+              className="text-body text-text-primary placeholder:text-text-primary/30 mt-1.5 h-[111px] resize-none rounded-none border-0 bg-transparent px-0 pt-2.5 shadow-none focus-visible:border-0 focus-visible:ring-0"
+              {...register("summary", { required: true })}
+            />
+          </div>
+
+          {/* Full-measure button — 640 x 48 in the frame. */}
+          <Button
+            type="submit"
+            variant="jemai"
+            className="text-label mt-[42px] h-12 w-full border-0"
+          >
+            Request a consultation
+          </Button>
+
+          {sent && (
+            <p
+              className="text-body-sm text-action-primary mt-4 text-center"
+              role="status"
+            >
+              Thank you — we&rsquo;ll be in touch to arrange your first
+              conversation.
+            </p>
+          )}
+
+          <a
+            href={`mailto:${email}`}
+            className="text-body-sm text-text-primary hover:text-action-link mt-[29px] flex items-center justify-center gap-2 transition-colors"
+          >
+            <Mail aria-hidden className="size-3.5" />
+            {email}
+          </a>
+        </form>
+      </div>
+    </section>
+  );
+};
