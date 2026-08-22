@@ -33,7 +33,12 @@ One page per session. Work top-down unless told otherwise.
       `design-reference/`. Header, rule, item row and footer rhythm land within
       1px of the frames; only the item title is off (3px of ink width).
       Verified at 500 (design parity), 1440, 768 and 390.
-- [ ] Checkout — `1:1664`, plus modals: processing `257:20543`, success `267:23442`, payment issue `267:23955` (1440 × 1004)
+- [x] Checkout — `1:1664`, plus modals: processing `257:20543`, success
+      `267:23442`, payment issue `267:23955` (1440 × 1004) — `/checkout`, on its
+      own `app/(checkout)` route group so the page closes on Pay Now with no
+      newsletter and no footer. Delivery form, order summary and the three
+      shared-wrapper payment modals live under `components/checkout/`; the
+      off-palette values are collected in `components/checkout/tokens.ts`.
 
 Shared reference frames (not pages): `246:18783` intro, `247:18801` semantic colour,
 `249:19691` typography, `249:19754` spacing & layout, `251:19982` shared components,
