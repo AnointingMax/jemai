@@ -14,7 +14,7 @@ export const RelatedProducts = ({
   products,
 }: RelatedProductsProps) => (
   <section className="w-full px-4 sm:px-6 lg:px-page-gutter">
-    <div className="mx-auto flex w-full max-w-[1728px] flex-col">
+    <div className="mx-auto flex w-full max-w-432 flex-col">
       <h2 className="font-heading text-text-primary text-2xl sm:text-h3">
         {title}
       </h2>

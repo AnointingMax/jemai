@@ -32,11 +32,11 @@ const spaces = [
 
 export const ArchitectureSection = () => (
   <section className="flex w-full flex-col items-center gap-stack-loose pt-8 lg:pt-16">
-    <div className="flex w-full max-w-[1728px] flex-col gap-stack-loose px-4 sm:px-6 lg:px-page-gutter">
-      <hr className="border-border-strong w-full border-t-[3px]" />
+    <div className="flex w-full max-w-432 flex-col gap-stack-loose px-4 sm:px-6 lg:px-page-gutter">
+      <hr className="border-border-strong w-full border-t-3" />
       <div className="flex w-full flex-col items-center py-8">
         <SectionIntro
-          className="max-w-[1080px] gap-2.5"
+          className="max-w-270 gap-2.5"
           eyebrow="05 / Architecture &amp; Interiors"
           heading="Spaces Shaped by Purpose, Personality and Space"
           copy="From private homes to public spaces, discover considered environments shaped around the people, purpose and possibilities within them."
@@ -49,7 +49,7 @@ export const ArchitectureSection = () => (
     <div className="flex w-full flex-col gap-14 pb-3 pl-4 sm:pl-6 lg:pl-page-gutter">
       <ul className="flex gap-7 overflow-x-auto pr-4 sm:pr-6 lg:pr-page-gutter [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {spaces.map((space) => (
-          <li key={space.name} className="w-[280px] shrink-0 sm:w-[330px]">
+          <li key={space.name} className="w-70 shrink-0 sm:w-82.5">
             <Link href={space.href} className="group flex flex-col gap-2.5">
               <div className="relative aspect-square w-full overflow-hidden bg-[#e9e6de]">
                 <Image

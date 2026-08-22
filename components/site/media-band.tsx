@@ -45,7 +45,7 @@ export const MediaBand = ({
 
     <div
       className={cn(
-        "flex w-full items-center justify-center px-4 py-12 sm:px-6 sm:py-16 lg:w-1/2 lg:px-[50px] lg:py-[130.5px]",
+        "flex w-full items-center justify-center px-4 py-12 sm:px-6 sm:py-16 lg:w-1/2 lg:px-12.5 lg:py-[130.5px]",
         mediaSide === "left" ? "lg:order-2" : "lg:order-1",
       )}
     >
@@ -59,8 +59,8 @@ export const MediaBand = ({
           </h3>
         </div>
         <p className="text-body text-text-secondary">{copy}</p>
-        <div className="pt-[15px]">
-          <Button asChild size="cta" className="min-w-[148px]">
+        <div className="pt-3.75">
+          <Button asChild size="cta" className="min-w-37">
             <Link href={cta.href}>{cta.label}</Link>
           </Button>
         </div>

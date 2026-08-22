@@ -19,12 +19,12 @@ const slides: RailPhoto[] = [...highlights, ...highlights];
 
 export const ExhibitionsSection = () => (
   <section className="flex w-full flex-col items-center pt-8 lg:pt-16">
-    <div className="flex w-full max-w-[1728px] flex-col gap-stack-loose px-4 sm:px-6 lg:px-page-gutter">
-      <hr className="border-border-strong w-full border-t-[3px]" />
+    <div className="flex w-full max-w-432 flex-col gap-stack-loose px-4 sm:px-6 lg:px-page-gutter">
+      <hr className="border-border-strong w-full border-t-3" />
 
       <div className="flex w-full flex-col items-center gap-stack-loose py-8">
         <SectionIntro
-          className="max-w-[1080px] gap-2"
+          className="max-w-270 gap-2"
           eyebrow="04 / Exhibitions"
           heading="Where Art, Artists and Audiences Meet"
           copy="Step inside JEMAI’s exhibitions, conversations and creative encounters—bringing new work, fresh perspectives and our wider creative community together."
@@ -36,8 +36,8 @@ export const ExhibitionsSection = () => (
     </div>
 
     {/* Up next — half-bleed photograph beside the featured exhibition */}
-    <div className="bg-surface-subtle flex w-full flex-col lg:h-[900px] lg:flex-row">
-      <div className="relative h-[420px] w-full lg:h-full lg:w-1/2">
+    <div className="bg-surface-subtle flex w-full flex-col lg:h-225 lg:flex-row">
+      <div className="relative h-105 w-full lg:h-full lg:w-1/2">
         <Image
           src="/figma/home/ex-sculpture.jpg"
           alt="Wire sculpture of a figure in a patterned room"
@@ -54,7 +54,7 @@ export const ExhibitionsSection = () => (
               Up Next
             </p>
             <div className="flex w-full flex-col items-center gap-2 text-center">
-              <h3 className="font-heading text-text-primary text-3xl leading-tight sm:text-[40px] sm:leading-[46px]">
+              <h3 className="font-heading text-text-primary text-3xl leading-tight sm:text-[40px] sm:leading-11.5">
                 Forms of Stillness
               </h3>
               <p className="text-body-lg text-text-secondary">
@@ -69,7 +69,7 @@ export const ExhibitionsSection = () => (
           </p>
 
           <div className="flex flex-col items-center justify-center gap-stack-default">
-            <div className="relative size-[280px] sm:size-[360px] lg:size-[400px]">
+            <div className="relative size-70 sm:size-90 lg:size-100">
               <Image
                 src="/figma/home/ex-bust.jpg"
                 alt="Gilded bust sculpture on a plinth"
@@ -78,7 +78,7 @@ export const ExhibitionsSection = () => (
                 className="object-cover"
               />
             </div>
-            <Button asChild size="cta" className="min-w-[148px]">
+            <Button asChild size="cta" className="min-w-37">
               <Link href="/exhibitions/forms-of-stillness">Register to Attend</Link>
             </Button>
           </div>

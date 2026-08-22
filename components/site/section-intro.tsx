@@ -27,7 +27,7 @@ export const SectionIntro = ({
   <div className={cn("flex w-full flex-col gap-2.5", className)}>
     <Eyebrow>{eyebrow}</Eyebrow>
 
-    <div className="flex flex-col gap-stack-heading lg:flex-row lg:gap-[30px]">
+    <div className="flex flex-col gap-stack-heading lg:flex-row lg:gap-7.5">
       <div className="flex flex-1 items-start gap-4">
         {numeral && (
           <span className="text-numeral text-text-primary font-sans shrink-0 pr-4 leading-[0.9]">
@@ -44,7 +44,7 @@ export const SectionIntro = ({
         {(cta || secondaryCta) && (
           <div className="flex flex-wrap items-center gap-stack-default">
             {cta && (
-              <Button asChild size="cta" className="min-w-[148px]">
+              <Button asChild size="cta" className="min-w-37">
                 <Link href={cta.href}>{cta.label}</Link>
               </Button>
             )}

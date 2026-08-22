@@ -65,14 +65,14 @@ const ProductDetailPage = async ({ params }: PageProps<"/furniture/[slug]">) => 
     <>
       {/* The frame closes 41px below the last accordion rule, which is what
           separates this block from the 80px editorial gap that follows. */}
-      <section className="flex w-full flex-col pt-3 pb-10 lg:pb-[41px]">
+      <section className="flex w-full flex-col pt-3 pb-10 lg:pb-10.25">
         {/* The Nav frame closes on the same 3px rule every section opens with. */}
         <div className="w-full px-4 sm:px-6 lg:px-page-gutter">
-          <hr className="border-border-strong mx-auto w-full max-w-[1728px] border-t-[3px]" />
+          <hr className="border-border-strong mx-auto w-full max-w-432 border-t-3" />
         </div>
 
         <div className="mt-0.5 w-full px-4 sm:px-6 lg:px-page-gutter">
-          <div className="mx-auto w-full max-w-[1728px]">
+          <div className="mx-auto w-full max-w-432">
             <Breadcrumb name={product.name} />
           </div>
         </div>
@@ -82,7 +82,7 @@ const ProductDetailPage = async ({ params }: PageProps<"/furniture/[slug]">) => 
               at the 1440 design width and scales everywhere else. The gallery
               panel closes at its own height rather than stretching to the
               taller info column, as the frame draws it. */}
-          <div className="mx-auto grid w-full max-w-[1728px] grid-cols-1 items-start lg:grid-cols-[660fr_652fr]">
+          <div className="mx-auto grid w-full max-w-432 grid-cols-1 items-start lg:grid-cols-[660fr_652fr]">
             <div className="border-border-default border p-6 sm:p-8 lg:p-10">
               <ProductGallery name={product.name} images={product.gallery} />
             </div>
@@ -90,7 +90,7 @@ const ProductDetailPage = async ({ params }: PageProps<"/furniture/[slug]">) => 
             {/* The frame's divider is two coincident 1px `border-default`
                 strokes (composited alpha 0x4b, twice 0x29), so the info column
                 carries its own left border beside the panel's right one. */}
-            <div className="border-t-border-strong lg:border-l-border-default flex flex-col border-t pt-8 lg:border-l lg:pt-[42px] lg:pr-5 lg:pl-10">
+            <div className="border-t-border-strong lg:border-l-border-default flex flex-col border-t pt-8 lg:border-l lg:pt-10.5 lg:pr-5 lg:pl-10">
               {/* 28px Classico Bold: the frame's run measures 191 wide and 23
                   of ink, which `text-h3` reproduces (191.6 / 22.1). Regular at
                   26px matches the width but is two units short of the ink. */}
@@ -100,7 +100,7 @@ const ProductDetailPage = async ({ params }: PageProps<"/furniture/[slug]">) => 
               <p className="text-body-lg text-text-primary mt-5">
                 {product.price}
               </p>
-              <p className="text-body-lg text-text-secondary mt-4 max-w-[540px]">
+              <p className="text-body-lg text-text-secondary mt-4 max-w-135">
                 {product.summary}
               </p>
 

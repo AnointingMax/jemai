@@ -25,9 +25,9 @@ const stepperVariants = cva(
     variants: {
       size: {
         /** Cart line: 75 x 29, 2px corners. */
-        sm: "h-[29px] w-[75px] rounded-[2px]",
+        sm: "h-7.25 w-18.75 rounded-[2px]",
         /** Product page: 143 x 57, square. */
-        lg: "h-[57px] w-[143px] rounded-none",
+        lg: "h-14.25 w-35.75 rounded-none",
       },
     },
     defaultVariants: { size: "lg" },

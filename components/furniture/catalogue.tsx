@@ -31,7 +31,7 @@ type SortKey = keyof typeof sorts;
 
 /** Shared field chrome: 34px tall, sitting on a hairline rather than in a box. */
 const fieldClass =
-  "border-border-default text-body-sm text-text-primary focus-visible:border-border-strong h-[34px] w-full rounded-none border-0 border-b bg-transparent px-0 shadow-none ring-0 transition-colors focus-visible:ring-0 dark:bg-transparent";
+  "border-border-default text-body-sm text-text-primary focus-visible:border-border-strong h-8.5 w-full rounded-none border-0 border-b bg-transparent px-0 shadow-none ring-0 transition-colors focus-visible:ring-0 dark:bg-transparent";
 
 type FieldProps = {
   label: string;
@@ -48,7 +48,7 @@ const Field = ({ label, value, onChange, children }: FieldProps) => (
         fieldClass,
         // The trigger renders its own chevron; the frame draws a narrow one in
         // the primary ink rather than shadcn's 16px muted glyph.
-        "data-[size=default]:h-[34px] [&>svg]:size-2.5 [&>svg]:text-text-primary",
+        "data-[size=default]:h-8.5 [&>svg]:size-2.5 [&>svg]:text-text-primary",
       )}
     >
       <SelectValue />
@@ -118,7 +118,7 @@ export const Catalogue = () => {
           spacing={5}
           value={collection}
           onValueChange={(value) => repage(setCollection)(value || "All")}
-          className="mx-auto w-full max-w-[1728px] justify-start overflow-x-auto lg:justify-center [&::-webkit-scrollbar]:hidden [scrollbar-width:none]"
+          className="mx-auto w-full max-w-432 justify-start overflow-x-auto lg:justify-center [&::-webkit-scrollbar]:hidden [scrollbar-width:none]"
         >
           {["All", ...collections].map((item) => (
             <ToggleGroupItem key={item} value={item} className="whitespace-nowrap">
@@ -131,7 +131,7 @@ export const Catalogue = () => {
       {/* Filter bar — its rules run the full width of the viewport */}
       <div className="border-border-default mt-1 w-full border-t border-b">
         <div className="w-full px-4 sm:px-6 lg:px-page-gutter">
-          <div className="mx-auto flex w-full max-w-[1152px] flex-col gap-[15px] pt-3 pb-2.5">
+          <div className="mx-auto flex w-full max-w-288 flex-col gap-3.75 pt-3 pb-2.5">
             <div className="grid grid-cols-1 gap-7 sm:grid-cols-2 lg:grid-cols-[repeat(4,1fr)_80px]">
               <div>
                 <label className="sr-only" htmlFor="catalogue-search">
@@ -198,8 +198,8 @@ export const Catalogue = () => {
         </div>
       </div>
 
-      <div className="mt-8 w-full px-4 sm:px-6 lg:mt-[41px] lg:px-page-gutter">
-        <div className="mx-auto flex w-full max-w-[1728px] flex-col">
+      <div className="mt-8 w-full px-4 sm:px-6 lg:mt-10.25 lg:px-page-gutter">
+        <div className="mx-auto flex w-full max-w-432 flex-col">
           {filtered.length > 0 ? (
             <>
               <div className="grid w-full grid-cols-1 gap-grid-gutter-compact sm:grid-cols-2 lg:grid-cols-4">
@@ -225,7 +225,7 @@ export const Catalogue = () => {
                     size="cta"
                     variant="jemai-ink"
                     onClick={() => setVisible((count) => count + PAGE_SIZE)}
-                    className="mt-[30px] h-[47px] px-[30px]"
+                    className="mt-7.5 h-11.75 px-7.5"
                   >
                     Load more
                   </Button>

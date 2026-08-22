@@ -52,7 +52,7 @@ export const AssuranceRow = ({ items, className }: AssuranceRowProps) => (
             </div>
             <Link
               href={cta.href}
-              className="border-border-default text-label text-text-secondary hover:border-border-strong flex min-h-10 min-w-[50px] items-center justify-center rounded-[4px] border px-5 py-3 transition-colors"
+              className="border-border-default text-label text-text-secondary hover:border-border-strong flex min-h-10 min-w-12.5 items-center justify-center rounded-[4px] border px-5 py-3 transition-colors"
             >
               {cta.label}
             </Link>

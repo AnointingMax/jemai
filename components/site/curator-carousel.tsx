@@ -41,16 +41,16 @@ export const CuratorCarousel = ({ picks }: CuratorCarouselProps) => {
         if (event.key === "ArrowLeft") { event.preventDefault(); go(-1); }
         if (event.key === "ArrowRight") { event.preventDefault(); go(1); }
       }}
-      className="relative flex w-full flex-col items-center justify-center gap-6 py-10 lg:flex-row lg:items-end lg:py-[60px]"
+      className="relative flex w-full flex-col items-center justify-center gap-6 py-10 lg:flex-row lg:items-end lg:py-15"
     >
-      <div className="flex w-full flex-col items-end gap-2.5 lg:w-[828px]">
+      <div className="flex w-full flex-col items-end gap-2.5 lg:w-207">
         <div
           key={index}
           className="animate-in fade-in flex w-full flex-col gap-stack-heading bg-[rgba(22,5,7,0.73)] p-6 duration-500 sm:p-stack-loose"
           aria-live="polite"
           aria-atomic
         >
-          <p className="text-eyebrow-lg max-w-[650px] uppercase text-white">
+          <p className="text-eyebrow-lg max-w-162.5 uppercase text-white">
             Curator&rsquo;s Pick
           </p>
           <div className="text-text-inverse flex w-full flex-col gap-stack-compact">
@@ -63,7 +63,7 @@ export const CuratorCarousel = ({ picks }: CuratorCarouselProps) => {
             asChild
             size="cta"
             variant="outline"
-            className="border-border-inverse text-text-inverse min-w-[148px] self-start bg-transparent hover:bg-white/10 hover:text-white"
+            className="border-border-inverse text-text-inverse min-w-37 self-start bg-transparent hover:bg-white/10 hover:text-white"
           >
             <Link href={pick.href}>View Artwork</Link>
           </Button>
@@ -94,9 +94,9 @@ export const CuratorCarousel = ({ picks }: CuratorCarouselProps) => {
       <Link
         key={pick.image.src}
         href={pick.href}
-        className="animate-in fade-in flex w-full max-w-[372px] flex-col gap-stack-compact bg-[#f6f6f6] px-3 pt-4 pb-8 duration-500"
+        className="animate-in fade-in flex w-full max-w-93 flex-col gap-stack-compact bg-[#f6f6f6] px-3 pt-4 pb-8 duration-500"
       >
-        <div className="relative h-[300px] w-full lg:h-[370px]">
+        <div className="relative h-75 w-full lg:h-92.5">
           <Image
             src={pick.image.src}
             alt={pick.image.alt}

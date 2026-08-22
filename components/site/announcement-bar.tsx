@@ -18,8 +18,8 @@ export const AnnouncementBar = () => (
     {/* Gutter outside the max width, mirroring SiteHeader, so the socials keep
         their alignment with the nav on screens wider than the 1440 frame. */}
     <div className="w-full px-4 sm:px-6 lg:px-page-gutter">
-      <div className="mx-auto flex w-full max-w-[1728px] items-center">
-        <ul className="hidden flex-1 items-center gap-grid-gutter pt-[5px] pb-[2.4px] sm:flex">
+      <div className="mx-auto flex w-full max-w-432 items-center">
+        <ul className="hidden flex-1 items-center gap-grid-gutter pt-1.25 pb-[2.4px] sm:flex">
           {socials.map(({ label, href, Icon }) => (
             <li key={label}>
               <Link
