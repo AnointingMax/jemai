@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowUpRight, ExternalLink } from "lucide-react";
 import { ContactForm } from "@/components/contact/contact-form";
+import { LocationMap } from "@/components/contact/location-map";
 
 export const metadata: Metadata = {
   title: "Contact | JEMAI",
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
 
 type DirectoryRow = {
   label: string;
-  links?: { label: string; href: string; }[];
+  links?: { label: string; href: string }[];
   text?: string;
 };
 
@@ -52,7 +53,10 @@ const ContactPage = () => (
             <span aria-hidden className="text-body-xs text-text-secondary">
               /
             </span>
-            <span className="text-body-xs text-text-primary" aria-current="page">
+            <span
+              className="text-body-xs text-text-primary"
+              aria-current="page"
+            >
               Contact
             </span>
           </nav>
@@ -134,7 +138,7 @@ const ContactPage = () => (
           </a>
         </div>
 
-        <div className="relative aspect-[932/480] w-full bg-gray-200" />
+        <LocationMap />
       </div>
     </div>
   </div>

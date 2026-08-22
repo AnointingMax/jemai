@@ -25,7 +25,13 @@ One page per session. Work top-down unless told otherwise.
 - [ ] Exhibitions / Past — `186:12520` (1440 × 3782)
 - [ ] Upcoming Exhibition Details — `164:8752`, variant `267:24736`, paid event `278:26966` (1440 × 3307)
 - [ ] Past Exhibition Details — `166:9228` (1440 × 6097)
-- [ ] Consultation — `252:20009` (1440 × 3230)
+- [x] Consultation — `252:20009` (1440 × 3230) — `/consultation`. Built from
+      three frame exports (`Frame 385`, `Section`, `Artwork Catalogue` — the
+      last is misnamed, it is the FAQ). **All three blocks render at exactly
+      their frame heights: 600 / 949 / 371**, the form's five rules land on
+      284 / 368 / 456 / 540 / 725 against 284 / 368 / 456 / 540 / 724, and the
+      FAQ block is pixel-exact including the 20 × 20 toggle box at 1130, 158.
+      Verified at 1440 / 768 / 390 and swept for overflow at 390 / 1024 / 1920.
 - [x] About Page — `182:10993` (1440 × 5893) — `/about`. Built from frame
       *metadata* plus one export (`design-reference/1.png`, the founder note).
       The Figma quota died one call in, so five of the six blocks have no
@@ -546,21 +552,33 @@ Shared reference frames (not pages): `246:18783` intro, `247:18801` semantic col
   on the transparent export. Note this is *not* the checkout flow's `#808080`
   placeholder — a third contact-form treatment in the file.
 
-- **The map panel is live Mapbox with the frame's own still behind it.**
-  `components/contact/location-map.tsx` renders `mapbox-gl` when
-  `NEXT_PUBLIC_MAPBOX_TOKEN` is set, and otherwise falls back to
-  `public/figma/contact/map.jpg` — which is not a stand-in but the frame's own
-  map, cropped straight out of the export where it sits unobstructed at full
-  alpha (444, 842 at 932 × 480). So the panel renders as designed with no token
-  configured and upgrades in place once there is one. **No token is set in this
-  repo**, so what renders today is the still.
-- **The map lives behind a client boundary on purpose.** `mapbox-gl` needs
-  `"use client"`, and marking the whole page client breaks `export const
-  metadata` — Next rejects it outright with a 500. The page stays a Server
-  Component and only `LocationMap` is a client component.
-- **The map is centred on Lagos Island / Ikoyi**, which is the extent the frame
-  draws — i.e. it follows the drawn map rather than the "Visit" address, which
-  is the New York one.
+- **The map panel is live Leaflet**, via `react-leaflet` on OpenStreetMap tiles
+  (`components/contact/{location-map,leaflet-map}.tsx`). It lands on the frame's
+  own geometry — 444, 842 at 932 × 480 — so the block still measures 1322
+  against the frame's 1323. Zoom controls sit top-left, which is where the frame
+  draws them too.
+- **Two files, and the split is load-bearing.** Leaflet touches `window` at
+  module scope, so the map is loaded with `ssr: false`; that option is only
+  legal inside a Client Component, and marking the *page* client breaks
+  `export const metadata` outright (Next 500s on it). So `location-map.tsx` is a
+  thin client wrapper that dynamic-imports `leaflet-map.tsx`, and the page stays
+  a Server Component.
+- **The marker is a `divIcon`, not Leaflet's default.** The default marker
+  resolves its icon from relative image paths that bundlers break; a `divIcon`
+  sidesteps that and lets the pin carry `action-primary` instead of shipping a
+  PNG.
+- **`overflow-hidden` on the map wrapper is required**, not cosmetic — Leaflet
+  always paints tiles past the edge of its pane, and without the clip they widen
+  the page on mobile. The wrapper also carries a `min-h-65` floor, since
+  932/480 leaves the map only 184px tall at 390 and the frame has no mobile
+  layout to follow.
+- **`scrollWheelZoom` is off.** A full-width map that swallows page scroll is
+  hostile; zoom stays on the controls and double-click.
+- **One constant holds the location.** `LOCATION` in `leaflet-map.tsx` centres
+  on Lagos Island — the extent the frame draws, and the city the block's own
+  "City" label names. The design's address data contradicts itself (New York
+  under "Visit", Murray Hill under "Neighborhood", Lagos under "City", Abuja in
+  the footer), so pointing this at the real address is a one-line change.
 
 - **The frame's own address data contradicts itself.** It draws a New York
   street address under "Visit", "Lagos" under "City", and the footer carries an
@@ -575,3 +593,71 @@ Shared reference frames (not pages): `246:18783` intro, `247:18801` semantic col
 
 - **`Field` is declared at module scope on purpose.** Inside the form component
   it remounts on every render and drops focus mid-keystroke.
+
+
+## Consultation page notes
+
+- **Three exports, three different measures.** Nothing on this page shares a
+  container: the opening header is 1080 centred (180 either side), its
+  photographic rail runs 16 → 1424, the inquiry form is 640 centred, and the FAQ
+  is 860 centred. All four fall out of a 16px section padding plus a per-block
+  `mx-auto max-w-*`, so none of them needs the page gutter.
+
+- **The heading is 50px Classico Bold on a 56px line, which is not a token.**
+  Its two lines measure 365.4 / 465.6 against the frame's 365 / 469. This one
+  only fell out with **canvas ink extents** (`actualBoundingBoxLeft/Right`)
+  rather than advance widths: on advances, 48px Regular looked right for line
+  two (471.7 against 469) but was 17px wide on line one, and no single size fit
+  both. Ink extents put line one at 365.4 and settled it. Worth reaching for
+  when advance widths give contradictory sizes across two runs of the same
+  heading.
+
+- **The frame really does draw a double space in "Purpose, &  Personality".**
+  With it the run measures 465.6 against 469; without it, ~453. Reproduced with
+  a non-breaking space rather than tidied away, since the measurement is
+  unambiguous — but it reads like a typo in the file, so drop the `\u00a0` if it
+  is.
+
+- **Two eyebrow sizes on one page.** The header kicker and the four rail
+  captions are `text-eyebrow-lg` (12px) — "ARCHITECTURE & INTERIORS" measures
+  169.9 against 169 there, and 141.6 at 10px. Everything in the form and the FAQ
+  is `text-eyebrow` (10px), checked across seven separate runs. Don't assume one
+  eyebrow size per page.
+
+- **The rail photography is already in the repo.** `sp-lanier`, `sp-soho`,
+  `sp-bathhouse`, `sp-woods` are the exact four frames drawn, in order — the
+  `sp-` set turns out to be this rail's project photography. No stand-ins.
+
+- **The form reuses the Contact field recipe on a tighter lead**: 26px rather
+  than 34, then the same 14px eyebrow label, 6px, and a 37px control closing on
+  the rule. That gives the frame's 84px rule pitch exactly.
+
+- **The date row is 88px where every other row is 84.** Reproduced with `pb-1`
+  on the field rather than a taller control — `h-[41px]` was tried first and
+  silently did nothing, because Tailwind had not generated that arbitrary
+  utility yet even though the class was on the element. **If an arbitrary value
+  appears in the class list but the computed style ignores it, suspect a missing
+  generated utility before suspecting the cascade** — and prefer a standard
+  utility where one exists.
+
+- **`SelectTrigger` needs its height overridden through its own variant.** The
+  primitive carries `data-[size=default]:h-8`, which a plain `h-[37px]` in
+  `cn()` does not displace — tailwind-merge treats them as different keys and
+  the variant wins on specificity. The budget row came out 5px short until the
+  override was written as `data-[size=default]:h-[37px]`.
+
+- **The date fields swap type on focus.** The frame draws "Select date" with a
+  calendar glyph, and a native date input has no placeholder, so the control
+  starts as `text` and becomes `date` on focus; the browser's own indicator is
+  made transparent and stretched over the drawn glyph so that is what you click.
+  `register`'s `onBlur` has to be composed rather than replaced, or RHF stops
+  seeing the field.
+
+- **Ground and rules are tokens.** The form band is `surface-subtle` (#ece5e2,
+  sampled exactly) and every rule on the page solves to `border-default` against
+  its own ground — 41/255 over the tint, the same over the page ground.
+
+- **Written, not transcribed:** all three FAQ answers (the frame draws every row
+  collapsed), the open/minus state of the toggle, the project-type list beyond
+  "Interior Decor", every budget range, and the submitted state. As with
+  Contact, there is no endpoint — `onSubmit` is the seam.
