@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cn } from "@/lib/utils";
+import { LoadMorePager } from "@/components/shared/load-more-pager";
 import { catalogue, collections, colours } from "@/lib/products";
 
 /** How many cards the frame draws before the first "Load more". */
@@ -88,10 +89,12 @@ export const Catalogue = () => {
   const shown = Math.min(visible, filtered.length);
 
   /** Every filter change restarts paging, so "Load more" never skips a page. */
-  const repage = <T,>(set: (value: T) => void) => (value: T) => {
-    set(value);
-    setVisible(PAGE_SIZE);
-  };
+  const repage =
+    <T,>(set: (value: T) => void) =>
+    (value: T) => {
+      set(value);
+      setVisible(PAGE_SIZE);
+    };
 
   const reset = () => {
     setCollection("All");
@@ -121,7 +124,11 @@ export const Catalogue = () => {
           className="mx-auto w-full max-w-432 justify-start overflow-x-auto lg:justify-center [&::-webkit-scrollbar]:hidden [scrollbar-width:none]"
         >
           {["All", ...collections].map((item) => (
-            <ToggleGroupItem key={item} value={item} className="whitespace-nowrap">
+            <ToggleGroupItem
+              key={item}
+              value={item}
+              className="whitespace-nowrap"
+            >
               {item}
             </ToggleGroupItem>
           ))}
@@ -209,27 +216,12 @@ export const Catalogue = () => {
               </div>
 
               <div className="mt-5 flex flex-col items-center">
-                <p className="text-body-sm text-[#3c4347]">
-                  1-{shown} of {filtered.length} products
-                </p>
-                <div aria-hidden className="mt-1 h-px w-40 bg-[#eaeaea]">
-                  <div
-                    className="h-px bg-[#3c4347]"
-                    style={{ width: `${(shown / filtered.length) * 100}%` }}
-                  />
-                </div>
-
-                {shown < filtered.length && (
-                  <Button
-                    type="button"
-                    size="cta"
-                    variant="jemai-ink"
-                    onClick={() => setVisible((count) => count + PAGE_SIZE)}
-                    className="mt-7.5 h-11.75 px-7.5"
-                  >
-                    Load more
-                  </Button>
-                )}
+                <LoadMorePager
+                  shown={shown}
+                  total={filtered.length}
+                  noun="products"
+                  onLoadMore={() => setVisible((count) => count + PAGE_SIZE)}
+                />
               </div>
             </>
           ) : (
@@ -255,7 +247,10 @@ export const Catalogue = () => {
 
 /** Home › Furniture, centred above the page title. */
 export const CatalogueBreadcrumb = () => (
-  <nav aria-label="Breadcrumb" className="flex items-center justify-center gap-2.5">
+  <nav
+    aria-label="Breadcrumb"
+    className="flex items-center justify-center gap-2.5"
+  >
     <Link
       href="/"
       className="text-body-xs text-text-primary underline-offset-4 hover:underline"

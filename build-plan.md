@@ -19,7 +19,15 @@ One page per session. Work top-down unless told otherwise.
       plus the shared Newsletter and Footer. Every landmark within 1–1.5px of
       its frame; page total 2804 vs 2822. Verified at 1440 / 768 / 390 and
       swept 360–1920 for overflow.
-- [ ] Artworks — `166:10393` (1440 × 6696)
+- [~] Artworks — `166:10393` (1440 × 6696) — `/artworks`. Built from three
+      exports (`Frame 385`, `Artwork Catalogue`, `Exhibition CTA`). The three
+      blocks render at **702 / 3100 / 500 against the frame's 702 / 3096 / 500**,
+      and every landmark inside them lands within 5px. Verified at 1440 / 768 /
+      390, swept for overflow at 390 / 1024 / 1920.
+      **Not complete: roughly 1087px of the frame is missing.** The five exported
+      nodes plus five 64px gaps total 5609 against the frame's 6696, so at least
+      one block was never exported — see the notes. Do not check this off until
+      that block lands.
 - [ ] Artwork Details — `164:8295`, variant `278:28837` (1440 × 3512)
 - [ ] Exhibitions / Upcoming — `186:12088`, with modal `278:28420` (1440 × 3251)
 - [ ] Exhibitions / Past — `186:12520` (1440 × 3782)
@@ -661,3 +669,82 @@ Shared reference frames (not pages): `246:18783` intro, `247:18801` semantic col
   collapsed), the open/minus state of the toggle, the project-type list beyond
   "Interior Decor", every budget range, and the submitted state. As with
   Contact, there is no endpoint — `onSubmit` is the seam.
+
+
+## Artworks page notes
+
+- **~1087px of this page has no export.** Nav (119) + hero (702) + catalogue
+  (3096) + CTA (500) + Newsletter (358) + Footer (514) plus five 64px seams
+  comes to 5609 against the frame's 6696. Two candidates for the gap, and the
+  export cannot distinguish them: `Frame 385` **clips its own carousel** (the
+  photograph runs to the export's bottom edge at y=702, so the band's true
+  height is unknown), and there may be a whole section between the hero and the
+  catalogue that was not exported at all. The build holds the carousel at the
+  1440 × 500 the export does show. Re-export the hero node unclipped and check
+  whether a block is missing between it and the catalogue.
+
+- **The photographs are recovered, not stood in.** All fifteen catalogue works
+  sit unobstructed in the export at 383 × 339, and the curator's pick at
+  720 × 537, so they were cropped straight out to `public/figma/artworks/`
+  (684 KB for seventeen images). Only the hero carousel's second and third
+  slides and the CTA photograph are stand-ins.
+
+- **The hero is the consultation header, again.** Same 1080px centred measure,
+  same eyebrow at x=180, same 50px Classico Bold on a 56px line, same copy
+  column at x=753 — its first line measures 475.3 against the frame's 475. The
+  carousel below it is full-bleed with arrows inset 90px and three dashes.
+
+- **Three different measures on one page, none of them the page gutter.** The
+  hero header is 1080 centred; the curator's rule runs the gutter's 1312
+  (x 64 → 1375); the card grid sits on its own 1183 (x 128 → 1310), narrower
+  than the rule directly above it. As drawn.
+
+- **The seam inside the catalogue block is 80px, not 64.** Every other seam on
+  this page — and on About, Contact and Consultation — is 64. Here the frame
+  puts its rule at y=600 and the first card at 681.
+
+- **The curator's photo does not fill its track.** The frame runs it 592 → 1311
+  and leaves the last 65px of the measure empty, so the image is capped at
+  `max-w-[720px]` inside a wider column rather than stretched.
+
+- **The exhibition CTA's copy deliberately breaks out of its scrim**, and that
+  is the one thing about this block worth knowing. The scrim runs x 64 → 404,
+  but the heading's first line ends at 496 and the body copy at 588 — the type
+  sits straight on the photograph past the panel's edge. Building it the obvious
+  way, with the copy nested inside the panel, wraps the heading onto three lines
+  and can never match. Scrim and copy are two separate absolutely-positioned
+  boxes.
+  - Its heading is `text-h2` — 40px Classico Bold, 391.1 / 235.5 against
+    391 / 233, on the frame's own 46px pitch. Copy is `text-body` (486 against
+    485), eyebrow `text-eyebrow-lg` (183 against 181), button 148 × 48 at y=348.
+  - The scrim's alpha is **approximate**: its right edge crosses a framed work,
+    so the photo changes as you cross it and it will not solve the way the
+    founder note's did. Sampling either side puts it in the same 85–88% band, so
+    it takes the founder note's value.
+
+- **The pager block is now shared.** `components/shared/load-more-pager.tsx` —
+  the "1-n of m" count, its 160px bar and the charcoal Load more button — is
+  drawn identically here and on the furniture catalogue, so it was lifted out of
+  `catalogue.tsx` and both pages use it. The three off-palette colours travel
+  with it.
+
+- **The frame's card data is placeholder, and its own numbers disagree.** All
+  fifteen cards read "Of Mind and Myth · Mixed media on canvas · 2 ft × 3 ft",
+  while the pager reads "1-12 of 16 pieces" against a grid of fifteen — the same
+  shape of contradiction the furniture catalogue has. The build keeps the
+  dominant visual (the fifteen cards as drawn) and derives the pager from data:
+  the fifteen run twice, so the first page is exactly the frame's grid and
+  "Load more" still has somewhere to go. Drop the repeat with the real
+  catalogue.
+
+- **Two more arbitrary-value misses.** `pb-[65px]` and (earlier, on
+  consultation) `h-[41px]` sat in the class list with no generated utility
+  behind them, so the computed style ignored them silently. Same lesson: when an
+  arbitrary value appears on the element but does nothing, suspect the generated
+  CSS before the cascade, and prefer a standard utility where one exists.
+
+- **Lazy images make full-page screenshots lie.** The CTA photograph read as
+  missing in three successive captures — `complete: false`, `naturalWidth: 0` —
+  purely because `loading="lazy"` had not fired for a band that far down. The
+  optimizer was serving it in 100ms the whole time. Screenshot the element, or
+  scroll first, before concluding an image is broken.
