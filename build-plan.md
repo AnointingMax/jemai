@@ -28,7 +28,13 @@ One page per session. Work top-down unless told otherwise.
       nodes plus five 64px gaps total 5609 against the frame's 6696, so at least
       one block was never exported — see the notes. Do not check this off until
       that block lands.
-- [ ] Artwork Details — `164:8295`, variant `278:28837` (1440 × 3512)
+- [x] Artwork Details — `164:8295`, variant `278:28837` (1440 × 3512) —
+      `/artworks/[slug]`, plus the Enquire modal (`modal wrapper.png`). Built
+      from two exports. **The content block renders at exactly its export's
+      2017px**, every text run matches its frame's ink width within 3px, and the
+      modal panel lands on the frame's 1124 × 715 with every band within 2px.
+      Verified at 1440 / 768 / 390 and swept 360–1920 for overflow.
+      **Note: ~1495px of the 3512 frame is unaccounted for** — see the notes.
 - [ ] Exhibitions / Upcoming — `186:12088`, with modal `278:28420` (1440 × 3251)
 - [ ] Exhibitions / Past — `186:12520` (1440 × 3782)
 - [ ] Upcoming Exhibition Details — `164:8752`, variant `267:24736`, paid event `278:26966` (1440 × 3307)
@@ -748,3 +754,99 @@ Shared reference frames (not pages): `246:18783` intro, `247:18801` semantic col
   purely because `loading="lazy"` had not fired for a band that far down. The
   optimizer was serving it in 100ms the whole time. Screenshot the element, or
   scroll first, before concluding an image is broken.
+
+
+## Artwork details notes
+
+- **Two exports, no Figma.** The MCP quota was gone before the first call
+  landed, so this page is `design-reference/Artwork Content.png` (1440 × 2017,
+  transparent) and `design-reference/modal wrapper.png` (1440 × 3198) measured
+  with `sharp`, nothing else. Both are transparent, which makes the alpha
+  channel the content mask — the same break the Contact page got.
+
+- **~1495px of the 3512 frame has no export.** The content block (2017) plus
+  Nav (119), Newsletter (358) and Footer (514) comes to 3008, and four 64px
+  seams only bring that to 3264. The content export is *not* clipped — its last
+  gallery row closes 1px above the bottom edge — so the missing height is a
+  block that was never exported, most likely a related-works or exhibition band
+  between the gallery and the newsletter. Re-export the frame's remaining
+  children before treating the page as complete.
+
+- **Every type token on this page fell out of ink extents, and two runs share
+  one token.** The artist name and the lead paragraph are both `text-h4`
+  (22px/600 on a 28px line): the name measures 191 against the frame's 192, and
+  the lead's three lines measure 757/786/363 against 757/787/364 on an 800px
+  measure. Nothing else came close — 20px semibold, the obvious first guess,
+  renders the third line 146px short.
+  - Body copy is `text-body-lg` (18/400), which reproduces the frame's wrap
+    *exactly*: 778/772/512 against 779/772/512. It is `text-primary`, not
+    secondary — the export's darkest pixel is alpha 239, where `text-secondary`
+    would peak at 173. It only reads lighter than the lead because of weight.
+  - The H1 is 50px Classico **Bold** set in caps (507 against 505), the same
+    display size the consultation and artworks headers use.
+  - The breadcrumb is `text-body-xs` and its middle crumb reads **"Art"**, not
+    the catalogue's "Artworks".
+
+- **The work is matted, not full-bleed.** A 900 × 730 `surface-tint` panel with
+  24px of margin around an 852 × 682 photograph, centred on the page rather than
+  on any of the site's measures. Copy and the Enquire button sit on their own
+  800px measure below it (x 320 → 1120), left-aligned under the mat.
+
+- **This page's rule is the odd one out.** Every section rule on the site is 3px
+  of `border-strong`; this one is **2px of `border-default`**. The export settles
+  it: rows 1281/1282/1283 carry alpha 16/41/26, which is a 2px stroke of 0x29
+  landing on a fractional y, not a 1px one.
+
+- **The gallery grid runs two different gutters** — 16px between columns, 40px
+  between rows (`gap-x-4 gap-y-10`), on three 426.67px tracks. Cells are
+  `aspect-[427/327]`. The frame repeats one photograph in the first and last
+  cell; reproduced as drawn.
+
+- **`bg-clip-padding` on the button variants eats 2px of fill.** The Enquire
+  button is 148 × 48 in the frame and rendered 146 × 46, because the shadcn base
+  carries `border border-transparent` *and* `bg-clip-padding`, so the background
+  stops at the padding box. `border-0` on the instance restores the full fill.
+  Worth knowing for every other CTA measured against a frame.
+
+- **The photographs are recovered, not stood in.** The hero (852 × 682) and all
+  six gallery cells were cropped straight out of the export into
+  `public/figma/artworks/detail/`.
+
+## Enquire modal notes
+
+- **1124 × 715, and it lands on the frame exactly** — a 423px photograph on the
+  left with its caption block inset 32px, and a 702px `surface-page` panel on the
+  right padded 48px. Same shape as the checkout modal at a different measure, and
+  built on the same `ui/dialog`, whose `bg-black/64` scrim is already this
+  frame's value.
+
+- **The field recipe is Contact's on a 9px shorter lead** — 25px of lead, a 14px
+  eyebrow label, 6px, then a 37px control closing on a `border-default` rule —
+  which gives the frame's 84px rule pitch. The email/phone row is two 290px
+  columns on a 24px gutter, i.e. the 604px content measure split.
+
+- **Type: heading is `text-h3`** (28px Classico Bold — 305 against 306, where
+  Regular measures 324), subcopy and the locked artwork value are `text-body-sm`,
+  the help line is `text-body-xs`, the message placeholder is `text-body` (401
+  against 401), and both buttons are `text-label` at `px-6` (133 wide against
+  133). The caption line over the photograph is `text-body-sm`, not `text-body`.
+
+- **`md:text-sm` on the Textarea primitive beat `text-body`.** tailwind-merge
+  treats a responsive variant as a different class group, so an unprefixed
+  `text-body` never displaces it and the placeholder rendered at 14px (351 of ink
+  against the frame's 401). The fix is to pass `md:text-body` alongside it. The
+  Input primitive hides the same bug — its `md:text-sm` happens to equal the
+  `text-body-sm` the fields want.
+
+- **Focus is moved off the close button.** Radix autofocuses it, which paints a
+  focus ring the frame does not draw; `onOpenAutoFocus` sends focus to the first
+  field instead — closer to the frame and better to use.
+
+- **The frame and its page disagree about the artist.** The page reads
+  "Marcellina Akpojotor" and the modal's caption reads "Amina Bako". The modal
+  takes whatever piece it is opened on, so the page's name wins. Worth raising
+  with the designer.
+
+- **Written, not transcribed:** the sent state (there is no endpoint —
+  `onSubmit` is the seam, as on Contact and Consultation) and the mobile layout,
+  where the photograph pane drops and the form stacks to one column.
