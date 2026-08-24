@@ -57,7 +57,7 @@ const ArtworkDetailPage = async ({ params }: PageProps<"/artworks/[slug]">) => {
   if (!artwork) notFound();
 
   return (
-    <section className="flex w-full flex-col pb-0.25">
+    <section className="flex w-full flex-col pb-px">
       <div className="w-full px-4 sm:px-6 lg:px-page-gutter">
         <Breadcrumb title={artwork.title} />
       </div>
@@ -76,7 +76,7 @@ const ArtworkDetailPage = async ({ params }: PageProps<"/artworks/[slug]">) => {
           frame with 24px of margin around an 852 × 682 photograph. */}
       <div className="mt-16 w-full px-4 sm:px-6 lg:px-page-gutter">
         <div className="bg-surface-tint mx-auto w-full max-w-225 p-4 sm:p-6 lg:p-6">
-          <div className="relative aspect-[852/682] w-full">
+          <div className="relative aspect-852/682 w-full">
             <Image
               src={artwork.hero}
               alt={artwork.title}
@@ -122,7 +122,7 @@ const ArtworkDetailPage = async ({ params }: PageProps<"/artworks/[slug]">) => {
       <div className="mt-9.75 w-full px-4 sm:px-6 lg:px-page-gutter">
         <ul className="mx-auto grid w-full max-w-432 grid-cols-1 gap-x-4 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
           {artwork.gallery.map((shot, index) => (
-            <li key={`${shot.src}-${index}`} className="relative aspect-[427/327]">
+            <li key={`${shot.src}-${index}`} className="relative aspect-427/327">
               <Image
                 src={shot.src}
                 alt={shot.alt}

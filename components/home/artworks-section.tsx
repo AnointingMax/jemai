@@ -74,7 +74,7 @@ export const ArtworksSection = () => (
         />
         <div
           aria-hidden
-          className="absolute inset-0 bg-gradient-to-b from-[rgba(121,121,121,0.1)] to-[rgba(19,19,19,0.5)]"
+          className="absolute inset-0 bg-linear-to-b from-[rgba(121,121,121,0.1)] to-[rgba(19,19,19,0.5)]"
         />
 
         <CuratorCarousel picks={curatorPicks} />

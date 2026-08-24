@@ -60,7 +60,7 @@ export const CuratorPick = ({
 
         {/* The track is wider than the photo: the frame runs it 592 → 1311 and
             leaves the remaining 65px of the measure empty on the right. */}
-        <div className="relative aspect-[720/537] w-full max-w-180">
+        <div className="relative aspect-720/537 w-full max-w-180">
           <Image
             src={image.src}
             alt={image.alt}

@@ -66,7 +66,7 @@ export const CheckoutModal = ({
       </div>
 
       {/* Right: the outcome */}
-      <div className="bg-surface-page relative flex-1 p-8 lg:w-144 lg:p-12">
+      <div className="bg-surface-page relative flex-1 p-8 lg:w-xl lg:p-12">
         {status !== "pending" && (
           <DialogClose asChild>
             <Button

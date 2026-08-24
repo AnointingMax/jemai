@@ -23,7 +23,7 @@ export const UpNext = ({ exhibition }: { exhibition: RegisterExhibition; }) => (
           <h2 className="font-heading text-text-primary mt-1.5 text-3xl font-bold sm:text-h2">
             {upNext.title}
           </h2>
-          <p className="text-body text-text-primary mt-3.25 max-w-128">
+          <p className="text-body text-text-primary mt-3.25 max-w-lg">
             {upNext.copy}
           </p>
 

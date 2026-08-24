@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-type Slide = { src: string; alt: string };
+type Slide = { src: string; alt: string; };
 
 type ArtworksHeroProps = {
   eyebrow: string;
@@ -36,7 +36,7 @@ export const ArtworksHero = ({
   return (
     <section className="w-full">
       <div className="w-full px-4">
-        <div className="mx-auto grid max-w-270 pt-8.5 pb-1.5 lg:grid-cols-[573fr_507fr]">
+        <div className="mx-auto grid max-w-270 items-end lg:pb-10 pt-8.5 pb-1.5 lg:grid-cols-[573fr_507fr]">
           <div>
             <p className="text-eyebrow-lg text-text-secondary uppercase">
               {eyebrow}
@@ -49,7 +49,7 @@ export const ArtworksHero = ({
               ))}
             </h1>
           </div>
-          <p className="text-body text-text-secondary mt-6 max-w-125 lg:mt-0 lg:pt-22.5">
+          <p className="text-body text-text-secondary mt-6 max-w-125 lg:mt-0">
             {copy}
           </p>
         </div>
@@ -57,7 +57,7 @@ export const ArtworksHero = ({
 
       {/* `min-h` is a derived-responsive call: 1440/500 leaves the band only
           135px tall at 390, and the frame has no mobile layout to follow. */}
-      <div className="relative aspect-[1440/500] w-full min-h-70 overflow-hidden">
+      <div className="relative aspect-1440/500 w-full min-h-70 overflow-hidden">
         {slides.map((slide, i) => (
           <Image
             key={slide.src}
@@ -66,9 +66,8 @@ export const ArtworksHero = ({
             fill
             priority={i === 0}
             sizes="100vw"
-            className={`object-cover transition-opacity duration-500 ${
-              i === index ? "opacity-100" : "opacity-0"
-            }`}
+            className={`object-cover transition-opacity duration-500 ${i === index ? "opacity-100" : "opacity-0"
+              }`}
           />
         ))}
 
@@ -98,9 +97,8 @@ export const ArtworksHero = ({
               onClick={() => setIndex(i)}
               aria-label={`Show work ${i + 1}`}
               aria-current={i === index}
-              className={`h-0.5 w-10 transition-colors ${
-                i === index ? "bg-white" : "bg-white/35"
-              }`}
+              className={`h-0.5 w-10 transition-colors ${i === index ? "bg-white" : "bg-white/35"
+                }`}
             />
           ))}
         </div>

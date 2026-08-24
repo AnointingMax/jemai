@@ -28,7 +28,7 @@ export const ArtworkGrid = () => {
               href={`/artworks/${work.slug}`}
               className="border-border-default hover:border-border-strong/60 group border transition-colors"
             >
-              <div className="relative aspect-[383/339] w-full overflow-hidden">
+              <div className="relative aspect-383/339 w-full overflow-hidden">
                 <Image
                   src={work.src}
                   alt={work.title}

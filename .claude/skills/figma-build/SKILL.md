@@ -13,12 +13,72 @@ description: Implements the next unbuilt page from this project's Figma design a
   `if (!customer) return response(res, false, 404, "Customer not found");`
 - Reuse existing shadcn/ui primitives and existing components under `components/`
   before creating new ones — check there first
-- Match Figma variables to existing Tailwind tokens in `tailwind.config` rather
-  than inventing new spacing/color values
+- Match Figma variables to existing Tailwind tokens rather than inventing new
+  spacing/color values. This is Tailwind v4: there is **no `tailwind.config`**.
+  Tokens live in the `@theme` block in `app/globals.css`
+- When you add a `--text-*` token to `@theme`, also register it in the
+  `font-size` class group in `lib/utils.ts`. `cn()` uses tailwind-merge, which
+  otherwise reads a custom `text-*` utility as a text *colour* and silently
+  drops whatever colour class it is merged with
 - Forms: React Hook Form + Zod/Yup validation, following existing patterns in
   the repo if any exist
 - Data fetching: TanStack Query, following existing patterns in the repo if
   any exist
+
+## Route structure
+
+The app is split into two trees. Put new work in the right one:
+
+- `app/(customer)/` — the storefront. `(site)/` is the editorial shell
+  (announcement bar, header, newsletter, footer); `(checkout)/` is the
+  stripped-back checkout shell. The cart provider lives on the `(customer)`
+  layout, not the root.
+- `app/admin/` — internal tools, with its own layout and no storefront chrome.
+- `app/layout.tsx` — document shell and fonts only. Don't add page chrome,
+  providers, or storefront metadata here; they belong to one tree or the other.
+
+Route groups are folders, not URL segments, so `app/(customer)/(site)/about`
+still serves `/about`.
+
+## Writing Tailwind classes
+
+Prefer, in this order: an existing `@theme` token → a stock Tailwind scale
+value → an arbitrary value. Only reach for `foo-[...]` when the first two
+genuinely cannot express the value.
+
+- **Lengths go on the spacing scale.** `--spacing` is the default `0.25rem`, so
+  a Figma measurement in whole pixels is that number over four: 12px is `mt-3`,
+  18px is `mt-4.5`, 29px is `mt-7.25`. Write `mt-7.25`, not `mt-[29px]`. Quarter
+  steps are fine and already used across the codebase; keep the pixel figure in
+  a comment when it documents a frame measurement.
+- **Aspect ratios take a bare fraction**: `aspect-1440/501`, not
+  `aspect-[1440/501]`.
+- **Type sizes**: if the px matches a `--text-*` token, use the token — but only
+  when the token's line-height and weight are also what you want, since the
+  token sets all three. Otherwise keep the arbitrary size.
+- Some v4 names differ from v3 muscle memory: `bg-linear-to-b` (not
+  `bg-gradient-to-b`), `bg-top-left` (not `bg-left-top`), `bg-size-[...]` (not
+  `bg-[length:...]`), `scrollbar-none` (not `[scrollbar-width:none]`),
+  `group-has-focus-visible` (not `group-has-[:focus-visible]`).
+
+**Check your work** with the Tailwind language server's `suggestCanonicalClasses`
+diagnostic, which flags every non-canonical class in one pass. The VS Code
+extension shows them inline; to sweep the whole repo headlessly, drive
+`~/.vscode/extensions/bradlc.vscode-tailwindcss-*/dist/tailwindServer.js` over
+stdio with `tailwindCSS.lint.suggestCanonicalClasses` set to `"warning"`.
+
+Treat its output as suggestions, not orders — **verify before applying any that
+change a computed value.** It resolves theme variables statically and misses
+runtime overrides. Known false positive: it suggests `rounded-[4px]` →
+`rounded-lg`, but `app/globals.css` sets `--radius: 0px`, so `rounded-lg`
+computes to **0px** and taking the suggestion squares off the corner. Confirm
+with a computed-style probe in the browser when a suggestion touches a value
+that a `:root` block redefines.
+
+Legitimately arbitrary in this codebase, and fine to leave: sub-pixel values
+from Figma auto-layout (`gap-[14.896px]`), `border-[1.5px]`, `backdrop-blur-[2px]`,
+off-scale display type (`text-[50px]`), `fr` grid tracks, and `min()`/`calc()`
+widths.
 
 ## Design source
 
@@ -47,8 +107,8 @@ into the next page.
 2. **Pick the next unchecked item** at the top of `build-plan.md` (unless
    told to work on a specific page instead):
     - Extract that frame's design context via the Figma MCP tools.
-    - Check `components/` and `tailwind.config` for existing pieces that
-      already match before writing anything new.
+    - Check `components/` and the `@theme` block in `app/globals.css` for
+      pieces that already match before writing anything new.
     - Implement the page per the conventions above.
     - Start (or reuse) the dev server, use Playwright MCP to navigate to the
       route, resize to the frame's breakpoint, and screenshot it. Fetch the

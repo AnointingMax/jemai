@@ -47,7 +47,7 @@ export const ArchitectureSection = () => (
 
     {/* Featured spaces — a rail that runs off the right edge of the page */}
     <div className="flex w-full flex-col gap-14 pb-3 pl-4 sm:pl-6 lg:pl-page-gutter">
-      <ul className="flex gap-7 overflow-x-auto pr-4 sm:pr-6 lg:pr-page-gutter [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <ul className="flex gap-7 overflow-x-auto pr-4 sm:pr-6 lg:pr-page-gutter scrollbar-none [&::-webkit-scrollbar]:hidden">
         {spaces.map((space) => (
           <li key={space.name} className="w-70 shrink-0 sm:w-82.5">
             <Link href={space.href} className="group flex flex-col gap-2.5">

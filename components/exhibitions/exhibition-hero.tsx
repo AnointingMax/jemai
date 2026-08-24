@@ -20,7 +20,7 @@ export const ExhibitionHero = ({ slides }: { slides: Shot[]; }) => {
   return (
     /* `min-h` is a derived-responsive call: 1440/501 leaves the band only
        136px tall at 390, and the frames carry no mobile layout. */
-    <div className="relative aspect-[1440/501] w-full min-h-70 overflow-hidden">
+    <div className="relative aspect-1440/501 w-full min-h-70 overflow-hidden">
       {slides.map((slide, i) => (
         <Image
           key={slide.src}

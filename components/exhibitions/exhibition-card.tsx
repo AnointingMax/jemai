@@ -26,7 +26,7 @@ export const ExhibitionCard = ({
     {/* `fill` rather than an intrinsic image on purpose: an intrinsic one taller
         than the aspect box wins over `aspect-ratio` and stretches the card, so
         cards in the same row came out different heights. */}
-    <div className="bg-surface-subtle relative aspect-[411/341] w-full">
+    <div className="bg-surface-subtle relative aspect-411/341 w-full">
       <Image
         src={exhibition.card.src}
         alt={exhibition.card.alt}

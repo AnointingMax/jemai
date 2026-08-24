@@ -121,7 +121,7 @@ export const PhotoRail = ({ photos, label }: PhotoRailProps) => {
         ref={railRef}
         tabIndex={0}
         aria-label={`${label} — scrollable`}
-        className="flex w-full snap-x snap-mandatory items-center gap-grid-gutter-compact overflow-x-auto [scrollbar-width:none] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-current [&::-webkit-scrollbar]:hidden"
+        className="flex w-full snap-x snap-mandatory items-center gap-grid-gutter-compact overflow-x-auto scrollbar-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-current [&::-webkit-scrollbar]:hidden"
       >
         {photos.map((photo, index) => (
           <li

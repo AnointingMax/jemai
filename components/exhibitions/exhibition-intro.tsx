@@ -59,7 +59,7 @@ export const ExhibitionIntro = ({
       </div>
     </div>
 
-    <div className="relative mt-4 aspect-[1440/501] w-full min-h-70">
+    <div className="relative mt-4 aspect-1440/501 w-full min-h-70">
       <Image
         src={exhibition.hero}
         alt={exhibition.title}

@@ -31,7 +31,7 @@ export const MediaBand = ({
         mediaSide === "left" ? "lg:order-1" : "lg:order-2",
       )}
     >
-      <div className="relative aspect-[670/500] w-full">
+      <div className="relative aspect-670/500 w-full">
         <Image
           src={image.src}
           alt={image.alt}

@@ -44,7 +44,7 @@ export const InstallRail = ({ shots }: { shots: Shot[]; }) => {
             key={shot.src}
             className="w-[min(1088px,86vw)] shrink-0 snap-start"
           >
-            <div className="relative aspect-[1088/762] w-full">
+            <div className="relative aspect-1088/762 w-full">
               <Image
                 src={shot.src}
                 alt={shot.alt}
