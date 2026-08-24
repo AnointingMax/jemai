@@ -35,10 +35,23 @@ One page per session. Work top-down unless told otherwise.
       modal panel lands on the frame's 1124 × 715 with every band within 2px.
       Verified at 1440 / 768 / 390 and swept 360–1920 for overflow.
       **Note: ~1495px of the 3512 frame is unaccounted for** — see the notes.
-- [ ] Exhibitions / Upcoming — `186:12088`, with modal `278:28420` (1440 × 3251)
-- [ ] Exhibitions / Past — `186:12520` (1440 × 3782)
-- [ ] Upcoming Exhibition Details — `164:8752`, variant `267:24736`, paid event `278:26966` (1440 × 3307)
-- [ ] Past Exhibition Details — `166:9228` (1440 × 6097)
+- [x] Exhibitions / Upcoming — `186:12088`, with modal `278:28420` — `/exhibitions`,
+      built from `Exhibitions - upcoming/Upcoming.png` (1440 × 2879) and its
+      `modal wrapper.png`. Every band lands within 3px of its frame and the
+      "Coming soon" block is exact. Verified at 1440 / 768 / 390, swept
+      360–1920 for overflow.
+- [x] Exhibitions / Past — `186:12520` — `/exhibitions/past`, built from
+      `Exhibitions - past/Past.png` (1440 × 3183). **Every band lands within
+      1px**, all three card rows at 434 exactly. Verified at 1440 / 768 / 390.
+- [x] Upcoming Exhibition Details — `164:8752`, paid `278:26966`, unpaid
+      `267:24736` — `/exhibitions/[slug]`, built from the three exports in
+      `Upcoming Exhibition Details/`. **Every landmark on the page lands within
+      1px of its frame**; the free and paid register modals land within 2px of
+      theirs. Verified at 1440 / 768 / 390.
+- [x] Past Exhibition Details — `166:9228` — `/exhibitions/past/[slug]`, built
+      from `Past Exhibition Details.png` (1440 × 6097, the whole page). **Every
+      one of its 40-odd bands lands within 1px** from the breadcrumb to the
+      artist note. Verified at 1440 / 768 / 390.
 - [x] Consultation — `252:20009` (1440 × 3230) — `/consultation`. Built from
       three frame exports (`Frame 385`, `Section`, `Artwork Catalogue` — the
       last is misnamed, it is the FAQ). **All three blocks render at exactly
@@ -850,3 +863,130 @@ Shared reference frames (not pages): `246:18783` intro, `247:18801` semantic col
 - **Written, not transcribed:** the sent state (there is no endpoint —
   `onSubmit` is the seam, as on Contact and Consultation) and the mobile layout,
   where the photograph pane drops and the form stacks to one column.
+
+
+## Exhibitions notes (all four pages)
+
+- **Four exports, no Figma.** The MCP quota is still spent, so all four pages
+  and all three modals were measured out of the seven transparent PNGs in
+  `design-reference/`. `Past Exhibition Details.png` and
+  `Upcoming Exhibition Details.png` are whole-page exports including the nav,
+  newsletter and footer; the two index exports include the nav.
+
+- **The site header is 13px shorter than the frames' Nav.** Every export puts
+  its closing 3px rule at y=115; ours renders it at y=102. That offset is
+  pre-existing — it predates this work and shifts *every* page — so the
+  exhibition pages were matched to their frames **relative to that rule**, and
+  every measurement in this section is quoted against `frame − 13`. Worth
+  fixing in `site-header.tsx` once, rather than per page; it would bring every
+  page on the site onto its frame's absolute grid at the same time.
+
+- **The type scale on these frames is the site's, with two exceptions.** Every
+  size fell out of ink extents:
+  - Index tabs, the detail status word and the detail date line are
+    `text-body-lg` (161/115 against 160/115; 75 against 76; 156 against 157).
+  - Card titles and the detail page's artist eyebrow are `text-h4` — 22px/600
+    (155 against 156; 170 against 170; the artist run 117 against 117).
+  - The "UP NEXT" kicker is `text-eyebrow-lg`, not `text-eyebrow` (48 against 49
+    — 10px measures 40).
+  - Detail titles are 50px Classico Bold (583 against 583, exact); the UP NEXT
+    heading is `text-h2` (466 against 468); "About the Artist" is `text-h3`
+    (186 against 186).
+  - **The one size with no token is the card's second line** — 14px uppercase on
+    the eyebrow's 0.08em tracking. `text-eyebrow-lg` is 12px and measures 12%
+    short; 14px lands within 1px on both strings ("AMINA BAKO" 83 against 83,
+    "18 JULY–8 AUGUST 2026" 159 against 158). Written as `text-body-sm` plus
+    `tracking-[0.08em]`. Worth adding as a token if it recurs.
+  - The detail lead/body are the artwork detail page's `text-h4` over
+    `text-body-lg` on the same 800px measure, and reproduce the frame's wrap
+    exactly.
+
+- **The copy measure is 799px, not 800.** At 800 the lead and the first body
+  paragraph match the frame but the second body paragraph pulls "us" up onto the
+  previous line (800/415 against the frame's 779/434). 799 satisfies all three.
+  A one-pixel measure looks arbitrary and is: it is the width the frame's own
+  text box works out to.
+
+- **An intrinsic image can beat `aspect-ratio`.** The exhibition cards render a
+  work of its own aspect on a 411 × 341 mat. Built with `<Image width height>`
+  inside `aspect-[411/341]`, a photograph taller than the box **wins** — the
+  aspect box grows and cards in the same row come out different heights (434 vs
+  374 at 768). Switching the mat to `relative` + a `fill` image with
+  `object-contain p-2` fixes it: both cards render 411 × 433 against the frame's
+  434. Same trap as the arbitrary-utility one — the class was right, the box
+  just was not constrained.
+
+- **The two index pages share everything above the listing**: a 3px nav rule, a
+  full-bleed 1440 × 501 carousel (40px arrows inset 90/88, three 44 × 4 dashes
+  39px off the foot), then a tab row with full-bleed 2px `border-default` rules
+  49px apart. `ExhibitionHero`, `ExhibitionTabs` and `ExhibitionCard` are shared;
+  so are `ExhibitionIntro` and `ArtistNote` across the two detail pages, which
+  are byte-identical down to the body copy.
+
+- **Two blocks break the page gutter, in opposite directions.** The UP NEXT row
+  starts 40px *inside* the gutter (x=104) and closes flush on it; the artist note
+  starts on the gutter and stops 92px short of it (576 + 81 + 563 = 1220 against
+  the 1312 measure). Both are `fr`-free fixed compositions — a `max-w-[1220px]`
+  block for the note, an `lg:pl-10` for the row — rather than second measures.
+
+- **The past-detail works rail is not a grid of equal cells.** Four 300px columns
+  on a 24px gutter, each image at its own natural height (538 / 192 / 386 / 537),
+  so the row is top-aligned and every caption and button hangs off its own image.
+  Modelled with intrinsic `<Image>` sizes rather than an aspect box.
+
+- **`bg-clip-padding` bites again.** The works rail's "View Artwork" outline
+  button is 43px in the frame; `h-11` rendered 46 because the border adds to the
+  box. `h-[41px]` plus the 1px border lands on 43.
+
+### Modals
+
+- **The register modal has two geometries, and they are not variants of one
+  box.** Free is 1120 × 579 with a 544px photograph and a 576px panel — the
+  checkout modal's split. Paid is 1120 × 710 with a 419px photograph and a 701px
+  panel — the enquire modal's. Both pad 48px and share the field rhythm, which is
+  now `components/site/modal-field.tsx` (25px lead, 14px eyebrow label, 6px, a
+  37px control on a `border-default` rule = the frames' 84px pitch). Both land
+  within 2px of their frames on every band, including the button pair widths
+  (292 free, 333 paid).
+
+- **The ticket summary is the only new block.** `surface-subtle`, 604 × 142, a
+  `TICKET SUMMARY` eyebrow in `action-primary`, then three rows on a 12px pitch
+  with a semibold total. Its internal rhythm was solved from the frame's four ink
+  bands rather than guessed — the obvious `pt-4.5 / mt-4.5 / pb-5` reading came
+  out 8px tall.
+
+- **The design contradicts itself about which events are paid.** The index frame
+  draws its modal free for the 12 September event; the detail frames draw the
+  *same* exhibition ("The Land Knows Our Names · 15 Aug 2026") both free and
+  paid. `ticket` on the exhibition record is what switches the modal, and it is
+  set on that exhibition — so the index's Register button opens the paid modal
+  where its frame draws the free one. The free geometry is still reproduced
+  exactly, from the other two upcoming exhibitions' detail pages. Worth asking
+  the designer which events are ticketed.
+
+- Focus is moved off the close button on open, as on the enquire modal, and both
+  modals acknowledge in place — there is no endpoint, and `onSubmit` is the seam.
+
+### Content the frames get wrong, and what was done about it
+
+- **The past-detail frame draws its narrative block twice, verbatim** — the same
+  nine lines above and below the featured work. Reproduced as drawn so the page
+  matches its frame, but carried as two fields (`bodyBefore` / `bodyAfter`) in
+  `lib/exhibitions.ts` so replacing the duplicate is a one-line edit. **This is
+  the first thing to fix with real copy.**
+- **The past-detail frame's artist note is a David Lynch biography**, pasted in
+  from another file, on a page about a Nigerian painter. The design's own Amina
+  Bako copy — which the upcoming-detail frame carries — is used on both pages
+  instead. This is the one deliberate departure from the frames, and it is why
+  the past detail's artist-note band is 865 against 863 rather than exact.
+- The past index repeats "Queit Witnesses" in cards 6 and 9, with the same run of
+  dates, and misspells "Quiet" in both. Transcribed as drawn.
+- Every exhibition on every frame is by the same artist and most share the same
+  body copy; the whole `lib/exhibitions.ts` content layer is placeholder.
+
+- **The seam into the Newsletter does not agree between frames.** The two index
+  frames want ~12px more than the shell's 80px editorial gap (added as a `pb-3`
+  on each page); the two detail frames want ~19px *less*, which a fixed gap
+  cannot give without a negative margin, so they are left 19px loose. Every other
+  landmark on those pages is within 1px, so this is the only place either detail
+  page departs from its frame by more than 3px.
