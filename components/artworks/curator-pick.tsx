@@ -31,21 +31,21 @@ export const CuratorPick = ({
   <div className="w-full px-4 sm:px-6 lg:px-page-gutter">
     <div className="mx-auto w-full max-w-432">
       <div className="grid items-center gap-10 lg:grid-cols-[528fr_784fr] lg:gap-0">
-        <div className="lg:pr-10 lg:pl-[104px]">
+        <div className="lg:pr-10 lg:pl-26">
           <p className="text-eyebrow text-text-secondary uppercase">
             {eyebrow}
           </p>
-          <h2 className="font-heading text-text-primary mt-[18px] text-3xl leading-[47px] tracking-[0.02em] uppercase sm:text-[34px]">
+          <h2 className="font-heading text-text-primary mt-4.5 text-3xl leading-11.75 tracking-[0.02em] uppercase sm:text-[34px]">
             {heading.map((line) => (
               <span key={line} className="block">
                 {line}
               </span>
             ))}
           </h2>
-          <p className="text-body text-text-secondary mt-[29px] max-w-[383px]">
+          <p className="text-body text-text-secondary mt-7.25 max-w-95.75">
             {copy}
           </p>
-          <div className="mt-[30px] flex items-center gap-6">
+          <div className="mt-7.5 flex items-center gap-6">
             <Button asChild size="cta" className="h-12 px-8">
               <Link href={cta.href}>{cta.label}</Link>
             </Button>
@@ -60,7 +60,7 @@ export const CuratorPick = ({
 
         {/* The track is wider than the photo: the frame runs it 592 → 1311 and
             leaves the remaining 65px of the measure empty on the right. */}
-        <div className="relative aspect-[720/537] w-full max-w-[720px]">
+        <div className="relative aspect-[720/537] w-full max-w-180">
           <Image
             src={image.src}
             alt={image.alt}
@@ -71,7 +71,7 @@ export const CuratorPick = ({
         </div>
       </div>
 
-      <hr className="border-border-default mt-[63px] border-t" />
+      <hr className="border-border-default mt-15.75 border-t" />
     </div>
   </div>
 );

@@ -53,13 +53,13 @@ export const ExhibitionIntro = ({
       <hr className="border-border-strong mx-auto w-full max-w-432 border-t-3" />
     </div>
 
-    <div className="mt-[80px] w-full px-4 sm:px-6 lg:px-page-gutter">
+    <div className="mt-20 w-full px-4 sm:px-6 lg:px-page-gutter">
       <div className="mx-auto w-full max-w-432">
         <Breadcrumb exhibition={exhibition} />
       </div>
     </div>
 
-    <div className="relative mt-[16px] aspect-[1440/501] w-full min-h-70">
+    <div className="relative mt-4 aspect-[1440/501] w-full min-h-70">
       <Image
         src={exhibition.hero}
         alt={exhibition.title}
@@ -70,32 +70,32 @@ export const ExhibitionIntro = ({
       />
     </div>
 
-    <header className="mt-[62px] w-full px-4 text-center sm:px-6 lg:px-page-gutter">
+    <header className="mt-15.5 w-full px-4 text-center sm:px-6 lg:px-page-gutter">
       <p className="text-h4 text-text-primary uppercase">{exhibition.artist}</p>
-      <h1 className="font-heading text-text-primary mt-[12px] text-3xl sm:text-4xl lg:text-[50px] lg:leading-[56px] lg:font-bold">
+      <h1 className="font-heading text-text-primary mt-3 text-3xl sm:text-4xl lg:text-[50px] lg:leading-14 lg:font-bold">
         {exhibition.title}
       </h1>
-      <p className="text-body-lg text-text-secondary mt-[14px] capitalize">
+      <p className="text-body-lg text-text-secondary mt-3.5 capitalize">
         {exhibition.status}
       </p>
-      <p className="text-body-lg text-text-primary mt-[12px]">
+      <p className="text-body-lg text-text-primary mt-3">
         {exhibition.dates}
       </p>
     </header>
 
-    <div className="mt-[47px] w-full px-4 sm:px-6 lg:px-page-gutter">
-      <div className="mx-auto w-full max-w-[799px]">
+    <div className="mt-11.75 w-full px-4 sm:px-6 lg:px-page-gutter">
+      <div className="mx-auto w-full max-w-199.75">
         <p className="text-h4 text-text-primary">{exhibition.lead}</p>
         {/* The frame runs both paragraphs on one unbroken 28px pitch, so the
             block carries no paragraph gap at all. */}
-        <div className="mt-[25px]">
+        <div className="mt-6.25">
           {exhibition.body.map((paragraph) => (
             <p key={paragraph} className="text-body-lg text-text-primary">
               {paragraph}
             </p>
           ))}
         </div>
-        {action && <div className="mt-[22px]">{action}</div>}
+        {action && <div className="mt-5.5">{action}</div>}
       </div>
     </div>
   </>

@@ -20,8 +20,8 @@ export const ArtworkGrid = () => {
 
   return (
     <div className="w-full px-4 pb-16 sm:px-6">
-      <div className="mx-auto w-full max-w-[1183px]">
-        <div className="grid grid-cols-1 gap-[17px] sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mx-auto w-full max-w-295.75">
+        <div className="grid grid-cols-1 gap-4.25 sm:grid-cols-2 lg:grid-cols-3">
           {artworks.slice(0, shown).map((work) => (
             <Link
               key={work.slug}
@@ -37,7 +37,7 @@ export const ArtworkGrid = () => {
                   className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
                 />
               </div>
-              <div className="px-[17px] pt-[19px] pb-[23px]">
+              <div className="px-4.25 pt-4.75 pb-5.75">
                 <p className="text-body text-text-primary font-semibold">
                   {work.title}
                 </p>
@@ -49,7 +49,7 @@ export const ArtworkGrid = () => {
           ))}
         </div>
 
-        <div className="mt-[19px]">
+        <div className="mt-4.75">
           <LoadMorePager
             shown={shown}
             total={artworks.length}

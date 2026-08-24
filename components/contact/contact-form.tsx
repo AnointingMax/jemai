@@ -48,10 +48,10 @@ const inquiryTypes = [
  * 6px, then a 37px control closing on the rule. That puts the label ink at 127
  * against the frame's 127 and the input ink at ~159 against 159.
  */
-const fieldClass = "border-border-default border-b pt-[34px]";
+const fieldClass = "border-border-default border-b pt-8.5";
 const labelClass = "text-eyebrow text-text-secondary block uppercase";
 const controlClass =
-  "mt-1.5 h-[37px] rounded-none border-0 bg-transparent px-0 text-body-sm text-text-primary shadow-none placeholder:text-text-primary/25 focus-visible:border-0 focus-visible:ring-0";
+  "mt-1.5 h-9.25 rounded-none border-0 bg-transparent px-0 text-body-sm text-text-primary shadow-none placeholder:text-text-primary/25 focus-visible:border-0 focus-visible:ring-0";
 
 type FieldProps = ComponentProps<typeof Input> & {
   label: string;
@@ -106,7 +106,7 @@ export const ContactForm = () => {
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate>
       <p className="text-eyebrow text-text-secondary uppercase">01 &middot; The Brief</p>
-      <div className="border-border-default mt-[22px] border-t" />
+      <div className="border-border-default mt-5.5 border-t" />
 
       <div className="grid gap-x-6 sm:grid-cols-2">
         <Field register={register} label="First Name" name="firstName" placeholder="Jane" />
@@ -165,7 +165,7 @@ export const ContactForm = () => {
         <Textarea
           aria-label="Message"
           placeholder="The occasion, headcount, dates and anything else we should know…"
-          className="text-body text-text-primary placeholder:text-text-primary/25 mt-1.5 h-[111px] resize-none rounded-none border-0 bg-transparent px-0 pt-2.5 shadow-none focus-visible:border-0 focus-visible:ring-0"
+          className="text-body text-text-primary placeholder:text-text-primary/25 mt-1.5 h-27.75 resize-none rounded-none border-0 bg-transparent px-0 pt-2.5 shadow-none focus-visible:border-0 focus-visible:ring-0"
           {...register("message", { required: true })}
         />
       </div>
@@ -174,7 +174,7 @@ export const ContactForm = () => {
       <Button
         type="submit"
         variant="jemai"
-        className="text-label mt-[47px] h-12 border-0 px-[30px]"
+        className="text-label mt-11.75 h-12 border-0 px-7.5"
       >
         Send Message
       </Button>
@@ -189,7 +189,7 @@ export const ContactForm = () => {
       {/* max-w-172 (688px), not the column's 732: the frame breaks this after
           "Our only domain is" and drops "jemai.co." to a second line, which a
           full-width measure does not do (the whole run is 713). */}
-      <p className="text-body-xs text-text-secondary mt-[41px] max-w-172">
+      <p className="text-body-xs text-text-secondary mt-10.25 max-w-172">
         JEMAI International will never contact you from a personal email or ask
         for payment outside of our official channels. Our only domain is
         jemai.co.

@@ -41,7 +41,7 @@ export const Disciplines = ({ disciplines, defaultOpen }: DisciplinesProps) => (
         className="border-border-default scroll-mt-24 border-b"
       >
         <Accordion.Header>
-          <Accordion.Trigger className="group text-text-primary font-heading flex w-full items-center justify-between gap-4 pt-4 pb-[17px] text-left text-[18px] leading-7">
+          <Accordion.Trigger className="group text-text-primary font-heading flex w-full items-center justify-between gap-4 pt-4 pb-4.25 text-left text-body-lg leading-7">
             {discipline.title}
             <ChevronDownIcon
               aria-hidden

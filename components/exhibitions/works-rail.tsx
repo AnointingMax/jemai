@@ -16,7 +16,7 @@ export const WorksRail = ({ works }: { works: ExhibitionWork[]; }) => (
     aria-label="Works in this exhibition"
     className="w-full px-4 sm:px-6 lg:px-page-gutter"
   >
-    <ul className="mx-auto grid w-full max-w-[1272px] grid-cols-2 items-start gap-x-6 gap-y-10 lg:grid-cols-4">
+    <ul className="mx-auto grid w-full max-w-318 grid-cols-2 items-start gap-x-6 gap-y-10 lg:grid-cols-4">
       {works.map((work) => (
         <li key={work.src}>
           <Image
@@ -27,10 +27,10 @@ export const WorksRail = ({ works }: { works: ExhibitionWork[]; }) => (
             sizes="(min-width: 1024px) 300px, 50vw"
             className="h-auto w-full"
           />
-          <p className="text-body-sm text-text-primary mt-[11px]">
+          <p className="text-body-sm text-text-primary mt-2.75">
             {work.title}, {work.year}
           </p>
-          <Button asChild size="cta" className="mt-3.5 h-[41px] rounded-none border border-border-strong bg-transparent px-4 text-action-primary hover:bg-transparent">
+          <Button asChild size="cta" className="mt-3.5 h-10.25 rounded-none border border-border-strong bg-transparent px-4 text-action-primary hover:bg-transparent">
             <Link href={work.href}>View Artwork</Link>
           </Button>
         </li>

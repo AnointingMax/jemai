@@ -42,7 +42,7 @@ const ContactPage = () => (
   <div className="w-full px-4 pt-16 sm:px-6 lg:px-page-gutter">
     <div className="mx-auto w-full max-w-432">
       <div className="grid gap-x-49 gap-y-12 lg:grid-cols-[384fr_732fr]">
-        <div className="pt-[18px]">
+        <div className="pt-4.5">
           <nav aria-label="Breadcrumb" className="flex items-center gap-2">
             <Link
               href="/"
@@ -68,7 +68,7 @@ const ContactPage = () => (
           {/* max-w-80 (320px), not the column's 384: the frame wraps this to
               three lines, whose longest is 311. At 384 "day." rides up onto
               line two and the block loses a line. */}
-          <p className="text-body-sm text-text-secondary mt-[18px] max-w-80">
+          <p className="text-body-sm text-text-secondary mt-4.5 max-w-80">
             Tell us the occasion and we&rsquo;ll take it from there &mdash; one
             conversation, one point of contact, from brief to event day.
           </p>
@@ -77,11 +77,11 @@ const ContactPage = () => (
               than `border-default` — black at 10%, which composites 11 levels
               lighter than the token, so it is literal rather than an invented
               token. */}
-          <dl className="mt-[38px] border-t border-black/10">
+          <dl className="mt-9.5 border-t border-black/10">
             {directory.map((row) => (
               <div
                 key={row.label}
-                className="flex min-h-[53px] flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b border-black/10 py-1"
+                className="flex min-h-13.25 flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b border-black/10 py-1"
               >
                 <dt className="text-body-sm text-text-primary">{row.label}</dt>
                 <dd className="text-body-sm text-text-primary flex items-center gap-4">
@@ -104,14 +104,14 @@ const ContactPage = () => (
 
         {/* The frame top-aligns the form's eyebrow with the H1's ink, not with
             the breadcrumb above it — 53px below the top of the column. */}
-        <div className="lg:pt-[53px]">
+        <div className="lg:pt-13.25">
           <ContactForm />
         </div>
       </div>
 
       {/* Where to find us — tracks 380fr / 932fr, no gutter, summing to 1312. */}
-      <div className="mt-[138px] grid gap-y-10 lg:grid-cols-[380fr_932fr]">
-        <div className="lg:pt-[3px]">
+      <div className="mt-34.5 grid gap-y-10 lg:grid-cols-[380fr_932fr]">
+        <div className="lg:pt-0.75">
           <p className="text-eyebrow text-text-secondary uppercase">Location</p>
           <h2 className="font-heading text-text-primary text-2xl font-bold sm:text-h3">
             Where to find us
@@ -122,7 +122,7 @@ const ContactPage = () => (
           </p>
           <p className="text-body-lg text-text-primary">Murray Hill</p>
 
-          <p className="text-eyebrow text-text-secondary mt-[19px] uppercase">
+          <p className="text-eyebrow text-text-secondary mt-4.75 uppercase">
             City
           </p>
           <p className="text-body-lg text-text-primary">Lagos</p>
@@ -131,7 +131,7 @@ const ContactPage = () => (
             href="https://maps.google.com/?q=875+Washington+St,+New+York,+NY+10014"
             target="_blank"
             rel="noreferrer"
-            className="text-eyebrow text-text-primary hover:text-action-link border-border-default mt-[23px] inline-flex items-center gap-2.5 border-b pb-1 uppercase transition-colors"
+            className="text-eyebrow text-text-primary hover:text-action-link border-border-default mt-5.75 inline-flex items-center gap-2.5 border-b pb-1 uppercase transition-colors"
           >
             <ExternalLink aria-hidden className="size-2.5" />
             Get Directions

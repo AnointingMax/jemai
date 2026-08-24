@@ -39,7 +39,7 @@ export const ExhibitionHero = ({ slides }: { slides: Shot[]; }) => {
         type="button"
         onClick={() => go(-1)}
         aria-label="Previous exhibition"
-        className="absolute top-1/2 left-[90px] hidden size-10 -translate-y-1/2 items-center justify-center bg-black/25 text-white backdrop-blur-[2px] transition-colors hover:bg-black/40 lg:flex"
+        className="absolute top-1/2 left-22.5 hidden size-10 -translate-y-1/2 items-center justify-center bg-black/25 text-white backdrop-blur-[2px] transition-colors hover:bg-black/40 lg:flex"
       >
         <ChevronLeft aria-hidden className="size-5" />
       </button>
@@ -47,12 +47,12 @@ export const ExhibitionHero = ({ slides }: { slides: Shot[]; }) => {
         type="button"
         onClick={() => go(1)}
         aria-label="Next exhibition"
-        className="absolute top-1/2 right-[88px] hidden size-10 -translate-y-1/2 items-center justify-center bg-black/25 text-white backdrop-blur-[2px] transition-colors hover:bg-black/40 lg:flex"
+        className="absolute top-1/2 right-22 hidden size-10 -translate-y-1/2 items-center justify-center bg-black/25 text-white backdrop-blur-[2px] transition-colors hover:bg-black/40 lg:flex"
       >
         <ChevronRight aria-hidden className="size-5" />
       </button>
 
-      <div className="absolute bottom-[39px] left-1/2 flex -translate-x-1/2 gap-2">
+      <div className="absolute bottom-9.75 left-1/2 flex -translate-x-1/2 gap-2">
         {slides.map((slide, i) => (
           <button
             key={slide.src}

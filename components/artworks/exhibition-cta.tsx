@@ -29,15 +29,15 @@ export const ExhibitionCta = ({
     <div className="bg-surface-inverse/85 relative px-8 py-16 sm:px-6 w-fit">
       <div className="max-w-125">
         <p className="text-eyebrow-lg text-text-inverse uppercase">{eyebrow}</p>
-        <h2 className="font-heading text-text-inverse mt-[29px] text-3xl font-bold sm:text-h2">
+        <h2 className="font-heading text-text-inverse mt-7.25 text-3xl font-bold sm:text-h2">
           {heading.map((line) => (
             <span key={line} className="block">
               {line}
             </span>
           ))}
         </h2>
-        <p className="text-body text-text-inverse/85 mt-[15px]">{copy}</p>
-        <Button asChild size="cta" className="mt-[30px] h-12 w-37 border-0">
+        <p className="text-body text-text-inverse/85 mt-3.75">{copy}</p>
+        <Button asChild size="cta" className="mt-7.5 h-12 w-37 border-0">
           <Link href={cta.href}>{cta.label}</Link>
         </Button>
       </div>

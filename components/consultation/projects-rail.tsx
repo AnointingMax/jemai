@@ -20,7 +20,7 @@ type ProjectsRailProps = {
  *
  * Two measures on purpose — the frame insets the header 180px from each edge
  * (1080 centred) while the rail runs 16 → 1424. Both fall out of a 16px page
- * padding plus `mx-auto max-w-[1080px]` on the header alone.
+ * padding plus `mx-auto max-w-270` on the header alone.
  *
  * The heading is **50px Classico Bold on a 56px line**, which is not a token:
  * its two lines measure 365.4 / 465.6 against the frame's 365 / 469, where
@@ -32,13 +32,13 @@ export const ProjectsRail = ({
   copy,
   projects,
 }: ProjectsRailProps) => (
-  <section className="w-full px-4 pb-[14px]">
-    <div className="mx-auto grid max-w-[1080px] pt-[34px] lg:grid-cols-[573fr_507fr]">
+  <section className="w-full px-4 pb-3.5">
+    <div className="mx-auto grid max-w-270 pt-8.5 lg:grid-cols-[573fr_507fr]">
       <div>
         <p className="text-eyebrow-lg text-text-secondary uppercase">
           {eyebrow}
         </p>
-        <h1 className="font-heading text-text-primary mt-[7px] text-4xl font-bold sm:text-5xl lg:text-[50px] lg:leading-14">
+        <h1 className="font-heading text-text-primary mt-1.75 text-4xl font-bold sm:text-5xl lg:text-[50px] lg:leading-14">
           {heading.map((line) => (
             <span key={line} className="block">
               {line}
@@ -47,12 +47,12 @@ export const ProjectsRail = ({
         </h1>
       </div>
 
-      <p className="text-body text-text-secondary mt-6 max-w-[492px] lg:mt-0 lg:pt-[90px]">
+      <p className="text-body text-text-secondary mt-6 max-w-123 lg:mt-0 lg:pt-22.5">
         {copy}
       </p>
     </div>
 
-    <div className="mt-[46px] grid grid-cols-1 gap-[30px] sm:grid-cols-2 lg:grid-cols-4">
+    <div className="mt-11.5 grid grid-cols-1 gap-7.5 sm:grid-cols-2 lg:grid-cols-4">
       {projects.map((project) => (
         <figure key={project.src}>
           <div className="relative aspect-square w-full">
@@ -64,7 +64,7 @@ export const ProjectsRail = ({
               className="object-cover"
             />
           </div>
-          <figcaption className="text-eyebrow-lg text-text-secondary mt-[22px] uppercase">
+          <figcaption className="text-eyebrow-lg text-text-secondary mt-5.5 uppercase">
             {project.caption}
           </figcaption>
         </figure>

@@ -67,7 +67,7 @@ const ArtworkDetailPage = async ({ params }: PageProps<"/artworks/[slug]">) => {
         <p className="text-h4 text-text-primary">{artwork.artist}</p>
         {/* 50px Classico Bold on a 56px line — the same display size the
             consultation and artworks headers use, set in caps here. */}
-        <h1 className="font-heading text-text-primary mt-3 text-3xl uppercase sm:text-4xl lg:text-[50px] lg:leading-[56px] lg:font-bold">
+        <h1 className="font-heading text-text-primary mt-3 text-3xl uppercase sm:text-4xl lg:text-[50px] lg:leading-14 lg:font-bold">
           {artwork.title}
         </h1>
       </header>
@@ -75,7 +75,7 @@ const ArtworkDetailPage = async ({ params }: PageProps<"/artworks/[slug]">) => {
       {/* The work is matted rather than full-bleed: a 900 × 730 `surface-tint`
           frame with 24px of margin around an 852 × 682 photograph. */}
       <div className="mt-16 w-full px-4 sm:px-6 lg:px-page-gutter">
-        <div className="bg-surface-tint mx-auto w-full max-w-[900px] p-4 sm:p-6 lg:p-6">
+        <div className="bg-surface-tint mx-auto w-full max-w-225 p-4 sm:p-6 lg:p-6">
           <div className="relative aspect-[852/682] w-full">
             <Image
               src={artwork.hero}
@@ -92,7 +92,7 @@ const ArtworkDetailPage = async ({ params }: PageProps<"/artworks/[slug]">) => {
       {/* Copy and the enquiry sit on their own 800px measure, left-aligned
           under the matted work — x 320 → 1120 in the frame. */}
       <div className="mt-9.75 w-full px-4 sm:px-6 lg:px-page-gutter">
-        <div className="mx-auto w-full max-w-[800px]">
+        <div className="mx-auto w-full max-w-200">
           <p className="text-h4 text-text-primary">
             {artwork.lead}
           </p>

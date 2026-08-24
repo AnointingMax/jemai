@@ -44,11 +44,11 @@ const UpcomingExhibitionPage = async ({
 
       {/* Unlike every section rule on the site, this one is 2px of
           `border-default` rather than the 3px `border-strong`. */}
-      <div className="mt-[62px] w-full px-4 sm:px-6 lg:px-page-gutter">
+      <div className="mt-15.5 w-full px-4 sm:px-6 lg:px-page-gutter">
         <hr className="border-border-default mx-auto w-full max-w-432 border-t-2" />
       </div>
 
-      <div className="mt-[40px]">
+      <div className="mt-10">
         <ArtistNote />
       </div>
     </div>

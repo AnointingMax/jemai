@@ -30,7 +30,7 @@ export const generateMetadata = async ({
 /** The narrative block, on the same 800px measure the intro copy uses. */
 const Narrative = ({ paragraphs }: { paragraphs: string[]; }) => (
   <div className="w-full px-4 sm:px-6 lg:px-page-gutter">
-    <div className="mx-auto w-full max-w-[800px]">
+    <div className="mx-auto w-full max-w-200">
       {paragraphs.map((paragraph) => (
         <p key={paragraph} className="text-body-lg text-text-primary">
           {paragraph}
@@ -51,43 +51,43 @@ const PastExhibitionPage = async ({
     <div className="flex w-full flex-col">
       <ExhibitionIntro exhibition={exhibition} />
 
-      <div className="mt-[48px]">
+      <div className="mt-12">
         <InstallRail shots={installShots} />
       </div>
 
-      <div className="mt-[49px]">
+      <div className="mt-12.25">
         <Narrative paragraphs={pastNarrative.bodyBefore} />
       </div>
 
       {/* The featured work sits on its own 900px centred panel — the same
           treatment the artwork detail page gives its hero. */}
-      <div className="mt-[23px] w-full px-4 sm:px-6 lg:px-page-gutter">
+      <div className="mt-5.75 w-full px-4 sm:px-6 lg:px-page-gutter">
         <Image
           src={featuredWork.src}
           alt={featuredWork.alt}
           width={featuredWork.width}
           height={featuredWork.height}
           sizes="(min-width: 1024px) 900px, 100vw"
-          className="mx-auto h-auto w-full max-w-[900px]"
+          className="mx-auto h-auto w-full max-w-225"
         />
       </div>
 
       {/* **The frame draws the block above verbatim a second time here.** Kept
           as drawn so the page matches its frame; `bodyAfter` is the field to
           replace with real copy. */}
-      <div className="mt-[25px]">
+      <div className="mt-6.25">
         <Narrative paragraphs={pastNarrative.bodyAfter} />
       </div>
 
-      <div className="mt-[48px]">
+      <div className="mt-12">
         <WorksRail works={exhibitionWorks} />
       </div>
 
-      <div className="mt-[83px] w-full px-4 sm:px-6 lg:px-page-gutter">
+      <div className="mt-20.75 w-full px-4 sm:px-6 lg:px-page-gutter">
         <hr className="border-border-default mx-auto w-full max-w-432 border-t-2" />
       </div>
 
-      <div className="mt-[40px]">
+      <div className="mt-10">
         <ArtistNote />
       </div>
     </div>

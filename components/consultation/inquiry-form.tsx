@@ -57,10 +57,10 @@ const budgets = [
  * 84px rule pitch (284 / 368 / 456 / 540) and puts each label's ink where the
  * export has it.
  */
-const fieldClass = "border-border-default border-b pt-[26px]";
+const fieldClass = "border-border-default border-b pt-6.5";
 const labelClass = "text-eyebrow text-text-secondary block uppercase";
 const controlClass =
-  "mt-1.5 h-[37px] rounded-none border-0 bg-transparent px-0 text-body-sm text-text-primary shadow-none placeholder:text-text-primary/30 focus-visible:border-0 focus-visible:ring-0";
+  "mt-1.5 h-9.25 rounded-none border-0 bg-transparent px-0 text-body-sm text-text-primary shadow-none placeholder:text-text-primary/30 focus-visible:border-0 focus-visible:ring-0";
 
 type FieldProps = ComponentProps<typeof Input> & {
   label: string;
@@ -131,7 +131,7 @@ const DateField = ({
       />
       <Calendar
         aria-hidden
-        className="text-text-secondary pointer-events-none absolute right-0 bottom-[11px] size-3.5"
+        className="text-text-secondary pointer-events-none absolute right-0 bottom-2.75 size-3.5"
       />
     </div>
   );
@@ -161,7 +161,7 @@ const Picker = ({
             aria-label={label}
             className={cn(
               controlClass,
-              "w-full justify-between px-0 data-[size=default]:h-[37px] data-placeholder:text-text-primary/30",
+              "w-full justify-between px-0 data-[size=default]:h-9.25 data-placeholder:text-text-primary/30",
             )}
           >
             <SelectValue placeholder={placeholder} />
@@ -210,22 +210,22 @@ export const InquiryForm = ({
   const onSubmit = () => setSent(true);
 
   return (
-    <section className="bg-surface-subtle w-full px-4 pt-[83px] pb-[85px] sm:px-6">
+    <section className="bg-surface-subtle w-full px-4 pt-20.75 pb-21.25 sm:px-6">
       <div className="mx-auto w-full max-w-160">
         <div className="text-center">
           <p className="text-eyebrow text-text-secondary uppercase">
             {eyebrow}
           </p>
-          <h2 className="font-heading text-text-primary mt-[11px] text-2xl font-bold sm:text-h3">
+          <h2 className="font-heading text-text-primary mt-2.75 text-2xl font-bold sm:text-h3">
             {heading}
           </h2>
-          <p className="text-body text-text-secondary mt-[13px]">{copy}</p>
+          <p className="text-body text-text-secondary mt-3.25">{copy}</p>
         </div>
 
         <form
           onSubmit={handleSubmit(onSubmit)}
           noValidate
-          className="mt-[21px]"
+          className="mt-5.25"
         >
           <div className="grid gap-x-6 sm:grid-cols-2">
             <Field
@@ -271,7 +271,7 @@ export const InquiryForm = ({
             options={budgets}
             placeholder="Select range"
           />
-          <p className="text-body-xs text-text-secondary mt-[9px]">
+          <p className="text-body-xs text-text-secondary mt-2.25">
             Optional, but useful for shaping the right proposal.
           </p>
 
@@ -280,7 +280,7 @@ export const InquiryForm = ({
             <Textarea
               aria-label="Project Summary"
               placeholder="Tell us what you are creating, changing or solving."
-              className="text-body text-text-primary placeholder:text-text-primary/30 mt-1.5 h-[111px] resize-none rounded-none border-0 bg-transparent px-0 pt-2.5 shadow-none focus-visible:border-0 focus-visible:ring-0"
+              className="text-body text-text-primary placeholder:text-text-primary/30 mt-1.5 h-27.75 resize-none rounded-none border-0 bg-transparent px-0 pt-2.5 shadow-none focus-visible:border-0 focus-visible:ring-0"
               {...register("summary", { required: true })}
             />
           </div>
@@ -289,7 +289,7 @@ export const InquiryForm = ({
           <Button
             type="submit"
             variant="jemai"
-            className="text-label mt-[42px] h-12 w-full border-0"
+            className="text-label mt-10.5 h-12 w-full border-0"
           >
             Request a consultation
           </Button>
@@ -306,7 +306,7 @@ export const InquiryForm = ({
 
           <a
             href={`mailto:${email}`}
-            className="text-body-sm text-text-primary hover:text-action-link mt-[29px] flex items-center justify-center gap-2 transition-colors"
+            className="text-body-sm text-text-primary hover:text-action-link mt-7.25 flex items-center justify-center gap-2 transition-colors"
           >
             <Mail aria-hidden className="size-3.5" />
             {email}

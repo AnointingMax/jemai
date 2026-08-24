@@ -35,7 +35,7 @@ export const ExhibitionCard = ({
         className="object-contain p-2 transition-transform duration-500 group-hover:scale-[1.02]"
       />
     </div>
-    <div className="px-[17px] pt-4 pb-[22px]">
+    <div className="px-4.25 pt-4 pb-5.5">
       <p className="text-h4 text-text-primary">
         {exhibition.title}
       </p>
