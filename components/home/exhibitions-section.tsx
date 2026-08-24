@@ -54,7 +54,7 @@ export const ExhibitionsSection = () => (
               Up Next
             </p>
             <div className="flex w-full flex-col items-center gap-2 text-center">
-              <h3 className="font-heading text-text-primary text-3xl leading-tight sm:text-[40px] sm:leading-11.5">
+              <h3 className="font-heading text-text-primary text-3xl leading-tight sm:text-h2 sm:leading-11.5">
                 Forms of Stillness
               </h3>
               <p className="text-body-lg text-text-secondary">

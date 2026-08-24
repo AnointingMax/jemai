@@ -121,7 +121,7 @@ export const Catalogue = () => {
           spacing={5}
           value={collection}
           onValueChange={(value) => repage(setCollection)(value || "All")}
-          className="mx-auto w-full max-w-432 justify-start overflow-x-auto lg:justify-center [&::-webkit-scrollbar]:hidden [scrollbar-width:none]"
+          className="mx-auto w-full max-w-432 justify-start overflow-x-auto lg:justify-center [&::-webkit-scrollbar]:hidden scrollbar-none"
         >
           {["All", ...collections].map((item) => (
             <ToggleGroupItem
@@ -138,7 +138,7 @@ export const Catalogue = () => {
       {/* Filter bar — its rules run the full width of the viewport */}
       <div className="border-border-default mt-1 w-full border-t border-b">
         <div className="w-full px-4 sm:px-6 lg:px-page-gutter">
-          <div className="mx-auto flex w-full max-w-288 flex-col gap-3.75 pt-3 pb-2.5">
+          <div className="mx-auto flex w-full max-w-6xl flex-col gap-3.75 pt-3 pb-2.5">
             <div className="grid grid-cols-1 gap-7 sm:grid-cols-2 lg:grid-cols-[repeat(4,1fr)_80px]">
               <div>
                 <label className="sr-only" htmlFor="catalogue-search">

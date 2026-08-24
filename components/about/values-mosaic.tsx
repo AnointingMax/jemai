@@ -34,7 +34,7 @@ export const ValuesMosaic = ({
         {values.map((value) => (
           <div
             key={value.label}
-            className="border-border-default border-t px-4 pt-[17px] pb-4"
+            className="border-border-default border-t px-4 pt-4.25 pb-4"
           >
             <p className="text-label text-text-primary uppercase leading-7 tracking-[0.08em]">
               {value.label}

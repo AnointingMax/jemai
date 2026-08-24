@@ -16,18 +16,18 @@ export const UpNext = ({ exhibition }: { exhibition: RegisterExhibition; }) => (
   <section className="w-full px-4 sm:px-6 lg:px-page-gutter">
     <div className="mx-auto w-full max-w-432 lg:pl-10">
       <div className="grid items-start gap-8 lg:grid-cols-[512fr_720fr] lg:gap-10">
-        <div className="lg:pt-[73px]">
+        <div className="lg:pt-18.25">
           <p className="text-eyebrow-lg text-text-secondary uppercase">
             {upNext.eyebrow}
           </p>
           <h2 className="font-heading text-text-primary mt-1.5 text-3xl font-bold sm:text-h2">
             {upNext.title}
           </h2>
-          <p className="text-body text-text-primary mt-[13px] max-w-[512px]">
+          <p className="text-body text-text-primary mt-3.25 max-w-lg">
             {upNext.copy}
           </p>
 
-          <dl className="mt-[17px]">
+          <dl className="mt-4.25">
             {upNext.rows.map((row, index) => (
               <div
                 key={row.label}
@@ -35,7 +35,7 @@ export const UpNext = ({ exhibition }: { exhibition: RegisterExhibition; }) => (
                   index === upNext.rows.length - 1 ? "border-b-0" : ""
                 }`}
               >
-                <dt className="text-body text-text-secondary w-[103px] shrink-0">
+                <dt className="text-body text-text-secondary w-25.75 shrink-0">
                   {row.label}
                 </dt>
                 <dd className="text-body text-text-primary">{row.value}</dd>
@@ -43,7 +43,7 @@ export const UpNext = ({ exhibition }: { exhibition: RegisterExhibition; }) => (
             ))}
           </dl>
 
-          <div className="mt-[31px] flex flex-wrap items-center gap-6">
+          <div className="mt-7.75 flex flex-wrap items-center gap-6">
             <RegisterButton exhibition={exhibition} />
             <Link
               href={`/exhibitions/${upNext.slug}`}

@@ -40,7 +40,7 @@ const UpcomingExhibitionsPage = () => (
       <ExhibitionTabs active="upcoming" />
     </div>
 
-    <div className="mt-[30px]">
+    <div className="mt-7.5">
       <UpNext
         exhibition={{
           title: upNext.title,
@@ -54,7 +54,7 @@ const UpcomingExhibitionsPage = () => (
 
     {/* Eyebrow with a hairline running out to the gutter — the same kicker the
         catalogue sections use. */}
-    <section className="mt-[58px] w-full px-4 sm:px-6 lg:px-page-gutter">
+    <section className="mt-14.5 w-full px-4 sm:px-6 lg:px-page-gutter">
       <div className="mx-auto w-full max-w-432">
         <div className="flex items-center gap-6">
           <h2 className="text-eyebrow text-text-primary shrink-0 uppercase">
@@ -64,7 +64,7 @@ const UpcomingExhibitionsPage = () => (
         </div>
 
         {/* Three tracks on a 40px gutter; the frame fills only two. */}
-        <ul className="mt-[22px] grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="mt-5.5 grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-3">
           {comingSoon.map((exhibition) => (
             <li key={exhibition.slug}>
               <ExhibitionCard

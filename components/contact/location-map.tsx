@@ -25,7 +25,7 @@ export const LocationMap = () => (
      its pane, and without the clip they push the page wider on mobile.
      `min-h` is a derived-responsive call — the frame has no mobile layout, and
      932/480 leaves the map only 184px tall at 390. */
-  <div className="relative aspect-[932/480] w-full min-h-65 overflow-hidden">
+  <div className="relative aspect-932/480 w-full min-h-65 overflow-hidden">
     <LeafletMap />
   </div>
 );

@@ -37,14 +37,14 @@ export const InstallRail = ({ shots }: { shots: Shot[]; }) => {
     <section aria-label="Installation views" className="w-full">
       <ul
         ref={railRef}
-        className="flex snap-x snap-mandatory gap-5 overflow-x-auto px-4 sm:px-6 lg:pr-0 lg:pl-[74px]"
+        className="flex snap-x snap-mandatory gap-5 overflow-x-auto px-4 sm:px-6 lg:pr-0 lg:pl-18.5"
       >
         {shots.map((shot) => (
           <li
             key={shot.src}
             className="w-[min(1088px,86vw)] shrink-0 snap-start"
           >
-            <div className="relative aspect-[1088/762] w-full">
+            <div className="relative aspect-1088/762 w-full">
               <Image
                 src={shot.src}
                 alt={shot.alt}
@@ -57,7 +57,7 @@ export const InstallRail = ({ shots }: { shots: Shot[]; }) => {
         ))}
       </ul>
 
-      <div className="mt-[15px] w-full px-4 sm:px-6 lg:pr-0 lg:pl-[74px]">
+      <div className="mt-3.75 w-full px-4 sm:px-6 lg:pr-0 lg:pl-18.5">
         <p className="text-body-sm text-text-secondary w-[min(1088px,86vw)] text-right">
           {index + 1}/12
         </p>

@@ -17,6 +17,35 @@
   otherwise reads a custom `text-*` utility as a text *colour* and silently
   drops whatever colour class it is merged with
 
+# Route structure
+
+- `app/(customer)/` — the storefront. `(site)/` is the editorial shell
+  (announcement bar, header, newsletter, footer); `(checkout)/` is the
+  stripped-back checkout shell. The cart provider lives on the `(customer)`
+  layout, not the root.
+- `app/admin/` — internal tools, with its own layout and no storefront chrome.
+- `app/layout.tsx` — document shell and fonts only. Page chrome, providers and
+  storefront metadata belong to one tree or the other, never the root.
+
+Route groups are folders, not URL segments, so `app/(customer)/(site)/about`
+still serves `/about`.
+
+# Tailwind class values
+
+Prefer an existing `@theme` token, then a stock Tailwind scale value, and only
+then an arbitrary `foo-[...]` value.
+
+- Lengths go on the spacing scale — `--spacing` is `0.25rem`, so a whole-pixel
+  Figma measurement is that number over four: 29px is `mt-7.25`, not
+  `mt-[29px]`. Quarter steps are fine.
+- Aspect ratios take a bare fraction: `aspect-1440/501`, not `aspect-[1440/501]`.
+- v4 renamed some v3 names: `bg-linear-to-b`, `bg-top-left`, `bg-size-[...]`,
+  `scrollbar-none`, `group-has-focus-visible`.
+- Sweep with the Tailwind LSP's `suggestCanonicalClasses` diagnostic, but verify
+  any suggestion that changes a computed value. It misses `:root` overrides —
+  it wrongly suggests `rounded-[4px]` → `rounded-lg`, which is 0px here because
+  `app/globals.css` sets `--radius: 0px`.
+
 # Responsive design
 
 Every page ships responsive — no desktop-only screens.

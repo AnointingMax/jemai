@@ -13,8 +13,8 @@ export const ArtistNote = () => (
     <div className="mx-auto w-full max-w-432">
       {/* 576 + 81 + 563 = 1220, so the block sits on the gutter and stops 92px
           short of it on the right — as drawn. */}
-      <div className="w-full max-w-[1220px]">
-        <div className="grid gap-8 lg:grid-cols-[576fr_563fr] lg:gap-x-[81px]">
+      <div className="w-full max-w-305">
+        <div className="grid gap-8 lg:grid-cols-[576fr_563fr] lg:gap-x-20.25">
           <Image
             src={artistNote.portrait.src}
             alt={artistNote.portrait.alt}
@@ -24,11 +24,11 @@ export const ArtistNote = () => (
             className="h-auto w-full"
           />
 
-          <div className="lg:pt-[132px]">
+          <div className="lg:pt-33">
             <h2 className="font-heading text-text-primary text-2xl sm:text-h3">
               {artistNote.heading}
             </h2>
-            <div className="mt-[23px] space-y-[3px]">
+            <div className="mt-5.75 space-y-0.75">
               {artistNote.paragraphs.map((paragraph) => (
                 <p key={paragraph} className="text-body-lg text-text-primary">
                   {paragraph}

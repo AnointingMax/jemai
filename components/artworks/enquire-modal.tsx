@@ -35,10 +35,10 @@ type EnquireModalProps = {
  * 6px, then a 37px control closing on the rule. That is the Contact field
  * recipe on a 9px shorter lead.
  */
-const fieldClass = "border-border-default border-b pt-[25px]";
+const fieldClass = "border-border-default border-b pt-6.25";
 const labelClass = "text-eyebrow text-text-secondary block uppercase";
 const controlClass =
-  "mt-1.5 h-[37px] rounded-none border-0 bg-transparent px-0 text-body-sm text-text-primary shadow-none placeholder:text-text-primary/25 focus-visible:border-0 focus-visible:ring-0";
+  "mt-1.5 h-9.25 rounded-none border-0 bg-transparent px-0 text-body-sm text-text-primary shadow-none placeholder:text-text-primary/25 focus-visible:border-0 focus-visible:ring-0";
 
 type FieldProps = ComponentProps<typeof Input> & {
   label: string;
@@ -98,9 +98,9 @@ export const EnquireModal = ({
             ?.querySelector<HTMLInputElement>("input")
             ?.focus();
         }}
-        className="flex h-[715px] w-[min(1124px,calc(100vw-2rem))] max-w-none overflow-hidden max-lg:h-auto max-lg:max-h-[calc(100dvh-2rem)] max-lg:overflow-y-auto">
+        className="flex h-178.75 w-[min(1124px,calc(100vw-2rem))] max-w-none overflow-hidden max-lg:h-auto max-lg:max-h-[calc(100dvh-2rem)] max-lg:overflow-y-auto">
         {/* Left: the piece, with its caption block */}
-        <div className="bg-surface-inverse relative hidden w-[423px] shrink-0 lg:block">
+        <div className="bg-surface-inverse relative hidden w-105.75 shrink-0 lg:block">
           <Image
             src={artwork.image}
             alt={artwork.title}

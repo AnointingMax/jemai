@@ -18,7 +18,7 @@ export const ProductGallery = ({ name, images }: ProductGalleryProps) => {
 
   return (
     <div className="flex w-full flex-col gap-2">
-      <div className="relative aspect-[578/580] w-full overflow-hidden bg-[#efede9]">
+      <div className="relative aspect-578/580 w-full overflow-hidden bg-[#efede9]">
         <Image
           key={images[active]}
           src={images[active]}
@@ -32,7 +32,7 @@ export const ProductGallery = ({ name, images }: ProductGalleryProps) => {
 
       {/* The rail scrolls on narrow screens rather than wrapping 3-and-1. */}
       {images.length > 1 && (
-        <ul className="flex gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <ul className="flex gap-2 overflow-x-auto scrollbar-none [&::-webkit-scrollbar]:hidden">
           {images.map((src, index) => (
             <li key={src} className="shrink-0">
               <Button

@@ -148,7 +148,7 @@ export const CartDrawer = () => {
               <div className="border-t pt-4" style={{ borderColor: rule }}>
                 <div className="flex items-baseline justify-between">
                   <span
-                    className="font-heading text-[16px] leading-5"
+                    className="font-heading text-body leading-5"
                     style={{ color: inkStrong }}
                   >
                     Sub Total:
@@ -190,7 +190,7 @@ export const CartDrawer = () => {
                     setOpen(false);
                     router.push("/checkout");
                   }}
-                  className="mt-5.75 h-13 w-full text-[14px] tracking-[0.04em]"
+                  className="mt-5.75 h-13 w-full text-body-sm tracking-[0.04em]"
                 >
                   CHECKOUT
                 </Button>

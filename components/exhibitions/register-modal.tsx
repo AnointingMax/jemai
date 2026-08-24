@@ -101,13 +101,13 @@ export const RegisterModal = ({
             ?.focus();
         }}
         className={`flex w-[min(1120px,calc(100vw-2rem))] max-w-none overflow-hidden max-lg:h-auto max-lg:max-h-[calc(100dvh-2rem)] max-lg:overflow-y-auto ${
-          paid ? "h-[710px]" : "h-[579px]"
+          paid ? "h-177.5" : "h-144.75"
         }`}
       >
         {/* Left: the exhibition, with its caption block */}
         <div
           className={`bg-surface-inverse relative hidden shrink-0 lg:block ${
-            paid ? "w-[419px]" : "w-136"
+            paid ? "w-104.75" : "w-136"
           }`}
         >
           <Image
@@ -155,7 +155,7 @@ export const RegisterModal = ({
             </p>
 
             {exhibition.ticket ? (
-              <dl className="bg-surface-subtle mt-6.25 px-4 pt-[17px] pb-[14px]">
+              <dl className="bg-surface-subtle mt-6.25 px-4 pt-4.25 pb-3.5">
                 <p className="text-eyebrow text-action-primary uppercase">
                   Ticket summary
                 </p>
@@ -230,7 +230,7 @@ export const RegisterModal = ({
                   </DialogClose>
                 </div>
                 {paid && (
-                  <p className="text-body-xs text-text-secondary mt-[23px]">
+                  <p className="text-body-xs text-text-secondary mt-5.75">
                     You&rsquo;ll be redirected to Paystack. JEMAI does not store
                     your card or bank details.
                   </p>

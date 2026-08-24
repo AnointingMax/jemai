@@ -44,7 +44,7 @@ const contacts = [
  * so at the 1440 design width it lands exactly as drawn.
  */
 export const SiteFooter = () => (
-  <footer className="bg-surface-footer text-text-inverse mt-section-gap-editorial w-full bg-[url('/figma/brand/footer-pattern.png')] bg-[length:300px_514px] bg-left-top bg-repeat">
+  <footer className="bg-surface-footer text-text-inverse mt-section-gap-editorial w-full bg-[url('/figma/brand/footer-pattern.png')] bg-size-[300px_514px] bg-top-left bg-repeat">
     <div className="mx-auto flex w-full max-w-432 flex-col px-4 pt-14 pb-10 sm:px-6 lg:px-page-gutter lg:pt-footer-top lg:pb-footer-bottom">
       <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[341fr_164fr_164fr_292fr_345fr_6fr] lg:gap-0">
         {/* Brand */}

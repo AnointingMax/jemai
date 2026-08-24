@@ -124,7 +124,7 @@ export const OrderSummary = ({
         size="cta"
         disabled={!canPay}
         aria-busy={paying}
-        className="mt-3.5 h-13.25 w-full gap-3 text-[14px] font-semibold tracking-[0.04em]"
+        className="mt-3.5 h-13.25 w-full gap-3 text-body-sm font-semibold tracking-[0.04em]"
       >
         {paying && <ButtonSpinner />}
         {paying ? "REDIRECTING" : "PAY NOW"}
