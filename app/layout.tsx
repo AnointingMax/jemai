@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { Assistant } from "next/font/google";
 import localFont from "next/font/local";
-import { CartDrawer } from "@/components/cart/cart-drawer";
-import { CartProvider } from "@/lib/cart";
 import "./globals.css";
 
 const assistant = Assistant({
@@ -29,10 +27,12 @@ const classico = localFont({
   ],
 });
 
+/**
+ * Only the document shell and the shared type live here. The storefront and the
+ * admin tree each supply their own chrome and their own metadata.
+ */
 export const metadata: Metadata = {
-  title: "JEMAI — Signature style for every square inch",
-  description:
-    "Considered furniture, contemporary artwork, exhibitions and design services, brought together by a belief that every space should reflect the people within it.",
+  title: "JEMAI",
 };
 
 const RootLayout = ({ children }: LayoutProps<"/">) => (
@@ -41,10 +41,7 @@ const RootLayout = ({ children }: LayoutProps<"/">) => (
     className={`${assistant.variable} ${classico.variable} h-full antialiased`}
   >
     <body className="bg-surface-page text-text-primary flex min-h-full flex-col">
-      <CartProvider>
-        {children}
-        <CartDrawer />
-      </CartProvider>
+      {children}
     </body>
   </html>
 );
