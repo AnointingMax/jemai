@@ -1,16 +1,20 @@
-import type { FulfilmentStatus } from "@/lib/admin/dashboard";
 import type { ExhibitionStatus } from "@/lib/admin/exhibitions";
+import type { FulfilmentStatus } from "@/lib/admin/orders";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 type AdminStatus = FulfilmentStatus | ExhibitionStatus;
 
-/** Dot colour per state — the badge chrome itself is the same hairline pill. */
+/**
+ * Dot colour per state — the badge chrome itself is the same hairline pill.
+ * The fulfilment four are sampled off the orders frame; none of them has a
+ * published variable, so they sit here as literal hex.
+ */
 const dot: Record<AdminStatus, string> = {
   New: "bg-text-primary",
-  Processing: "bg-[#e07a2f]",
-  Shipped: "bg-[#2f6fe0]",
-  Delivered: "bg-[#2f8f4e]",
+  Processing: "bg-[#ff8d28]",
+  "Ready for dispatch": "bg-[#ffcc00]",
+  Delivered: "bg-[#34c759]",
   Upcoming: "bg-[#2f8f4e]",
   Archived: "bg-text-primary",
 };
