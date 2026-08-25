@@ -13,16 +13,20 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 /**
- * The detail page's overflow menu. Deleting is destructive and irreversible, so
- * it confirms before firing the action rather than on the way back.
+ * The overflow menu every detail screen carries. Deleting is destructive and
+ * irreversible, so it confirms before firing the action rather than on the way
+ * back.
  */
-export const FurnitureActionsMenu = ({
-  slug,
+export const RecordActionsMenu = ({
   name,
+  editHref,
+  deleteLabel,
   onDelete,
 }: {
-  slug: string;
   name: string;
+  editHref: string;
+  /** "Delete product", "Delete exhibition" — the frames name the record type. */
+  deleteLabel: string;
   onDelete: () => Promise<void>;
 }) => {
   const [pending, startTransition] = useTransition();
@@ -41,7 +45,7 @@ export const FurnitureActionsMenu = ({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuItem asChild>
-          <Link href={`/admin/furniture/${slug}/edit`}>
+          <Link href={editHref}>
             <SquarePen />
             Edit general info
           </Link>
@@ -58,7 +62,7 @@ export const FurnitureActionsMenu = ({
           }}
         >
           <Trash2 />
-          Delete product
+          {deleteLabel}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

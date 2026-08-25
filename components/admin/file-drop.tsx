@@ -4,7 +4,7 @@ import { useId, useRef, useState } from "react";
 import { GripVertical, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { formatFileSize, type FurnitureAsset } from "@/lib/admin/furniture";
+import { formatFileSize, type MediaAsset } from "@/lib/admin/content";
 import { cn } from "@/lib/utils";
 
 /**
@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
  * this for a real upload is the one change the rest of the form needs.
  */
 const toAsset = (file: File) =>
-  new Promise<FurnitureAsset>((resolve, reject) => {
+  new Promise<MediaAsset>((resolve, reject) => {
     const reader = new FileReader();
     reader.onerror = () => reject(reader.error);
     reader.onload = () =>
@@ -27,8 +27,8 @@ const toAsset = (file: File) =>
   });
 
 type FileDropProps = {
-  assets: FurnitureAsset[];
-  onChange: (assets: FurnitureAsset[]) => void;
+  assets: MediaAsset[];
+  onChange: (assets: MediaAsset[]) => void;
   /** Single-slot (thumbnail) replaces on pick; multiple (media) appends. */
   multiple?: boolean;
   /** Only the media list is ordered, so only it draws grip handles. */

@@ -1,0 +1,52 @@
+import { notFound } from "next/navigation";
+
+import { updateExhibitionAction } from "@/app/admin/(dashboard)/exhibitions/actions";
+import { ExhibitionForm, type ExhibitionFormValues } from "@/components/admin/exhibition-form";
+import { exhibitionStatuses, getExhibition } from "@/lib/admin/exhibitions";
+import { artworks } from "@/lib/artworks";
+
+/**
+ * Edit — the same form, handed the exhibition as defaults. The action is the
+ * update one with the current slug bound to it, so a renamed show still
+ * resolves.
+ */
+const AdminExhibitionEditPage = async ({
+  params,
+}: PageProps<"/admin/exhibitions/[slug]/edit">) => {
+  const { slug } = await params;
+  const exhibition = getExhibition(slug);
+  if (!exhibition) notFound();
+
+  const values: ExhibitionFormValues = {
+    name: exhibition.name,
+    slug: exhibition.slug,
+    artist: exhibition.artist,
+    startDate: exhibition.startDate,
+    endDate: exhibition.endDate,
+    venue: exhibition.venue,
+    admission: exhibition.admission.paid ? "paid" : "free",
+    price: exhibition.admission.price ? String(exhibition.admission.price) : "",
+    status: exhibition.status,
+    summary: exhibition.summary,
+    content: exhibition.content,
+    artistBio: exhibition.artistBio,
+    thumbnail: exhibition.thumbnail ? [exhibition.thumbnail] : [],
+    artistProfile: exhibition.artistProfile ? [exhibition.artistProfile] : [],
+    media: exhibition.media,
+    featured: exhibition.featured,
+  };
+
+  return (
+    <ExhibitionForm
+      exhibition={values}
+      artworks={artworks}
+      statuses={exhibitionStatuses}
+      action={updateExhibitionAction.bind(null, exhibition.slug)}
+      cancelHref={`/admin/exhibitions/${exhibition.slug}`}
+      heading={`Edit ${exhibition.name}`}
+      submitLabel="Save changes"
+    />
+  );
+};
+
+export default AdminExhibitionEditPage;
