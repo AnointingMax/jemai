@@ -1,0 +1,218 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+
+import { deleteFurnitureAction } from "@/app/admin/(dashboard)/furniture/actions";
+import { FurnitureActionsMenu } from "@/components/admin/furniture-actions-menu";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { getFurniture, naira, totalStock } from "@/lib/admin/furniture";
+
+/** The label/value rows under "Details". */
+const DetailRow = ({ label, value }: { label: string; value: string }) => (
+  <div className="flex items-baseline justify-between gap-4 py-2">
+    <dt className="text-text-secondary text-sm">{label}</dt>
+    <dd className="text-text-primary text-sm">{value}</dd>
+  </div>
+);
+
+/** One of the three long-copy panels, drawn as a labelled, open accordion. */
+const CopyPanel = ({ value, label, body }: { value: string; label: string; body: string }) => (
+  <AccordionItem value={value} className="border-border-default overflow-hidden rounded-lg border">
+    <AccordionTrigger className="bg-admin-muted rounded-none px-3 py-2.5 hover:no-underline">
+      <Badge
+        variant="outline"
+        className="border-border-default bg-background text-text-primary h-7 rounded-full px-3 text-xs font-normal"
+      >
+        {label}
+      </Badge>
+    </AccordionTrigger>
+    <AccordionContent className="text-text-primary bg-admin-field h-auto px-4 py-4 font-mono text-sm">
+      {body}
+    </AccordionContent>
+  </AccordionItem>
+);
+
+/**
+ * A product's detail screen: the record on the left, its imagery on the right.
+ * This is where a create or an edit lands.
+ */
+const AdminFurnitureDetailPage = async ({ params }: PageProps<"/admin/furniture/[slug]">) => {
+  const { slug } = await params;
+  const furniture = getFurniture(slug);
+  if (!furniture) notFound();
+
+  return (
+    <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_420px]">
+      <Card className="ring-border-default py-6">
+        <CardHeader className="gap-3">
+          <div className="flex items-start justify-between gap-4">
+            <CardTitle className="text-text-primary font-sans text-xl font-semibold">
+              {furniture.name}
+            </CardTitle>
+            <FurnitureActionsMenu
+              slug={furniture.slug}
+              name={furniture.name}
+              onDelete={deleteFurnitureAction.bind(null, furniture.slug)}
+            />
+          </div>
+          <p className="text-text-secondary max-w-[60ch] text-sm">{furniture.summary}</p>
+        </CardHeader>
+
+        <CardContent className="flex flex-col gap-8">
+          <section className="flex flex-col gap-1">
+            <h2 className="text-text-primary mb-1 text-sm font-semibold">Details</h2>
+            <dl className="divide-border-default/60 flex flex-col divide-y">
+              <DetailRow label="slug" value={furniture.slug} />
+              <DetailRow label="Category" value={furniture.category} />
+              <DetailRow label="Price" value={naira(furniture.price)} />
+              <DetailRow label="Stock Quantity" value={String(totalStock(furniture))} />
+            </dl>
+          </section>
+
+          <section className="flex flex-col gap-2">
+            <h2 className="text-text-primary text-sm font-semibold">Variants</h2>
+            {furniture.variants.length ? (
+              <div className="border-border-default overflow-hidden rounded-lg border">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-border-default hover:bg-transparent">
+                      <TableHead className="text-text-secondary h-10 px-3 text-xs font-normal">
+                        Size
+                      </TableHead>
+                      <TableHead className="text-text-secondary h-10 px-3 text-xs font-normal">
+                        Colour
+                      </TableHead>
+                      <TableHead className="text-text-secondary h-10 px-3 text-right text-xs font-normal">
+                        Quantity
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {furniture.variants.map((variant) => (
+                      <TableRow key={variant.id} className="border-border-default">
+                        <TableCell className="text-text-primary px-3 py-2.5 text-sm">
+                          {variant.size || "—"}
+                        </TableCell>
+                        <TableCell className="text-text-primary px-3 py-2.5 text-sm">
+                          {variant.colour || "—"}
+                        </TableCell>
+                        <TableCell className="text-text-primary px-3 py-2.5 text-right text-sm">
+                          {variant.quantity}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            ) : (
+              <p className="text-text-secondary text-sm">No variants on this product.</p>
+            )}
+          </section>
+
+          <Accordion
+            type="multiple"
+            defaultValue={["description", "timeline", "customisation"]}
+            className="gap-3"
+          >
+            <CopyPanel value="description" label="Description*" body={furniture.description} />
+            <CopyPanel
+              value="timeline"
+              label="Production / delivery timeline*"
+              body={furniture.timeline}
+            />
+            <CopyPanel
+              value="customisation"
+              label="Customisation*"
+              body={furniture.customisation}
+            />
+          </Accordion>
+        </CardContent>
+      </Card>
+
+      <div className="flex flex-col gap-4">
+        <Card className="ring-border-default py-6">
+          <CardHeader>
+            <CardTitle className="text-text-primary font-sans text-xl font-semibold">
+              Thumbnail
+            </CardTitle>
+            <div className="col-start-2 row-start-1 flex items-center gap-2 justify-self-end">
+              <Button
+                variant="outline"
+                size="lg"
+                asChild
+                className="border-border-default h-9 text-sm"
+              >
+                <Link href={`/admin/furniture/${furniture.slug}/edit`}>Upload</Link>
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {furniture.thumbnail ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={furniture.thumbnail.src}
+                alt={furniture.name}
+                className="bg-surface-subtle aspect-3/4 w-24 rounded-md object-cover"
+              />
+            ) : (
+              <p className="text-text-secondary text-sm">No thumbnail yet.</p>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="ring-border-default py-6">
+          <CardHeader>
+            <CardTitle className="text-text-primary font-sans text-xl font-semibold">
+              Media
+            </CardTitle>
+            <div className="col-start-2 row-start-1 justify-self-end">
+              <Button
+                variant="outline"
+                size="lg"
+                asChild
+                className="border-border-default h-9 text-sm"
+              >
+                <Link href={`/admin/furniture/${furniture.slug}/edit`}>Edit media</Link>
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {furniture.media.length ? (
+              <ul className="grid grid-cols-3 gap-3">
+                {furniture.media.map((asset) => (
+                  <li key={asset.id}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={asset.src}
+                      alt={asset.name}
+                      className="bg-surface-subtle aspect-square w-full rounded-md object-cover"
+                    />
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-text-secondary text-sm">No media yet.</p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
+export default AdminFurnitureDetailPage;

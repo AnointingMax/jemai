@@ -1,5 +1,7 @@
 "use client";
 
+import { Fragment } from "react";
+
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -16,12 +18,34 @@ import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 
 /**
- * The 64px console header: rail toggle, then a breadcrumb whose tail is the nav
- * entry the current route sits under.
+ * The segments below a section's own route, as the breadcrumb prints them:
+ * `new` becomes "Add new Furniture", and a slug is title-cased back into a name.
+ * A slug that carried an accent comes back without it — the sections that need
+ * the exact name can grow their own crumb later.
+ */
+const describeSegment = (segment: string, section: string) => {
+  if (segment === "new") return `Add new ${section}`;
+  return segment
+    .split("-")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+};
+
+/**
+ * The 64px console header: rail toggle, then a breadcrumb — JEMAI Admin, the
+ * nav entry the route sits under, and a crumb per segment below it.
  */
 export const AdminHeader = () => {
   const pathname = usePathname();
   const current = findAdminNavItem(pathname);
+  const section = current?.title ?? "Overview";
+  const trail = current
+    ? pathname
+        .slice(current.url.length)
+        .split("/")
+        .filter(Boolean)
+        .map((segment) => describeSegment(segment, section))
+    : [];
 
   return (
     <header className="border-border-default bg-background sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b px-4">
@@ -39,10 +63,28 @@ export const AdminHeader = () => {
           </BreadcrumbItem>
           <BreadcrumbSeparator className="text-text-secondary" />
           <BreadcrumbItem>
-            <BreadcrumbPage className="text-text-primary font-medium">
-              {current?.title ?? "Overview"}
-            </BreadcrumbPage>
+            {trail.length && current ? (
+              <BreadcrumbLink asChild className="text-text-secondary font-normal">
+                <Link href={current.url}>{section}</Link>
+              </BreadcrumbLink>
+            ) : (
+              <BreadcrumbPage className="text-text-primary font-medium">{section}</BreadcrumbPage>
+            )}
           </BreadcrumbItem>
+          {trail.map((crumb, index) => (
+            <Fragment key={crumb}>
+              <BreadcrumbSeparator className="text-text-secondary" />
+              <BreadcrumbItem>
+                {index === trail.length - 1 ? (
+                  <BreadcrumbPage className="text-text-primary font-medium">
+                    {crumb}
+                  </BreadcrumbPage>
+                ) : (
+                  <span className="text-text-secondary font-normal">{crumb}</span>
+                )}
+              </BreadcrumbItem>
+            </Fragment>
+          ))}
         </BreadcrumbList>
       </Breadcrumb>
     </header>

@@ -1,0 +1,477 @@
+"use client";
+
+import Link from "next/link";
+import { useState, useTransition } from "react";
+import { useFieldArray, useForm, useWatch } from "react-hook-form";
+import { Plus, Trash2, X } from "lucide-react";
+
+import {
+  FieldHint,
+  FieldLabel,
+  FormSection,
+  fieldChrome,
+} from "@/components/admin/form-section";
+import { FileDrop } from "@/components/admin/file-drop";
+import { Accordion } from "@/components/ui/accordion";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { slugify, type FurnitureAsset } from "@/lib/admin/furniture";
+import { cn } from "@/lib/utils";
+
+/**
+ * The form's own shape: every scalar is a string, because that is what the
+ * controls hand back. `toInput` on the server side of the action is the only
+ * place numbers are parsed.
+ */
+export type FurnitureFormValues = {
+  name: string;
+  slug: string;
+  category: string;
+  price: string;
+  stock: string;
+  summary: string;
+  variants: { size: string; colour: string; quantity: string; }[];
+  description: string;
+  timeline: string;
+  customisation: string;
+  thumbnail: FurnitureAsset[];
+  media: FurnitureAsset[];
+};
+
+export const emptyFurnitureForm: FurnitureFormValues = {
+  name: "",
+  slug: "",
+  category: "",
+  price: "",
+  stock: "",
+  summary: "",
+  variants: [{ size: "", colour: "", quantity: "" }],
+  description: "",
+  timeline: "",
+  customisation: "",
+  thumbnail: [],
+  media: [],
+};
+
+type FurnitureFormProps = {
+  /**
+   * Absent on the create screen. Supplied, the same form edits that product —
+   * the fields, the validation and the submit path are identical, only the
+   * defaults, the heading and the action differ.
+   */
+  furniture?: FurnitureFormValues;
+  categories: string[];
+  /** Server action. Redirects to the product's detail page when it resolves. */
+  action: (values: FurnitureFormValues) => Promise<void>;
+  /** Where the close button goes, and where a cancelled edit returns to. */
+  cancelHref: string;
+  submitLabel: string;
+  heading: string;
+};
+
+const required = (message: string) => ({
+  required: message,
+  validate: (value: string) => value.trim().length > 0 || message,
+});
+
+export const FurnitureForm = ({
+  furniture,
+  categories,
+  action,
+  cancelHref,
+  submitLabel,
+  heading,
+}: FurnitureFormProps) => {
+  const [pending, startTransition] = useTransition();
+  const [failed, setFailed] = useState<string | null>(null);
+  // On an existing product the slug is already settled, so it stops tracking
+  // the name; on a new one it follows until the author edits it by hand.
+  const [slugLocked, setSlugLocked] = useState(Boolean(furniture));
+
+  const {
+    control,
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors, isValid },
+  } = useForm<FurnitureFormValues>({
+    mode: "onChange",
+    defaultValues: furniture ?? emptyFurnitureForm,
+  });
+
+  const variants = useFieldArray({ control, name: "variants" });
+  const watchedVariants = useWatch({ control, name: "variants" });
+  const thumbnail = useWatch({ control, name: "thumbnail" });
+  const media = useWatch({ control, name: "media" });
+  const category = useWatch({ control, name: "category" });
+  const stock = useWatch({ control, name: "stock" });
+
+  /**
+   * Stock is the sum of the variant counts whenever any are filled in, so the
+   * General information field goes read-only rather than offering a second,
+   * conflicting answer. A product with no counted variants keeps its own number.
+   */
+  const variantStock = (watchedVariants ?? []).reduce(
+    (sum, variant) => sum + (Number(variant?.quantity) || 0),
+    0
+  );
+  const stockDerived = (watchedVariants ?? []).some((variant) => variant?.quantity?.trim());
+
+  const onSubmit = handleSubmit((values) => {
+    setFailed(null);
+    startTransition(async () => {
+      try {
+        await action({ ...values, stock: stockDerived ? String(variantStock) : values.stock });
+      } catch (error) {
+        // `redirect()` throws a control-flow signal on success; anything with a
+        // digest is that, and must be left to bubble.
+        if (error && typeof error === "object" && "digest" in error) throw error;
+        setFailed("Could not save this product. Try again.");
+      }
+    });
+  });
+
+  return (
+    <form
+      onSubmit={onSubmit}
+      className="border-border-default overflow-hidden rounded-xl border bg-background"
+    >
+      <div className="border-border-default flex items-center justify-between gap-4 border-b p-4">
+        <Button
+          type="button"
+          variant="outline"
+          size="icon-lg"
+          asChild
+          aria-label="Close without saving"
+          className="border-border-default"
+        >
+          <Link href={cancelHref}>
+            <X />
+          </Link>
+        </Button>
+        <Button
+          type="submit"
+          size="lg"
+          disabled={!isValid || pending}
+          className="h-11 px-5 text-sm disabled:bg-action-primary/32 disabled:opacity-100"
+        >
+          {pending ? "Saving…" : submitLabel}
+        </Button>
+      </div>
+
+      <div className="px-4 py-10 sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-175 flex-col gap-8">
+          <h1 className="text-text-primary text-2xl font-semibold">{heading}</h1>
+
+          {failed ? (
+            <p role="alert" className="text-[#e11d48] text-sm">
+              {failed}
+            </p>
+          ) : null}
+
+          <Accordion type="multiple" defaultValue={["general"]}>
+            <FormSection
+              value="general"
+              title="General information"
+              required
+              description="To start selling, all you need is a name and a price."
+            >
+              <div className="grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-2">
+                <div className="flex flex-col gap-1.5">
+                  <FieldLabel htmlFor="name" required>
+                    Product name
+                  </FieldLabel>
+                  <Input
+                    id="name"
+                    className={cn(fieldChrome, "h-11 text-sm md:text-sm")}
+                    {...register("name", {
+                      ...required("A product name is required."),
+                      onChange: (event) => {
+                        if (!slugLocked) setValue("slug", slugify(event.target.value));
+                      },
+                    })}
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <FieldLabel htmlFor="slug">Slug</FieldLabel>
+                  <div
+                    className={cn(
+                      fieldChrome,
+                      "focus-within:border-ring flex h-11 items-center gap-1 border px-3"
+                    )}
+                  >
+                    <span aria-hidden className="text-text-secondary text-sm">
+                      /
+                    </span>
+                    <Input
+                      id="slug"
+                      className="h-full flex-1 rounded-none border-0 bg-transparent px-0 text-sm focus-visible:ring-0 md:text-sm"
+                      {...register("slug", {
+                        onChange: () => setSlugLocked(true),
+                      })}
+                    />
+                  </div>
+                </div>
+                <div className="sm:col-span-2">
+                  <FieldHint error={errors.name?.message}>
+                    {"Give your product a short and clear title.\n50-60 characters is the recommended length for search engines."}
+                  </FieldHint>
+                </div>
+              </div>
+
+              <div className="mt-6 flex flex-col gap-1.5 sm:max-w-[calc(50%-0.75rem)]">
+                <FieldLabel htmlFor="category">Category</FieldLabel>
+                <Select
+                  value={category}
+                  onValueChange={(value) => setValue("category", value, { shouldValidate: true })}
+                >
+                  <SelectTrigger id="category" className={cn(fieldChrome, "h-11 w-full text-sm")}>
+                    <SelectValue placeholder="Select Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((value) => (
+                      <SelectItem key={value} value={value}>
+                        {value}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-2">
+                <div className="flex flex-col gap-1.5">
+                  <FieldLabel htmlFor="price" required>
+                    Price
+                  </FieldLabel>
+                  <Input
+                    id="price"
+                    inputMode="numeric"
+                    placeholder="0"
+                    className={cn(fieldChrome, "h-11 text-sm md:text-sm")}
+                    {...register("price", {
+                      required: "A price is required.",
+                      validate: (value) =>
+                        (Number(value) > 0 && Number.isFinite(Number(value))) ||
+                        "Enter a price in whole naira.",
+                    })}
+                  />
+                  <FieldHint error={errors.price?.message} />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <FieldLabel htmlFor="stock">Stock quantity</FieldLabel>
+                  {/* Controlled for its whole life: swapping between the typed
+                      value and the derived total on a `register`-only input
+                      would flip it from uncontrolled to controlled mid-edit. */}
+                  <Input
+                    id="stock"
+                    inputMode="numeric"
+                    placeholder="0"
+                    readOnly={stockDerived}
+                    className={cn(
+                      fieldChrome,
+                      "h-11 text-sm md:text-sm",
+                      stockDerived && "text-text-secondary"
+                    )}
+                    {...register("stock")}
+                    value={stockDerived ? String(variantStock) : (stock ?? "")}
+                  />
+                  <FieldHint>
+                    {stockDerived
+                      ? "Summed from the variant quantities below."
+                      : "Add variants below to track stock per combination."}
+                  </FieldHint>
+                </div>
+              </div>
+
+              <div className="mt-6 flex flex-col gap-1.5">
+                <FieldLabel htmlFor="summary" required>
+                  Product summary
+                </FieldLabel>
+                <Textarea
+                  id="summary"
+                  rows={3}
+                  className={cn(fieldChrome, "min-h-20 text-sm md:text-sm")}
+                  {...register("summary", required("A product summary is required."))}
+                />
+                <FieldHint error={errors.summary?.message}>
+                  {"Give your product a short and clear description.\n120-160 characters is the recommended length for search engines."}
+                </FieldHint>
+              </div>
+            </FormSection>
+
+            <FormSection
+              value="variants"
+              title="Variants"
+              required
+              description="Add variations of this product. Each row is one buyable combination — its size, its colour and how many are in stock."
+            >
+              <div className="flex flex-col gap-3">
+                {variants.fields.map((field, index) => (
+                  <div
+                    key={field.id}
+                    className="border-border-default grid grid-cols-1 items-end gap-3 rounded-lg border p-3 sm:grid-cols-[1fr_1fr_7rem_auto]"
+                  >
+                    <div className="flex flex-col gap-1.5">
+                      <FieldLabel htmlFor={`variant-size-${field.id}`}>Size</FieldLabel>
+                      <Input
+                        id={`variant-size-${field.id}`}
+                        placeholder="Organic"
+                        className={cn(fieldChrome, "h-10 text-sm md:text-sm")}
+                        {...register(`variants.${index}.size` as const)}
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <FieldLabel htmlFor={`variant-colour-${field.id}`} required>
+                        Colour
+                      </FieldLabel>
+                      <Input
+                        id={`variant-colour-${field.id}`}
+                        placeholder="Red"
+                        className={cn(fieldChrome, "h-10 text-sm md:text-sm")}
+                        {...register(
+                          `variants.${index}.colour` as const,
+                          required("Every variant needs a colour.")
+                        )}
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <FieldLabel htmlFor={`variant-qty-${field.id}`} required>
+                        Quantity
+                      </FieldLabel>
+                      <Input
+                        id={`variant-qty-${field.id}`}
+                        inputMode="numeric"
+                        placeholder="0"
+                        className={cn(fieldChrome, "h-10 text-sm md:text-sm")}
+                        {...register(`variants.${index}.quantity` as const, {
+                          required: "Required.",
+                          validate: (value) =>
+                            (Number.isInteger(Number(value)) && Number(value) >= 0) ||
+                            "Whole numbers only.",
+                        })}
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-lg"
+                      // The last row is the product's only variant; emptying the
+                      // list would fail the section's own requirement.
+                      disabled={variants.fields.length === 1}
+                      onClick={() => variants.remove(index)}
+                      aria-label={`Remove variant ${index + 1}`}
+                      className="text-text-secondary hover:text-[#e11d48] justify-self-start sm:justify-self-auto"
+                    >
+                      <Trash2 />
+                    </Button>
+                    {errors.variants?.[index] ? (
+                      <div className="sm:col-span-4">
+                        <FieldHint
+                          error={
+                            errors.variants[index]?.colour?.message ??
+                            errors.variants[index]?.quantity?.message
+                          }
+                        />
+                      </div>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                onClick={() => variants.append({ size: "", colour: "", quantity: "" })}
+                className="border-border-default mt-4 h-10"
+              >
+                <Plus data-icon="inline-start" />
+                Add more
+              </Button>
+            </FormSection>
+
+            <FormSection
+              value="thumbnail"
+              title="Thumbnail"
+              description="Used to represent your product during checkout, social sharing and more."
+            >
+              <FileDrop
+                label="Thumbnail image"
+                assets={thumbnail}
+                onChange={(assets) => setValue("thumbnail", assets, { shouldValidate: true })}
+              />
+            </FormSection>
+
+            <FormSection
+              value="media"
+              title="Media"
+              description="Used to represent your product during checkout, social sharing and more."
+            >
+              <FileDrop
+                label="Product media"
+                multiple
+                reorderable
+                assets={media}
+                onChange={(assets) => setValue("media", assets, { shouldValidate: true })}
+              />
+            </FormSection>
+
+            <FormSection
+              value="related"
+              title="Related content"
+              description="To start selling, all you need is a name and a price."
+            >
+              <div className="flex flex-col gap-6">
+                <div className="flex flex-col gap-1.5">
+                  <FieldLabel htmlFor="description" required>
+                    Description
+                  </FieldLabel>
+                  <Textarea
+                    id="description"
+                    rows={3}
+                    className={cn(fieldChrome, "min-h-20 text-sm md:text-sm")}
+                    {...register("description", required("A description is required."))}
+                  />
+                  <FieldHint error={errors.description?.message} />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <FieldLabel htmlFor="timeline" required>
+                    Production / delivery timeline
+                  </FieldLabel>
+                  <Textarea
+                    id="timeline"
+                    rows={3}
+                    className={cn(fieldChrome, "min-h-20 text-sm md:text-sm")}
+                    {...register("timeline", required("A timeline is required."))}
+                  />
+                  <FieldHint error={errors.timeline?.message} />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <FieldLabel htmlFor="customisation" required>
+                    Customisation
+                  </FieldLabel>
+                  <Textarea
+                    id="customisation"
+                    rows={3}
+                    className={cn(fieldChrome, "min-h-20 text-sm md:text-sm")}
+                    {...register("customisation", required("A customisation note is required."))}
+                  />
+                  <FieldHint error={errors.customisation?.message}>
+                    {"Give your product a short and clear description.\n120-160 characters is the recommended length for search engines."}
+                  </FieldHint>
+                </div>
+              </div>
+            </FormSection>
+          </Accordion>
+        </div>
+      </div>
+    </form>
+  );
+};
