@@ -2,9 +2,9 @@ import Link from "next/link";
 
 import { FurnitureTable, type FurnitureRow } from "@/components/admin/furniture-table";
 import { Button } from "@/components/ui/button";
+import { formatUpdatedAt } from "@/lib/admin/content";
 import {
   describeVariants,
-  formatUpdatedAt,
   furnitureCategories,
   listFurniture,
   totalStock,

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { deleteFurnitureAction } from "@/app/admin/(dashboard)/furniture/actions";
-import { FurnitureActionsMenu } from "@/components/admin/furniture-actions-menu";
+import { ContentActionsMenu } from "@/components/admin/content-actions-menu";
 import {
   Accordion,
   AccordionContent,
@@ -64,8 +64,8 @@ const AdminFurnitureDetailPage = async ({ params }: PageProps<"/admin/furniture/
             <CardTitle className="text-text-primary font-sans text-xl font-semibold">
               {furniture.name}
             </CardTitle>
-            <FurnitureActionsMenu
-              slug={furniture.slug}
+            <ContentActionsMenu
+              editHref={`/admin/furniture/${furniture.slug}/edit`}
               name={furniture.name}
               onDelete={deleteFurnitureAction.bind(null, furniture.slug)}
             />

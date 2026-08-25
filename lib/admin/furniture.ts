@@ -1,11 +1,12 @@
-/** A media entry — thumbnail or gallery slot. `size` is what the uploader reported. */
-export type FurnitureAsset = {
-  id: string;
-  name: string;
-  /** Bytes, as the picker reported them. Formatted for display, never summed. */
-  size: number;
-  src: string;
-};
+import {
+  identifyAssets,
+  slugify,
+  uniqueSlug,
+  type ContentAsset,
+} from "@/lib/admin/content";
+
+/** A furniture media entry. Same shape as any other content asset. */
+export type FurnitureAsset = ContentAsset;
 
 /**
  * One buyable combination. The frames drew variants as two free-text tag rails
@@ -44,42 +45,6 @@ export const furnitureCategories = ["Lounge", "Table", "Sofa", "Setee", "Bed", "
 /** Naira, whole units, hand-grouped so server and client always agree. */
 export const naira = (amount: number) =>
   `₦${amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
-
-/**
- * "15 May 2020 9:00 pm" — the index's Updated column. Built by hand rather than
- * through `Intl` so a server render and a client re-render cannot disagree about
- * locale data.
- */
-const months = [
-  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-];
-
-export const formatUpdatedAt = (iso: string) => {
-  const date = new Date(iso);
-  const hour = date.getUTCHours();
-  const meridiem = hour < 12 ? "am" : "pm";
-  const twelve = hour % 12 === 0 ? 12 : hour % 12;
-  const minutes = date.getUTCMinutes().toString().padStart(2, "0");
-  return `${date.getUTCDate()} ${months[date.getUTCMonth()]} ${date.getUTCFullYear()} ${twelve}:${minutes} ${meridiem}`;
-};
-
-/** File sizes as the upload rows draw them: "163.38 KB". */
-export const formatFileSize = (bytes: number) => {
-  if (bytes < 1024) return `${bytes} B`;
-  const kb = bytes / 1024;
-  if (kb < 1024) return `${kb.toFixed(2)} KB`;
-  return `${(kb / 1024).toFixed(2)} MB`;
-};
-
-/** Lowercase, hyphenated, punctuation dropped — what the slug field suggests. */
-export const slugify = (value: string) =>
-  value
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
 
 /** The product's stock: the sum of its variant counts, or its own field if bare. */
 export const totalStock = (item: Pick<Furniture, "stock" | "variants">) =>
@@ -241,15 +206,6 @@ export const listFurniture = () => [...store].sort(byRecency);
 
 export const getFurniture = (slug: string) => store.find((item) => item.slug === slug);
 
-/** A slug the store does not already hold, suffixed `-2`, `-3`, … if it does. */
-const uniqueSlug = (candidate: string, ignore?: string) => {
-  const base = candidate || "furniture";
-  let slug = base;
-  for (let n = 2; store.some((item) => item.slug === slug && item.slug !== ignore); n += 1)
-    slug = `${base}-${n}`;
-  return slug;
-};
-
 export type FurnitureInput = Omit<Furniture, "slug" | "updatedAt"> & { slug: string };
 
 /** Stable ids for the variant rows, which arrive from the form without them. */
@@ -257,11 +213,16 @@ const identify = (slug: string, variants: FurnitureVariant[]) =>
   variants.map((variant, index) => ({ ...variant, id: `${slug}-v${index}` }));
 
 export const createFurniture = (input: FurnitureInput) => {
-  const slug = uniqueSlug(slugify(input.slug || input.name));
+  const slug = uniqueSlug(
+    store.map((item) => item.slug),
+    slugify(input.slug || input.name),
+    "furniture"
+  );
   const created: Furniture = {
     ...input,
     slug,
     variants: identify(slug, input.variants),
+    media: identifyAssets(input.media),
     updatedAt: new Date().toISOString(),
   };
   store.push(created);
@@ -271,11 +232,17 @@ export const createFurniture = (input: FurnitureInput) => {
 export const updateFurniture = (slug: string, input: FurnitureInput) => {
   const index = store.findIndex((item) => item.slug === slug);
   if (index === -1) return undefined;
-  const next = uniqueSlug(slugify(input.slug || input.name), slug);
+  const next = uniqueSlug(
+    store.map((item) => item.slug),
+    slugify(input.slug || input.name),
+    "furniture",
+    slug
+  );
   const updated: Furniture = {
     ...input,
     slug: next,
     variants: identify(next, input.variants),
+    media: identifyAssets(input.media),
     updatedAt: new Date().toISOString(),
   };
   store[index] = updated;

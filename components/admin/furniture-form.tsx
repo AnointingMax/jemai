@@ -23,7 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { slugify, type FurnitureAsset } from "@/lib/admin/furniture";
+import { slugify, type ContentAsset } from "@/lib/admin/content";
 import { cn } from "@/lib/utils";
 
 /**
@@ -42,8 +42,8 @@ export type FurnitureFormValues = {
   description: string;
   timeline: string;
   customisation: string;
-  thumbnail: FurnitureAsset[];
-  media: FurnitureAsset[];
+  thumbnail: ContentAsset[];
+  media: ContentAsset[];
 };
 
 export const emptyFurnitureForm: FurnitureFormValues = {

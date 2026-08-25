@@ -13,15 +13,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 /**
- * The detail page's overflow menu. Deleting is destructive and irreversible, so
- * it confirms before firing the action rather than on the way back.
+ * The overflow menu both detail pages carry. Deleting is destructive and
+ * irreversible, so it confirms before firing the action rather than on the way
+ * back — there is no undo behind it.
  */
-export const FurnitureActionsMenu = ({
-  slug,
+export const ContentActionsMenu = ({
+  editHref,
   name,
   onDelete,
 }: {
-  slug: string;
+  editHref: string;
   name: string;
   onDelete: () => Promise<void>;
 }) => {
@@ -41,7 +42,7 @@ export const FurnitureActionsMenu = ({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuItem asChild>
-          <Link href={`/admin/furniture/${slug}/edit`}>
+          <Link href={editHref}>
             <SquarePen />
             Edit general info
           </Link>
@@ -58,7 +59,7 @@ export const FurnitureActionsMenu = ({
           }}
         >
           <Trash2 />
-          Delete product
+          Delete
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

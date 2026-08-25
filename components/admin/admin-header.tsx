@@ -24,7 +24,9 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
  * the exact name can grow their own crumb later.
  */
 const describeSegment = (segment: string, section: string) => {
-  if (segment === "new") return `Add new ${section}`;
+  // "Artworks" names the section but "Add new Artwork" names one record, so the
+  // crumb drops a trailing plural. "Furniture" has none and is left alone.
+  if (segment === "new") return `Add new ${section.replace(/s$/, "")}`;
   return segment
     .split("-")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
