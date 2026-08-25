@@ -39,7 +39,7 @@ export const adminNav: AdminNavGroup[] = [
   {
     title: "Operations",
     items: [
-      { title: "Orders", url: "/admin/orders", icon: ShoppingBag },
+      { title: "Furniture orders", url: "/admin/orders", icon: ShoppingBag },
       {
         title: "Artwork enquiries",
         url: "/admin/artwork-enquiries",

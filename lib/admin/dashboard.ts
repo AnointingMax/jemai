@@ -1,28 +1,8 @@
 import { listFurniture } from "@/lib/admin/furniture";
+import { listOrders } from "@/lib/admin/orders";
 
-export type FulfilmentStatus = "New" | "Processing" | "Shipped" | "Delivered";
-
-export type AdminOrder = {
-  id: string;
-  customer: string;
-  phone: string;
-  /** Whole naira, as the frame prints it. */
-  total: number;
-  /** Pre-formatted; these are fixtures, not a live feed. */
-  date: string;
-  status: FulfilmentStatus;
-};
-
-/** The seven rows the overview frame draws, in frame order. */
-export const recentOrders: AdminOrder[] = [
-  { id: "#JM-2048", customer: "Ada Okafor", phone: "+234 704 667 6343", total: 1600, date: "Jan 16, 2025", status: "New" },
-  { id: "#JM-2047", customer: "Teni Alade", phone: "+234 704 667 6343", total: 2600, date: "Jan 15, 2025", status: "New" },
-  { id: "#JM-2046", customer: "Kelechi Nwosu", phone: "+234 704 667 6343", total: 5600, date: "Jan 16, 2025", status: "New" },
-  { id: "#JM-2045", customer: "Mathilde Lewis", phone: "+234 704 667 6343", total: 6300, date: "Jan 14, 2025", status: "New" },
-  { id: "#JM-2044", customer: "Olly Schroeder", phone: "+234 704 667 6343", total: 2100, date: "Jan 14, 2025", status: "New" },
-  { id: "#JM-2043", customer: "Julius Vaughan", phone: "+234 704 667 6343", total: 1070, date: "Jan 14, 2025", status: "Processing" },
-  { id: "#JM-2042", customer: "Zaid Schwartz", phone: "+234 704 667 6343", total: 8100, date: "Jan 14, 2025", status: "Processing" },
-];
+/** The rows the overview frame draws: the newest handful, in frame order. */
+export const recentOrders = () => listOrders().slice(0, 7);
 
 export type AttentionItem = {
   count: number;

@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { RecentOrders } from "@/components/admin/recent-orders";
+import { OrderTable } from "@/components/admin/order-table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { needsAttention, overviewStats, recentOrders } from "@/lib/admin/dashboard";
 
@@ -43,7 +43,7 @@ const AdminOverviewPage = () => (
           </CardTitle>
         </CardHeader>
         <CardContent className="border-border-default overflow-hidden rounded-lg border">
-          <RecentOrders orders={recentOrders} />
+          <OrderTable orders={recentOrders()} />
         </CardContent>
       </Card>
 
