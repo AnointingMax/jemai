@@ -3,13 +3,8 @@ import { notFound } from "next/navigation";
 
 import { deleteFurnitureAction } from "@/app/admin/(dashboard)/furniture/actions";
 import { ContentActionsMenu } from "@/components/admin/content-actions-menu";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import { Badge } from "@/components/ui/badge";
+import { CopyPanel, DetailRow } from "@/components/admin/record-panels";
+import { Accordion } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -21,31 +16,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { getFurniture, naira, totalStock } from "@/lib/admin/furniture";
-
-/** The label/value rows under "Details". */
-const DetailRow = ({ label, value }: { label: string; value: string }) => (
-  <div className="flex items-baseline justify-between gap-4 py-2">
-    <dt className="text-text-secondary text-sm">{label}</dt>
-    <dd className="text-text-primary text-sm">{value}</dd>
-  </div>
-);
-
-/** One of the three long-copy panels, drawn as a labelled, open accordion. */
-const CopyPanel = ({ value, label, body }: { value: string; label: string; body: string }) => (
-  <AccordionItem value={value} className="border-border-default overflow-hidden rounded-lg border">
-    <AccordionTrigger className="bg-admin-muted rounded-none px-3 py-2.5 hover:no-underline">
-      <Badge
-        variant="outline"
-        className="border-border-default bg-background text-text-primary h-7 rounded-full px-3 text-xs font-normal"
-      >
-        {label}
-      </Badge>
-    </AccordionTrigger>
-    <AccordionContent className="text-text-primary bg-admin-field h-auto px-4 py-4 font-mono text-sm">
-      {body}
-    </AccordionContent>
-  </AccordionItem>
-);
 
 /**
  * A product's detail screen: the record on the left, its imagery on the right.
@@ -65,8 +35,9 @@ const AdminFurnitureDetailPage = async ({ params }: PageProps<"/admin/furniture/
               {furniture.name}
             </CardTitle>
             <ContentActionsMenu
-              editHref={`/admin/furniture/${furniture.slug}/edit`}
               name={furniture.name}
+              editHref={`/admin/furniture/${furniture.slug}/edit`}
+              deleteLabel="Delete product"
               onDelete={deleteFurnitureAction.bind(null, furniture.slug)}
             />
           </div>

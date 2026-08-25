@@ -13,17 +13,20 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 /**
- * The overflow menu both detail pages carry. Deleting is destructive and
+ * The overflow menu every detail screen carries. Deleting is destructive and
  * irreversible, so it confirms before firing the action rather than on the way
  * back — there is no undo behind it.
  */
 export const ContentActionsMenu = ({
   editHref,
   name,
+  deleteLabel = "Delete",
   onDelete,
 }: {
   editHref: string;
   name: string;
+  /** "Delete exhibition" where the frame names the record type; plain "Delete" otherwise. */
+  deleteLabel?: string;
   onDelete: () => Promise<void>;
 }) => {
   const [pending, startTransition] = useTransition();
@@ -59,7 +62,7 @@ export const ContentActionsMenu = ({
           }}
         >
           <Trash2 />
-          Delete
+          {deleteLabel}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

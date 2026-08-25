@@ -6,17 +6,10 @@ import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
 
 import { SortableHead, nextSort, type SortState } from "@/components/admin/sortable-head";
+import { TablePager } from "@/components/admin/table-pager";
 import { Button } from "@/components/ui/button";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
 import {
   Select,
   SelectContent,
@@ -55,19 +48,6 @@ const compare = (a: FurnitureRow, b: FurnitureRow, key: RowKey) =>
   key === "price" || key === "stock"
     ? a[key] - b[key]
     : String(a[key]).localeCompare(String(b[key]));
-
-/**
- * The page numbers the frame draws: the first three, an ellipsis, then the last
- * three — collapsing to a plain run whenever the whole set fits in seven slots.
- */
-const pageWindow = (total: number, current: number): (number | "ellipsis")[] => {
-  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
-  const edges = new Set([1, 2, 3, total - 2, total - 1, total, current]);
-  const pages = [...edges].filter((page) => page >= 1 && page <= total).sort((a, b) => a - b);
-  return pages.flatMap((page, index) =>
-    index > 0 && page - pages[index - 1] > 1 ? (["ellipsis", page] as const) : [page]
-  );
-};
 
 /**
  * The furniture index: a search-and-filter bar over a sortable table, paged
@@ -236,59 +216,7 @@ export const FurnitureTable = ({
         </Table>
       )}
 
-      <div className="border-border-default border-t p-4">
-        <Pagination>
-          <PaginationContent className="w-full justify-between gap-2">
-            <PaginationItem>
-              <PaginationPrevious
-                href="#"
-                aria-disabled={current === 1}
-                className="border-border-default h-10 border data-[disabled=true]:pointer-events-none aria-disabled:pointer-events-none aria-disabled:opacity-50"
-                onClick={(event) => {
-                  event.preventDefault();
-                  goTo(current - 1);
-                }}
-              />
-            </PaginationItem>
-            <div className="flex items-center gap-1">
-              {pageWindow(pageCount, current).map((page, index) =>
-                page === "ellipsis" ? (
-                  <PaginationItem key={`gap-${index}`}>
-                    <span className="text-text-secondary flex size-9 items-center justify-center text-sm">
-                      …
-                    </span>
-                  </PaginationItem>
-                ) : (
-                  <PaginationItem key={page}>
-                    <PaginationLink
-                      href="#"
-                      isActive={page === current}
-                      className="size-9"
-                      onClick={(event) => {
-                        event.preventDefault();
-                        goTo(page);
-                      }}
-                    >
-                      {page}
-                    </PaginationLink>
-                  </PaginationItem>
-                )
-              )}
-            </div>
-            <PaginationItem>
-              <PaginationNext
-                href="#"
-                aria-disabled={current === pageCount}
-                className="border-border-default h-10 border data-[disabled=true]:pointer-events-none aria-disabled:pointer-events-none aria-disabled:opacity-50"
-                onClick={(event) => {
-                  event.preventDefault();
-                  goTo(current + 1);
-                }}
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
-      </div>
+      <TablePager current={current} pageCount={pageCount} onGoTo={goTo} />
     </div>
   );
 };

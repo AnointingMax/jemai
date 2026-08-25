@@ -1,11 +1,11 @@
 /**
- * What the furniture and artwork stores have in common: the asset shape the
- * uploader produces, the two display formatters the index and upload rows use,
- * slugging, and the unique-slug rule. Both stores import from here rather than
- * from each other.
+ * What the furniture, artwork and exhibition stores have in common: the asset
+ * shape the uploader produces, the display formatters the indexes and upload
+ * rows use, slugging, and the unique-slug rule. Every store imports from here
+ * rather than from each other.
  */
 
-/** A media entry — thumbnail or gallery slot. `size` is what the uploader reported. */
+/** A media entry — thumbnail, portrait or gallery slot. `size` is what the uploader reported. */
 export type ContentAsset = {
   id: string;
   name: string;
@@ -13,6 +13,10 @@ export type ContentAsset = {
   size: number;
   src: string;
 };
+
+/** Naira, whole units, hand-grouped so server and client always agree. */
+export const naira = (amount: number) =>
+  `₦${amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
 
 /**
  * "15 May 2020 9:00 pm" — the index's Updated column. Built by hand rather than
@@ -31,6 +35,44 @@ export const formatUpdatedAt = (iso: string) => {
   const twelve = hour % 12 === 0 ? 12 : hour % 12;
   const minutes = date.getUTCMinutes().toString().padStart(2, "0");
   return `${date.getUTCDate()} ${months[date.getUTCMonth()]} ${date.getUTCFullYear()} ${twelve}:${minutes} ${meridiem}`;
+};
+
+const monthNames = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+
+/**
+ * A `yyyy-mm-dd` field value as its parts, without going through `Date` — a
+ * bare date string parses as UTC midnight and prints as the day before in any
+ * negative offset, which is exactly the bug a date-only field must not have.
+ */
+const parts = (value: string) => {
+  const [year, month, day] = value.split("-").map(Number);
+  if (!year || !month || !day) return null;
+  return { year, month: month - 1, day };
+};
+
+/** "15 Aug – 14 Sep", collapsing the month when both ends share one. */
+export const formatDateRange = (start: string, end: string) => {
+  const from = parts(start);
+  const to = parts(end);
+  if (!from && !to) return "—";
+  if (!from || !to) {
+    const only = (from ?? to)!;
+    return `${only.day} ${months[only.month]}`;
+  }
+  return from.month === to.month && from.year === to.year
+    ? `${from.day} – ${to.day} ${months[to.month]}`
+    : `${from.day} ${months[from.month]} – ${to.day} ${months[to.month]}`;
+};
+
+/** "12 September–4 October 2026" — the long form the detail record prints. */
+export const formatDateSpan = (start: string, end: string) => {
+  const from = parts(start);
+  const to = parts(end);
+  if (!from || !to) return "—";
+  return `${from.day} ${monthNames[from.month]}–${to.day} ${monthNames[to.month]} ${to.year}`;
 };
 
 /** File sizes as the upload rows draw them: "163.38 KB". */

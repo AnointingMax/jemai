@@ -1,9 +1,15 @@
 import {
   identifyAssets,
+  naira,
   slugify,
   uniqueSlug,
   type ContentAsset,
 } from "@/lib/admin/content";
+
+// Prices are formatted the same way in every catalogue, so `naira` lives in the
+// shared module now. Re-exported here because the furniture screens reach for it
+// through this store.
+export { naira };
 
 /** A furniture media entry. Same shape as any other content asset. */
 export type FurnitureAsset = ContentAsset;
@@ -41,10 +47,6 @@ export type Furniture = {
 
 /** The catalogue groups the index filter and the form's category select share. */
 export const furnitureCategories = ["Lounge", "Table", "Sofa", "Setee", "Bed", "Storage"];
-
-/** Naira, whole units, hand-grouped so server and client always agree. */
-export const naira = (amount: number) =>
-  `₦${amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
 
 /** The product's stock: the sum of its variant counts, or its own field if bare. */
 export const totalStock = (item: Pick<Furniture, "stock" | "variants">) =>
