@@ -14,9 +14,9 @@ const AdminDashboardLayout = ({ children }: LayoutProps<"/admin">) => (
   <TooltipProvider delayDuration={0}>
     <SidebarProvider className="admin-surface bg-background min-h-svh">
       <AdminSidebar />
-      <SidebarInset className="bg-background">
+      <SidebarInset className="bg-background min-w-0">
         <AdminHeader />
-        <div className="flex flex-1 flex-col gap-6 p-4 sm:p-6">{children}</div>
+        <div className="flex min-w-0 flex-1 flex-col gap-6 p-4 sm:p-6">{children}</div>
       </SidebarInset>
     </SidebarProvider>
   </TooltipProvider>
