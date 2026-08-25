@@ -264,3 +264,26 @@
   --ring: var(--color-action-primary);
   --radius: 0px;
 }
+
+/* Sidebar primitives, re-pointed at the JEMAI palette. The frame draws the
+   rail on the page ground with the active row picked out in surface/subtle. */
+:root {
+  --sidebar: var(--color-surface-page);
+  --sidebar-foreground: var(--color-text-primary);
+  --sidebar-primary: var(--color-action-primary);
+  --sidebar-primary-foreground: var(--color-action-primary-content);
+  --sidebar-accent: var(--color-surface-subtle);
+  --sidebar-accent-foreground: var(--color-text-primary);
+  --sidebar-border: var(--color-border-default);
+  --sidebar-ring: var(--color-action-primary);
+}
+
+/* The admin console is its own surface: white rather than the editorial page
+   ground, and it keeps the shadcn corner radius the storefront squares off to
+   0. Scoped to the admin tree so the storefront is untouched. */
+.admin-surface {
+  --radius: 8px;
+  --background: #ffffff;
+  --card: #ffffff;
+  --popover: #ffffff;
+}

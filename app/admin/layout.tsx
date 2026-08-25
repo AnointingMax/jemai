@@ -6,14 +6,10 @@ export const metadata: Metadata = {
 };
 
 /**
- * The admin shell. Kept deliberately bare for now — it shares the root fonts
- * and tokens but none of the storefront chrome, so admin screens can grow their
- * own navigation without inheriting the editorial header and footer.
+ * The admin tree splits in two: `(auth)` renders the sign-in frames on bare
+ * white, `(dashboard)` renders the console shell. Only the metadata is shared,
+ * so this layout is a pass-through.
  */
-const AdminLayout = ({ children }: LayoutProps<"/admin">) => (
-  <main className="flex min-h-full flex-col px-4 py-10 sm:px-6 lg:px-page-gutter">
-    {children}
-  </main>
-);
+const AdminLayout = ({ children }: LayoutProps<"/admin">) => <>{children}</>;
 
 export default AdminLayout;

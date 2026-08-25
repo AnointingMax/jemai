@@ -87,6 +87,45 @@ One page per session. Work top-down unless told otherwise.
       shared-wrapper payment modals live under `components/checkout/`; the
       off-palette values are collected in `components/checkout/tokens.ts`.
 
+## Admin console
+
+Built from the PNG drops in `design-reference/` rather than Figma — `Log in.png`,
+the four `Recover password/` frames, and `Layout/{header,sidebar-7}.png`. There
+are no admin frames in the `Customer facing` Figma page, so these exports are the
+only reference; section screens beyond the shell have no design yet.
+
+- [x] Admin auth — `/admin/login`, `/admin/recover-password`,
+      `/admin/recover-password/check-email`, `/admin/reset-password`,
+      `/admin/reset-password/success`. One 360px column on white, on the
+      `app/admin/(auth)` group. **Every band on all five screens lands within
+      3px of its frame**, with the fields at exactly 360 × 44 and each button on
+      its frame's 40px box. Verified at 1440 / 768 / 390.
+- [x] Console shell — `/admin` and the seven section routes, on the
+      `app/admin/(dashboard)` group. **The rail matches `sidebar-7.png`
+      band-for-band** — wordmark 24-47, group labels on 92 / 280 / 432, row
+      pitch 36 with 28px pills, footer within 1px — and the header's runs land
+      within 2px of `header.png` across the 64px bar. Verified at 1440 / 768 /
+      390, plus the collapsed rail and the mobile drawer.
+
+Notes on the admin drops:
+
+- **The auth set runs two type scales.** The login frame is a 22px title over
+  16px copy; the four recovery frames are 28px over ~18px. Measured on ink the
+  recovery copy reads 18.4px against Assistant — 18px is the nearest token and
+  lands every line within 3%, so the remaining ~2% width gap on those runs is
+  expected, not drift. Worth a designer check.
+- **Section screens are placeholders.** Every route under the console renders a
+  title and a one-line blurb. The nav and the breadcrumb both read
+  `components/admin/nav.ts`, so a section is named once.
+- **`admin-surface` scopes the console's ground.** The storefront squares every
+  corner (`--radius: 0px`) on the page ground; the console is white with an 8px
+  radius. The class sits on the two admin layouts, so the shadcn primitives
+  inside them pick up console values without touching the storefront.
+- **The rail collapses off-canvas, not to icons.** No row in the frame carries
+  an icon of its own, so an icon strip would have nothing to draw.
+- **`devIndicators: false`** in `next.config.ts` — the floating dev badge sits
+  over the sidebar's account row and lands in every measuring screenshot.
+
 Shared reference frames (not pages): `246:18783` intro, `247:18801` semantic colour,
 `249:19691` typography, `249:19754` spacing & layout, `251:19982` shared components,
 `267:22649` modal flows, `280:30461` modal wrapper.
