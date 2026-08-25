@@ -15,18 +15,18 @@ import {
 /**
  * The overflow menu every detail screen carries. Deleting is destructive and
  * irreversible, so it confirms before firing the action rather than on the way
- * back.
+ * back — there is no undo behind it.
  */
-export const RecordActionsMenu = ({
-  name,
+export const ContentActionsMenu = ({
   editHref,
-  deleteLabel,
+  name,
+  deleteLabel = "Delete",
   onDelete,
 }: {
-  name: string;
   editHref: string;
-  /** "Delete product", "Delete exhibition" — the frames name the record type. */
-  deleteLabel: string;
+  name: string;
+  /** "Delete exhibition" where the frame names the record type; plain "Delete" otherwise. */
+  deleteLabel?: string;
   onDelete: () => Promise<void>;
 }) => {
   const [pending, startTransition] = useTransition();

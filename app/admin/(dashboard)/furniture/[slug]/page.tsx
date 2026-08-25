@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { deleteFurnitureAction } from "@/app/admin/(dashboard)/furniture/actions";
-import { RecordActionsMenu } from "@/components/admin/record-actions-menu";
+import { ContentActionsMenu } from "@/components/admin/content-actions-menu";
 import { CopyPanel, DetailRow } from "@/components/admin/record-panels";
 import { Accordion } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
@@ -34,7 +34,7 @@ const AdminFurnitureDetailPage = async ({ params }: PageProps<"/admin/furniture/
             <CardTitle className="text-text-primary font-sans text-xl font-semibold">
               {furniture.name}
             </CardTitle>
-            <RecordActionsMenu
+            <ContentActionsMenu
               name={furniture.name}
               editHref={`/admin/furniture/${furniture.slug}/edit`}
               deleteLabel="Delete product"

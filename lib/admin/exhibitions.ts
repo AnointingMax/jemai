@@ -4,7 +4,7 @@ import {
   naira,
   slugify,
   uniqueSlug,
-  type MediaAsset,
+  type ContentAsset,
 } from "@/lib/admin/content";
 
 /** Upcoming shows are live on the storefront; archived ones sit in the past record. */
@@ -35,10 +35,10 @@ export type Exhibition = {
   /** The "About the Artist" panel. */
   artistBio: string;
   status: ExhibitionStatus;
-  thumbnail: MediaAsset | null;
+  thumbnail: ContentAsset | null;
   /** The artist's portrait — its own single slot, beside the thumbnail. */
-  artistProfile: MediaAsset | null;
-  media: MediaAsset[];
+  artistProfile: ContentAsset | null;
+  media: ContentAsset[];
   /** Slugs out of the artwork catalogue, linked onto the exhibition page. */
   featured: string[];
   /** ISO string; the index sorts on it. */
@@ -57,7 +57,7 @@ export const exhibitionDates = (exhibition: Pick<Exhibition, "startDate" | "endD
 export const exhibitionSpan = (exhibition: Pick<Exhibition, "startDate" | "endDate">) =>
   formatDateSpan(exhibition.startDate, exhibition.endDate);
 
-const asset = (name: string, src: string): MediaAsset => ({
+const asset = (name: string, src: string): ContentAsset => ({
   id: `${name}-${src}`,
   name,
   size: 167301,
@@ -194,7 +194,7 @@ export type ExhibitionInput = Omit<Exhibition, "updatedAt">;
 const slugsInUse = () => store.map((item) => item.slug);
 
 export const createExhibition = (input: ExhibitionInput) => {
-  const slug = uniqueSlug(slugify(input.slug || input.name), slugsInUse(), "exhibition");
+  const slug = uniqueSlug(slugsInUse(), slugify(input.slug || input.name), "exhibition");
   const created: Exhibition = { ...input, slug, updatedAt: new Date().toISOString() };
   store.push(created);
   return created;
@@ -203,7 +203,7 @@ export const createExhibition = (input: ExhibitionInput) => {
 export const updateExhibition = (slug: string, input: ExhibitionInput) => {
   const index = store.findIndex((item) => item.slug === slug);
   if (index === -1) return undefined;
-  const next = uniqueSlug(slugify(input.slug || input.name), slugsInUse(), "exhibition", slug);
+  const next = uniqueSlug(slugsInUse(), slugify(input.slug || input.name), "exhibition", slug);
   const updated: Exhibition = { ...input, slug: next, updatedAt: new Date().toISOString() };
   store[index] = updated;
   return updated;

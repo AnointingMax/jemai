@@ -6,13 +6,13 @@ import {
   clearExhibitionImageAction,
   deleteExhibitionAction,
 } from "@/app/admin/(dashboard)/exhibitions/actions";
-import { RecordActionsMenu } from "@/components/admin/record-actions-menu";
+import { ContentActionsMenu } from "@/components/admin/content-actions-menu";
 import { CopyPanel, DetailRow } from "@/components/admin/record-panels";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { Accordion } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { MediaAsset } from "@/lib/admin/content";
+import type { ContentAsset } from "@/lib/admin/content";
 import { describeAdmission, exhibitionSpan, getExhibition } from "@/lib/admin/exhibitions";
 import { artworks } from "@/lib/artworks";
 
@@ -28,7 +28,7 @@ const ImageCard = ({
   onClear,
 }: {
   title: string;
-  asset: MediaAsset | null;
+  asset: ContentAsset | null;
   editHref: string;
   onClear: () => Promise<void>;
 }) => (
@@ -120,7 +120,7 @@ const AdminExhibitionDetailPage = async ({ params }: PageProps<"/admin/exhibitio
               </CardTitle>
               <StatusBadge status={exhibition.status} />
             </div>
-            <RecordActionsMenu
+            <ContentActionsMenu
               name={exhibition.name}
               editHref={editHref}
               deleteLabel="Delete exhibition"

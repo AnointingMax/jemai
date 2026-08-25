@@ -26,7 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { slugify, type MediaAsset } from "@/lib/admin/content";
+import { slugify, type ContentAsset } from "@/lib/admin/content";
 import type { ExhibitionStatus } from "@/lib/admin/exhibitions";
 import type { Artwork } from "@/lib/artworks";
 import { cn } from "@/lib/utils";
@@ -50,9 +50,9 @@ export type ExhibitionFormValues = {
   summary: string;
   content: string;
   artistBio: string;
-  thumbnail: MediaAsset[];
-  artistProfile: MediaAsset[];
-  media: MediaAsset[];
+  thumbnail: ContentAsset[];
+  artistProfile: ContentAsset[];
+  media: ContentAsset[];
   featured: string[];
 };
 

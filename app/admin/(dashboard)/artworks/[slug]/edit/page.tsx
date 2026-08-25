@@ -1,0 +1,43 @@
+import { notFound } from "next/navigation";
+
+import { updateArtworkAction } from "@/app/admin/(dashboard)/artworks/actions";
+import { ArtworkForm, type ArtworkFormValues } from "@/components/admin/artwork-form";
+import { artworkMediums, artworkYears, getArtwork } from "@/lib/admin/artworks";
+
+/**
+ * Edit — the same form, handed the artwork as defaults. The action is the update
+ * one with the current slug bound to it, so a renamed work still resolves.
+ */
+const AdminArtworkEditPage = async ({ params }: PageProps<"/admin/artworks/[slug]/edit">) => {
+  const { slug } = await params;
+  const artwork = getArtwork(slug);
+  if (!artwork) notFound();
+
+  const values: ArtworkFormValues = {
+    title: artwork.title,
+    slug: artwork.slug,
+    artist: artwork.artist,
+    medium: artwork.medium,
+    year: artwork.year,
+    dimensions: artwork.dimensions,
+    summary: artwork.summary,
+    story: artwork.story,
+    curatorsPick: artwork.curatorsPick,
+    thumbnail: artwork.thumbnail ? [artwork.thumbnail] : [],
+    media: artwork.media,
+  };
+
+  return (
+    <ArtworkForm
+      artwork={values}
+      mediums={artworkMediums}
+      years={artworkYears}
+      action={updateArtworkAction.bind(null, artwork.slug)}
+      cancelHref={`/admin/artworks/${artwork.slug}`}
+      heading={`Edit ${artwork.title}`}
+      submitLabel="Save changes"
+    />
+  );
+};
+
+export default AdminArtworkEditPage;

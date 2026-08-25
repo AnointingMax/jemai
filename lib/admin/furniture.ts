@@ -1,16 +1,18 @@
 import {
-  formatFileSize,
-  formatUpdatedAt,
+  identifyAssets,
   naira,
   slugify,
   uniqueSlug,
-  type MediaAsset,
+  type ContentAsset,
 } from "@/lib/admin/content";
 
-export { formatFileSize, formatUpdatedAt, naira, slugify };
+// Prices are formatted the same way in every catalogue, so `naira` lives in the
+// shared module now. Re-exported here because the furniture screens reach for it
+// through this store.
+export { naira };
 
-/** A media entry — thumbnail or gallery slot. Shared with every other catalogue. */
-export type FurnitureAsset = MediaAsset;
+/** A furniture media entry. Same shape as any other content asset. */
+export type FurnitureAsset = ContentAsset;
 
 /**
  * One buyable combination. The frames drew variants as two free-text tag rails
@@ -206,8 +208,6 @@ export const listFurniture = () => [...store].sort(byRecency);
 
 export const getFurniture = (slug: string) => store.find((item) => item.slug === slug);
 
-const slugsInUse = () => store.map((item) => item.slug);
-
 export type FurnitureInput = Omit<Furniture, "slug" | "updatedAt"> & { slug: string };
 
 /** Stable ids for the variant rows, which arrive from the form without them. */
@@ -215,11 +215,16 @@ const identify = (slug: string, variants: FurnitureVariant[]) =>
   variants.map((variant, index) => ({ ...variant, id: `${slug}-v${index}` }));
 
 export const createFurniture = (input: FurnitureInput) => {
-  const slug = uniqueSlug(slugify(input.slug || input.name), slugsInUse(), "furniture");
+  const slug = uniqueSlug(
+    store.map((item) => item.slug),
+    slugify(input.slug || input.name),
+    "furniture"
+  );
   const created: Furniture = {
     ...input,
     slug,
     variants: identify(slug, input.variants),
+    media: identifyAssets(input.media),
     updatedAt: new Date().toISOString(),
   };
   store.push(created);
@@ -229,11 +234,17 @@ export const createFurniture = (input: FurnitureInput) => {
 export const updateFurniture = (slug: string, input: FurnitureInput) => {
   const index = store.findIndex((item) => item.slug === slug);
   if (index === -1) return undefined;
-  const next = uniqueSlug(slugify(input.slug || input.name), slugsInUse(), "furniture", slug);
+  const next = uniqueSlug(
+    store.map((item) => item.slug),
+    slugify(input.slug || input.name),
+    "furniture",
+    slug
+  );
   const updated: Furniture = {
     ...input,
     slug: next,
     variants: identify(next, input.variants),
+    media: identifyAssets(input.media),
     updatedAt: new Date().toISOString(),
   };
   store[index] = updated;
