@@ -8,6 +8,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { cn } from "@/lib/utils";
 
 /**
  * The page numbers the frames draw: the first three, an ellipsis, then the last
@@ -19,6 +20,68 @@ export const pageWindow = (total: number, current: number): (number | "ellipsis"
   const pages = [...edges].filter((page) => page >= 1 && page <= total).sort((a, b) => a - b);
   return pages.flatMap((page, index) =>
     index > 0 && page - pages[index - 1] > 1 ? (["ellipsis", page] as const) : [page]
+  );
+};
+
+/**
+ * The newsletter frame's footer instead of the button pager above: a record
+ * count on the left and a bare run of text links on the right. Same window
+ * logic, no chrome — that list is read far more often than it is paged.
+ */
+export const TableCountPager = ({
+  count,
+  current,
+  pageCount,
+  onGoTo,
+}: {
+  count: number;
+  current: number;
+  pageCount: number;
+  onGoTo: (page: number) => void;
+}) => {
+  const step = (label: string, to: number, disabled: boolean) => (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={() => onGoTo(to)}
+      className="text-text-secondary hover:text-text-primary focus-visible:ring-ring/50 cursor-pointer rounded-sm px-0.5 outline-none focus-visible:ring-3 disabled:pointer-events-none disabled:opacity-50"
+    >
+      {label}
+    </button>
+  );
+
+  return (
+    <div className="border-border-default flex items-center justify-between gap-4 border-t px-6 py-5.5">
+      <p className="text-text-secondary text-sm">
+        Showing {count} {count === 1 ? "record" : "records"}
+      </p>
+      <nav aria-label="Pagination" className="flex items-center gap-1.5 text-xs">
+        {step("Previous", current - 1, current === 1)}
+        {pageWindow(pageCount, current).map((page, index) =>
+          page === "ellipsis" ? (
+            <span key={`gap-${index}`} className="text-text-secondary px-0.5">
+              …
+            </span>
+          ) : (
+            <button
+              key={page}
+              type="button"
+              aria-current={page === current ? "page" : undefined}
+              onClick={() => onGoTo(page)}
+              className={cn(
+                "focus-visible:ring-ring/50 cursor-pointer rounded-sm px-0.5 outline-none focus-visible:ring-3",
+                page === current
+                  ? "text-text-primary font-medium"
+                  : "text-text-secondary hover:text-text-primary"
+              )}
+            >
+              {page}
+            </button>
+          )
+        )}
+        {step("Next", current + 1, current === pageCount)}
+      </nav>
+    </div>
   );
 };
 

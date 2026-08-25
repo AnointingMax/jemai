@@ -37,6 +37,18 @@ export const formatUpdatedAt = (iso: string) => {
   return `${date.getUTCDate()} ${months[date.getUTCMonth()]} ${date.getUTCFullYear()} ${twelve}:${minutes} ${meridiem}`;
 };
 
+/**
+ * "18 Aug · 07:56" — the newsletter index's Date column, which drops the year
+ * and prints a 24-hour clock. Built off UTC for the same reason as
+ * `formatUpdatedAt`: a locale-dependent render would not survive hydration.
+ */
+export const formatDateTimeShort = (iso: string) => {
+  const date = new Date(iso);
+  const hours = date.getUTCHours().toString().padStart(2, "0");
+  const minutes = date.getUTCMinutes().toString().padStart(2, "0");
+  return `${date.getUTCDate()} ${months[date.getUTCMonth()]} · ${hours}:${minutes}`;
+};
+
 const monthNames = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",
