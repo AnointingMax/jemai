@@ -6,7 +6,7 @@ import { Search } from "lucide-react";
 import { EnquirySheet } from "@/components/admin/enquiry-sheet";
 import { SortableHead, nextSort, type SortState } from "@/components/admin/sortable-head";
 import { StatusBadge } from "@/components/admin/status-badge";
-import { TableCountPager } from "@/components/admin/table-pager";
+import { TablePager } from "@/components/admin/table-pager";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
 import {
@@ -220,8 +220,7 @@ export const EnquiryTable = ({ enquiries }: { enquiries: AdminEnquiry[] }) => {
           </div>
         )}
 
-        <TableCountPager
-          count={filtered.length}
+        <TablePager
           current={current}
           pageCount={pageCount}
           onGoTo={(next) => setPage(Math.min(Math.max(next, 1), pageCount))}

@@ -4,14 +4,13 @@ import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
 
 import { SortableHead, nextSort, type SortState } from "@/components/admin/sortable-head";
-import { TableCountPager } from "@/components/admin/table-pager";
+import { TablePager } from "@/components/admin/table-pager";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
   TableCell,
-  TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
@@ -150,12 +149,7 @@ export const NewsletterTable = ({ rows }: { rows: SubscriberRow[] }) => {
           </div>
         )}
 
-        <TableCountPager
-          count={filtered.length}
-          current={current}
-          pageCount={pageCount}
-          onGoTo={goTo}
-        />
+        <TablePager current={current} pageCount={pageCount} onGoTo={goTo} />
       </div>
     </div>
   );
