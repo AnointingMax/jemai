@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Check, LocateFixed, SquareArrowOutUpRight, X } from "lucide-react";
+import { Check, LocateFixed, X } from "lucide-react";
 
 import { FieldLabel } from "@/components/admin/form-section";
+import { ContactLink, SheetPanel } from "@/components/admin/record-panels";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,26 +30,6 @@ import {
   type FulfilmentStatus,
 } from "@/lib/admin/orders";
 import { cn } from "@/lib/utils";
-
-/** The panels in the sheet are all the same hairline card. */
-const Panel = ({ label, children }: { label: string; children: React.ReactNode }) => (
-  <section className="border-border-default flex flex-col gap-3 rounded-lg border p-4">
-    {/* A caption, not a form label — the panels wrap copy, not controls. */}
-    <p className="text-text-secondary text-eyebrow-lg uppercase">{label}</p>
-    {children}
-  </section>
-);
-
-/** A contact line: the value, then the icon that opens it in the OS handler. */
-const ContactLink = ({ href, children }: { href: string; children: string }) => (
-  <a
-    href={href}
-    className="text-text-secondary hover:text-text-primary focus-visible:ring-ring/50 flex w-fit items-center gap-2 rounded-sm text-sm outline-none focus-visible:ring-3"
-  >
-    {children}
-    <SquareArrowOutUpRight aria-hidden className="text-action-link size-4" />
-  </a>
-);
 
 /**
  * The fulfilment timeline. Every stage is drawn whether or not the order has
@@ -164,15 +145,15 @@ const OrderSheetBody = ({
 
         <hr className="border-border-default border-t border-dotted" />
 
-        <Panel label="Customer">
+        <SheetPanel label="Customer">
           <p className="text-text-primary text-base">{order.customer}</p>
           <div className="flex flex-col gap-1">
             <ContactLink href={`mailto:${order.email}`}>{order.email}</ContactLink>
             <ContactLink href={`tel:${order.phone.replace(/\s/g, "")}`}>{order.phone}</ContactLink>
           </div>
-        </Panel>
+        </SheetPanel>
 
-        <Panel label="Order items">
+        <SheetPanel label="Order items">
           {order.items.map((line) => (
             <div key={`${line.name}-${line.colour}-${line.size}`} className="flex flex-col gap-1">
               <p className="text-text-primary text-base">
@@ -181,14 +162,14 @@ const OrderSheetBody = ({
               <p className="text-text-secondary text-sm">{describeItem(line)}</p>
             </div>
           ))}
-        </Panel>
+        </SheetPanel>
 
-        <Panel label="Delivery">
+        <SheetPanel label="Delivery">
           <p className="text-text-primary flex items-start gap-2 text-base">
             <LocateFixed aria-hidden className="mt-0.5 size-5 shrink-0 text-[#16a34a]" />
             {order.address}
           </p>
-        </Panel>
+        </SheetPanel>
 
         <div className="flex flex-col gap-1.5">
           <FieldLabel htmlFor="fulfilment-status">Fulfilment status</FieldLabel>
@@ -211,9 +192,9 @@ const OrderSheetBody = ({
           </Select>
         </div>
 
-        <Panel label="Status history">
+        <SheetPanel label="Status history">
           <Timeline order={order} />
-        </Panel>
+        </SheetPanel>
       </div>
 
       <SheetFooter className="border-border-default flex-row justify-end gap-3 border-t p-4">

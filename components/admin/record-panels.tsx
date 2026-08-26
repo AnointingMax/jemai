@@ -1,3 +1,5 @@
+import { SquareArrowOutUpRight } from "lucide-react";
+
 import {
   AccordionContent,
   AccordionItem,
@@ -47,4 +49,27 @@ export const CopyPanel = ({
         ))}
     </AccordionContent>
   </AccordionItem>
+);
+
+/**
+ * A hairline card inside a detail sheet, captioned with an eyebrow. The order,
+ * enquiry and consultation sheets are all the same stack of these.
+ */
+export const SheetPanel = ({ label, children }: { label: string; children: React.ReactNode }) => (
+  <section className="border-border-default flex flex-col gap-3 rounded-lg border p-4">
+    {/* A caption, not a form label — the panels wrap copy, not controls. */}
+    <p className="text-text-secondary text-eyebrow-lg uppercase">{label}</p>
+    {children}
+  </section>
+);
+
+/** A contact line: the value, then the icon that opens it in the OS handler. */
+export const ContactLink = ({ href, children }: { href: string; children: string }) => (
+  <a
+    href={href}
+    className="text-text-secondary hover:text-text-primary focus-visible:ring-ring/50 flex w-fit items-center gap-2 rounded-sm text-sm outline-none focus-visible:ring-3"
+  >
+    {children}
+    <SquareArrowOutUpRight aria-hidden className="text-action-link size-4" />
+  </a>
 );

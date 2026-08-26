@@ -1,9 +1,10 @@
+import type { EnquiryStatus } from "@/lib/admin/enquiries";
 import type { ExhibitionStatus } from "@/lib/admin/exhibitions";
 import type { FulfilmentStatus } from "@/lib/admin/orders";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-type AdminStatus = FulfilmentStatus | ExhibitionStatus;
+type AdminStatus = FulfilmentStatus | ExhibitionStatus | EnquiryStatus;
 
 /**
  * Dot colour per state — the badge chrome itself is the same hairline pill.
@@ -17,6 +18,10 @@ const dot: Record<AdminStatus, string> = {
   Delivered: "bg-[#34c759]",
   Upcoming: "bg-[#2f8f4e]",
   Archived: "bg-text-primary",
+  // The request queues have no frames of their own, so they borrow the
+  // fulfilment palette: in-progress amber, settled green.
+  "In conversation": "bg-[#ff8d28]",
+  Closed: "bg-[#34c759]",
 };
 
 /** The status pill the order and exhibition tables share: a 6px dot, the label, a hairline border. */
