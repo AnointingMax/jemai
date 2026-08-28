@@ -1,10 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { MoreHorizontal, SquarePen, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import type { ActionResult } from "@/lib/action-result";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,14 +24,16 @@ export const ContentActionsMenu = ({
   editHref,
   name,
   deleteLabel = "Delete",
+  deletedHref,
   onDelete,
 }: {
   editHref: string;
   name: string;
-  /** "Delete exhibition" where the frame names the record type; plain "Delete" otherwise. */
   deleteLabel?: string;
-  onDelete: () => Promise<void>;
+  deletedHref?: string;
+  onDelete: () => Promise<ActionResult<string> | void>;
 }) => {
+  const router = useRouter();
   const [pending, startTransition] = useTransition();
 
   return (
@@ -57,7 +62,19 @@ export const ContentActionsMenu = ({
             event.preventDefault();
             if (!window.confirm(`Delete “${name}”? This cannot be undone.`)) return;
             startTransition(async () => {
-              await onDelete();
+              const result = await onDelete();
+              if (!result) return;
+
+              if (result.error) {
+                toast.error(result.message);
+                return;
+              }
+
+              toast.success(result.data);
+              if (deletedHref) {
+                router.refresh();
+                router.push(deletedHref);
+              }
             });
           }}
         >

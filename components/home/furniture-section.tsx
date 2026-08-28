@@ -1,7 +1,6 @@
 import Image from "next/image";
 import { SectionIntro } from "@/components/site/section-intro";
-import { ProductCard } from "@/components/site/product-card";
-import { featuredProducts } from "@/lib/products";
+import { ProductCard, type Product } from "@/components/site/product-card";
 import { AssuranceRow, type Assurance } from "@/components/site/assurance-row";
 
 const assurances: Assurance[] = [
@@ -25,7 +24,8 @@ const assurances: Assurance[] = [
   },
 ];
 
-export const FurnitureSection = () => (
+/** The four newest pieces, read on the server by the page that renders this. */
+export const FurnitureSection = ({ products }: { products: Product[] }) => (
   <section className="flex w-full flex-col items-center gap-section-gap-editorial">
     <div className="flex w-full max-w-432 flex-col gap-stack-loose px-4 sm:px-6 lg:px-page-gutter">
       <hr className="border-border-strong w-full border-t-3" />
@@ -41,8 +41,8 @@ export const FurnitureSection = () => (
         />
 
         <div className="grid w-full grid-cols-1 gap-grid-gutter-compact sm:grid-cols-2 lg:grid-cols-4">
-          {featuredProducts.map((product) => (
-            <ProductCard key={product.name} product={product} />
+          {products.map((product) => (
+            <ProductCard key={product.href} product={product} />
           ))}
         </div>
       </div>

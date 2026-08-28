@@ -23,7 +23,7 @@ import { getFurniture, naira, totalStock } from "@/lib/admin/furniture";
  */
 const AdminFurnitureDetailPage = async ({ params }: PageProps<"/admin/furniture/[slug]">) => {
   const { slug } = await params;
-  const furniture = getFurniture(slug);
+  const furniture = await getFurniture(slug);
   if (!furniture) notFound();
 
   return (
@@ -38,6 +38,7 @@ const AdminFurnitureDetailPage = async ({ params }: PageProps<"/admin/furniture/
               name={furniture.name}
               editHref={`/admin/furniture/${furniture.slug}/edit`}
               deleteLabel="Delete product"
+              deletedHref="/admin/furniture"
               onDelete={deleteFurnitureAction.bind(null, furniture.slug)}
             />
           </div>
@@ -97,7 +98,7 @@ const AdminFurnitureDetailPage = async ({ params }: PageProps<"/admin/furniture/
 
           <Accordion
             type="multiple"
-            defaultValue={["description", "timeline", "customisation"]}
+            defaultValue={["description", "timeline", "customization"]}
             className="gap-3"
           >
             <CopyPanel value="description" label="Description*" body={furniture.description} />
@@ -107,9 +108,9 @@ const AdminFurnitureDetailPage = async ({ params }: PageProps<"/admin/furniture/
               body={furniture.timeline}
             />
             <CopyPanel
-              value="customisation"
-              label="Customisation*"
-              body={furniture.customisation}
+              value="customization"
+              label="Customization*"
+              body={furniture.customization}
             />
           </Accordion>
         </CardContent>
@@ -136,7 +137,7 @@ const AdminFurnitureDetailPage = async ({ params }: PageProps<"/admin/furniture/
             {furniture.thumbnail ? (
               /* eslint-disable-next-line @next/next/no-img-element */
               <img
-                src={furniture.thumbnail.src}
+                src={furniture.thumbnail}
                 alt={furniture.name}
                 className="bg-surface-subtle aspect-3/4 w-24 rounded-md object-cover"
               />
@@ -165,12 +166,12 @@ const AdminFurnitureDetailPage = async ({ params }: PageProps<"/admin/furniture/
           <CardContent>
             {furniture.media.length ? (
               <ul className="grid grid-cols-3 gap-3">
-                {furniture.media.map((asset) => (
-                  <li key={asset.id}>
+                {furniture.media.map((src, index) => (
+                  <li key={src}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={asset.src}
-                      alt={asset.name}
+                      src={src}
+                      alt={`${furniture.name} — view ${index + 2}`}
                       className="bg-surface-subtle aspect-square w-full rounded-md object-cover"
                     />
                   </li>

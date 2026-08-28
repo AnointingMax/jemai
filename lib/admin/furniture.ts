@@ -1,18 +1,30 @@
+import { Prisma } from "@/lib/generated/prisma/client";
 import {
-  identifyAssets,
   naira,
   slugify,
   uniqueSlug,
   type ContentAsset,
 } from "@/lib/admin/content";
+import { prisma } from "@/lib/prisma";
 
 // Prices are formatted the same way in every catalogue, so `naira` lives in the
-// shared module now. Re-exported here because the furniture screens reach for it
+// shared module. Re-exported here because the furniture screens reach for it
 // through this store.
 export { naira };
 
-/** A furniture media entry. Same shape as any other content asset. */
-export type FurnitureAsset = ContentAsset;
+/**
+ * The uploader works in `ContentAsset`s, but only their `src` is worth keeping:
+ * a product carries one thumbnail and an ordered list of gallery sources on its
+ * own row. This turns a stored source back into the shape the picker draws,
+ * naming it from the last path segment — a re-opened edit form shows the file
+ * name it was uploaded under for a real URL, and a generic one for a data URL.
+ */
+export const toContentAsset = (src: string): ContentAsset => ({
+  id: src,
+  name: src.startsWith("data:") ? "Uploaded image" : (src.split("/").pop() || src),
+  size: 0,
+  src,
+});
 
 /**
  * One buyable combination. The frames drew variants as two free-text tag rails
@@ -27,6 +39,7 @@ export type FurnitureVariant = {
 };
 
 export type Furniture = {
+  id: string;
   slug: string;
   name: string;
   category: string;
@@ -38,9 +51,11 @@ export type Furniture = {
   variants: FurnitureVariant[];
   description: string;
   timeline: string;
-  customisation: string;
-  thumbnail: FurnitureAsset | null;
-  media: FurnitureAsset[];
+  customization: string;
+  /** Source of the single thumbnail shot, or null before one is uploaded. */
+  thumbnail: string | null;
+  /** Gallery sources, in the order the detail frame's rail draws them. */
+  media: string[];
   /** ISO string; the index sorts on it and renders it as "15 May 2020 9:00 pm". */
   updatedAt: string;
 };
@@ -54,7 +69,7 @@ export const totalStock = (item: Pick<Furniture, "stock" | "variants">) =>
     ? item.variants.reduce((sum, variant) => sum + variant.quantity, 0)
     : item.stock;
 
-/** "2 colours \u00b7 1 size" — the index's Options column. */
+/** "2 colours · 1 size" — the index's Options column. */
 export const describeVariants = (variants: FurnitureVariant[]) => {
   const count = (values: string[]) => new Set(values.filter(Boolean)).size;
   const colours = count(variants.map((variant) => variant.colour));
@@ -63,197 +78,145 @@ export const describeVariants = (variants: FurnitureVariant[]) => {
     colours ? `${colours} ${colours === 1 ? "colour" : "colours"}` : "",
     sizes ? `${sizes} ${sizes === 1 ? "size" : "sizes"}` : "",
   ].filter(Boolean);
-  return parts.length ? parts.join(" \u00b7 ") : "No variants";
+  return parts.length ? parts.join(" · ") : "No variants";
 };
 
-const asset = (name: string, src: string): FurnitureAsset => ({
-  id: `${name}-${src}`,
-  name,
-  size: 167301,
-  src,
-});
+/** Variants come back in authoring order, which Prisma has to be told. */
+const withRelations = {
+  variants: { orderBy: { position: "asc" } },
+} satisfies Prisma.FurnitureInclude;
 
-type Seed = Omit<
-  Furniture,
-  "summary" | "description" | "timeline" | "customisation" | "thumbnail" | "media" | "variants"
-> & { variants: Omit<FurnitureVariant, "id">[] };
+type FurnitureRecord = Prisma.FurnitureGetPayload<{ include: typeof withRelations; }>;
 
-const blurb =
-  "The unisex Classic Eames is designed to elevate the joy of feeling comfortable at home or when relaxing in nature. The chair are designed in a traditional style.";
-
-const seed = ({ variants, ...input }: Seed): Furniture => ({
-  variants: variants.map((variant, index) => ({
-    ...variant,
-    id: `${input.slug}-v${index}`,
+/** The row and its relations as the console's one furniture shape. */
+const toFurniture = (record: FurnitureRecord): Furniture => ({
+  id: record.id,
+  slug: record.slug,
+  name: record.name,
+  category: record.category,
+  price: record.price,
+  stock: record.stock,
+  summary: record.summary,
+  variants: record.variants.map((variant) => ({
+    id: variant.id,
+    size: variant.size,
+    colour: variant.colour,
+    quantity: variant.quantity,
   })),
-  summary: blurb,
-  description: blurb,
-  timeline: blurb,
-  customisation: blurb,
-  thumbnail: asset("chair-white01.jpg", "/figma/home/p-alma.png"),
-  media: [
-    asset("hite01.jpg", "/figma/home/p-alma.png"),
-    asset("bwhite01.jpg", "/figma/home/p-mila.png"),
-    asset("chair white01.jpg", "/figma/home/p-nara.png"),
-    asset("chair-white01.jpg", "/figma/home/p-stone.png"),
-  ],
-  ...input,
+  description: record.description,
+  timeline: record.timeline,
+  customization: record.customization,
+  thumbnail: record.thumbnail,
+  media: record.gallery,
+  updatedAt: record.updatedAt.toISOString(),
 });
+
+/** Newest first — the order the index draws. */
+export const listFurniture = async () => {
+  const records = await prisma.furniture.findMany({
+    include: withRelations,
+    orderBy: { updatedAt: "desc" },
+  });
+  return records.map(toFurniture);
+};
+
+/** The overview's counter. A count query, not a fetch of the whole catalogue. */
+export const countFurniture = () => prisma.furniture.count();
+
+export const getFurniture = async (slug: string) => {
+  const record = await prisma.furniture.findUnique({
+    where: { slug },
+    include: withRelations,
+  });
+  return record ? toFurniture(record) : null;
+};
+
+export type FurnitureInput = Omit<Furniture, "id" | "slug" | "updatedAt"> & {
+  slug: string;
+};
 
 /**
- * The catalogue lives in module memory: this console has no backend yet, so
- * creates and edits survive for the life of the server process and no longer.
- * Swapping this for a real store means replacing the six functions below and
- * nothing that imports them.
+ * A slug no other product holds, suffixed `-2`, `-3`, … if one does. Only the
+ * candidate's own family is fetched rather than the whole catalogue, and
+ * `ignore` is the record's current slug so re-saving it unchanged does not push
+ * it to `-2`.
  */
-const store: Furniture[] = [
-  seed({
-    slug: "alma-accent-chair",
-    name: "Alma Accent Chair",
-    category: "Lounge",
-    price: 458210,
-    stock: 18,
-    variants: [
-      { size: "Organic", colour: "Red", quantity: 10 },
-      { size: "Oversized fit", colour: "Blue", quantity: 8 },
-    ],
-    updatedAt: "2020-05-15T21:00:00.000Z",
-  }),
-  seed({
-    slug: "mila-velvet-chair",
-    name: "Mila Velvet Chair",
-    category: "Table",
-    price: 387100,
-    stock: 12,
-    variants: [
-      { size: "Organic", colour: "Red", quantity: 4 },
-      { size: "Organic", colour: "Blue", quantity: 3 },
-      { size: "Oversized fit", colour: "Green", quantity: 5 },
-    ],
-    updatedAt: "2020-05-15T20:00:00.000Z",
-  }),
-  seed({
-    slug: "nara-boucle-chair",
-    name: "Nara Bouclé Chair",
-    category: "Sofa",
-    price: 718010,
-    stock: 6,
-    variants: [
-      { size: "Organic", colour: "White", quantity: 4 },
-      { size: "Organic", colour: "Charcoal", quantity: 2 },
-    ],
-    updatedAt: "2020-05-15T19:00:00.000Z",
-  }),
-  seed({
-    slug: "stone-armchair",
-    name: "Stone Armchair",
-    category: "Lounge",
-    price: 295000,
-    stock: 9,
-    variants: [{ size: "Organic", colour: "Charcoal", quantity: 9 }],
-    updatedAt: "2020-05-15T17:00:00.000Z",
-  }),
-  seed({
-    slug: "ayo-side-table",
-    name: "Ayo Side Table",
-    category: "Lounge",
-    price: 650000,
-    stock: 34,
-    variants: [
-      { size: "", colour: "Oak", quantity: 20 },
-      { size: "", colour: "Walnut", quantity: 14 },
-    ],
-    updatedAt: "2020-05-15T23:00:00.000Z",
-  }),
-  seed({
-    slug: "alma-accent-chair-oak",
-    name: "Alma Accent Chair",
-    category: "Lounge",
-    price: 675000,
-    stock: 23,
-    variants: [
-      { size: "Organic", colour: "Red", quantity: 11 },
-      { size: "Organic", colour: "Blue", quantity: 12 },
-    ],
-    updatedAt: "2020-05-15T22:00:00.000Z",
-  }),
-  seed({
-    slug: "mila-velvet-setee",
-    name: "Mila Velvet Chair",
-    category: "Setee",
-    price: 945000,
-    stock: 8,
-    variants: [
-      { size: "Organic", colour: "Red", quantity: 2 },
-      { size: "Organic", colour: "Blue", quantity: 3 },
-      { size: "Oversized fit", colour: "Green", quantity: 3 },
-    ],
-    updatedAt: "2020-05-15T18:00:00.000Z",
-  }),
-  seed({
-    slug: "mila-velvet-sofa",
-    name: "Mila Velvet Chair",
-    category: "Sofa",
-    price: 650000,
-    stock: 14,
-    variants: [{ size: "", colour: "Green", quantity: 14 }],
-    updatedAt: "2020-05-15T18:00:00.000Z",
-  }),
-];
-
-/** Newest first — the order the index draws and the order the seeds imply. */
-const byRecency = (a: Furniture, b: Furniture) => b.updatedAt.localeCompare(a.updatedAt);
-
-export const listFurniture = () => [...store].sort(byRecency);
-
-export const getFurniture = (slug: string) => store.find((item) => item.slug === slug);
-
-export type FurnitureInput = Omit<Furniture, "slug" | "updatedAt"> & { slug: string };
-
-/** Stable ids for the variant rows, which arrive from the form without them. */
-const identify = (slug: string, variants: FurnitureVariant[]) =>
-  variants.map((variant, index) => ({ ...variant, id: `${slug}-v${index}` }));
-
-export const createFurniture = (input: FurnitureInput) => {
-  const slug = uniqueSlug(
-    store.map((item) => item.slug),
-    slugify(input.slug || input.name),
-    "furniture"
-  );
-  const created: Furniture = {
-    ...input,
-    slug,
-    variants: identify(slug, input.variants),
-    media: identifyAssets(input.media),
-    updatedAt: new Date().toISOString(),
-  };
-  store.push(created);
-  return created;
-};
-
-export const updateFurniture = (slug: string, input: FurnitureInput) => {
-  const index = store.findIndex((item) => item.slug === slug);
-  if (index === -1) return undefined;
-  const next = uniqueSlug(
-    store.map((item) => item.slug),
-    slugify(input.slug || input.name),
+const availableSlug = async (candidate: string, name: string, ignore?: string) => {
+  const base = slugify(candidate || name) || "furniture";
+  const taken = await prisma.furniture.findMany({
+    where: { slug: { startsWith: base } },
+    select: { slug: true },
+  });
+  return uniqueSlug(
+    taken.map((row) => row.slug),
+    base,
     "furniture",
-    slug
+    ignore,
   );
-  const updated: Furniture = {
-    ...input,
-    slug: next,
-    variants: identify(next, input.variants),
-    media: identifyAssets(input.media),
-    updatedAt: new Date().toISOString(),
-  };
-  store[index] = updated;
-  return updated;
 };
 
-export const deleteFurniture = (slug: string) => {
-  const index = store.findIndex((item) => item.slug === slug);
-  if (index === -1) return false;
-  store.splice(index, 1);
-  return true;
+/** The variant rows as Prisma create input, carrying their authoring order. */
+const variantRows = (variants: FurnitureVariant[]) =>
+  variants.map((variant, position) => ({
+    size: variant.size,
+    colour: variant.colour,
+    quantity: variant.quantity,
+    position,
+  }));
+
+export const createFurniture = async (input: FurnitureInput) => {
+  const record = await prisma.furniture.create({
+    data: {
+      slug: await availableSlug(input.slug, input.name),
+      name: input.name,
+      category: input.category,
+      price: input.price,
+      stock: input.stock,
+      summary: input.summary,
+      description: input.description,
+      timeline: input.timeline,
+      customization: input.customization,
+      thumbnail: input.thumbnail,
+      gallery: input.media,
+      variants: { create: variantRows(input.variants) },
+    },
+    include: withRelations,
+  });
+  return toFurniture(record);
+};
+
+/**
+ * The variant rows are replaced wholesale rather than reconciled one by one:
+ * the form posts the complete list every time, and a row's identity is its
+ * position in that list, not an id the client ever held.
+ */
+export const updateFurniture = async (slug: string, input: FurnitureInput) => {
+  const existing = await prisma.furniture.findUnique({ where: { slug }, select: { id: true } });
+  if (!existing) return null;
+
+  const record = await prisma.furniture.update({
+    where: { id: existing.id },
+    data: {
+      slug: await availableSlug(input.slug, input.name, slug),
+      name: input.name,
+      category: input.category,
+      price: input.price,
+      stock: input.stock,
+      summary: input.summary,
+      description: input.description,
+      timeline: input.timeline,
+      customization: input.customization,
+      thumbnail: input.thumbnail,
+      gallery: input.media,
+      variants: { deleteMany: {}, create: variantRows(input.variants) },
+    },
+    include: withRelations,
+  });
+  return toFurniture(record);
+};
+
+/** Cascades to the variant rows — the relation carries `onDelete: Cascade`. */
+export const deleteFurniture = async (slug: string) => {
+  const { count } = await prisma.furniture.deleteMany({ where: { slug } });
+  return count > 0;
 };

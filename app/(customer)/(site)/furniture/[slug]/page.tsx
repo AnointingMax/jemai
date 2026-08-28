@@ -5,20 +5,13 @@ import { ProductGallery } from "@/components/furniture/product-gallery";
 import { ProductPurchase } from "@/components/furniture/product-purchase";
 import { ProductSections } from "@/components/furniture/product-sections";
 import { RelatedProducts } from "@/components/site/related-products";
-import {
-  getProductDetail,
-  productDetails,
-  relatedProducts,
-} from "@/lib/products";
-
-export const generateStaticParams = () =>
-  productDetails.map((product) => ({ slug: product.slug }));
+import { getFurnitureDetail, relatedFurniture } from "@/lib/furniture";
 
 export const generateMetadata = async ({
   params,
 }: PageProps<"/furniture/[slug]">): Promise<Metadata> => {
   const { slug } = await params;
-  const product = getProductDetail(slug);
+  const product = await getFurnitureDetail(slug);
   if (!product) return { title: "Not found | JEMAI" };
 
   return {
@@ -58,7 +51,7 @@ const Breadcrumb = ({ name }: { name: string }) => (
 
 const ProductDetailPage = async ({ params }: PageProps<"/furniture/[slug]">) => {
   const { slug } = await params;
-  const product = getProductDetail(slug);
+  const product = await getFurnitureDetail(slug);
   if (!product) notFound();
 
   return (
@@ -116,7 +109,7 @@ const ProductDetailPage = async ({ params }: PageProps<"/furniture/[slug]">) => 
         </div>
       </section>
 
-      <RelatedProducts products={relatedProducts(product.slug)} />
+      <RelatedProducts products={await relatedFurniture(product.slug)} />
     </>
   );
 };

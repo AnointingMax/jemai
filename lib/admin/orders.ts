@@ -1,17 +1,17 @@
-import { naira } from "@/lib/admin/furniture";
+import { naira } from "@/lib/admin/content";
 
 /**
- * The fulfilment lifecycle, in order. Both the table pill and the sheet's
+ * The fulfillment lifecycle, in order. Both the table pill and the sheet's
  * timeline read this array, so a stage is named once and the two stay in step.
  */
-export const fulfilmentStatuses = [
+export const fulfillmentStatuses = [
   "New",
   "Processing",
   "Ready for dispatch",
   "Delivered",
 ] as const;
 
-export type FulfilmentStatus = (typeof fulfilmentStatuses)[number];
+export type FulfillmentStatus = (typeof fulfillmentStatuses)[number];
 
 /**
  * The timeline the sheet draws. It is the lifecycle with "New" spelled the way
@@ -44,7 +44,7 @@ export type AdminOrder = {
   total: number;
   /** ISO. The table prints `formatOrderDate`, sorting compares this. */
   placedAt: string;
-  status: FulfilmentStatus;
+  status: FulfillmentStatus;
   items: OrderItem[];
   address: string;
   /**

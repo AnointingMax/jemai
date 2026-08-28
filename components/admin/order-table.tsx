@@ -17,11 +17,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  fulfilmentStatuses,
+  fulfillmentStatuses,
   formatOrderDate,
   naira,
   type AdminOrder,
-  type FulfilmentStatus,
+  type FulfillmentStatus,
 } from "@/lib/admin/orders";
 
 type OrderKey = "id" | "customer" | "total" | "placedAt" | "status";
@@ -30,7 +30,7 @@ type OrderKey = "id" | "customer" | "total" | "placedAt" | "status";
 const compare = (a: AdminOrder, b: AdminOrder, key: OrderKey) => {
   if (key === "total") return a.total - b.total;
   if (key === "status")
-    return fulfilmentStatuses.indexOf(a.status) - fulfilmentStatuses.indexOf(b.status);
+    return fulfillmentStatuses.indexOf(a.status) - fulfillmentStatuses.indexOf(b.status);
   return String(a[key]).localeCompare(String(b[key]));
 };
 
@@ -53,9 +53,9 @@ export const OrderTable = ({ orders, pageSize }: OrderTableProps) => {
   const [selected, setSelected] = useState<string[]>([]);
   const [page, setPage] = useState(1);
   const [openId, setOpenId] = useState<string | null>(null);
-  // Status edits live here until the fulfilment endpoint exists, so the sheet's
+  // Status edits live here until the fulfillment endpoint exists, so the sheet's
   // select and the table's pill stay in agreement for the session.
-  const [overrides, setOverrides] = useState<Record<string, FulfilmentStatus>>({});
+  const [overrides, setOverrides] = useState<Record<string, FulfillmentStatus>>({});
 
   const rows = useMemo(() => {
     const withStatus = orders.map((order) =>
@@ -115,7 +115,7 @@ export const OrderTable = ({ orders, pageSize }: OrderTableProps) => {
                 Date
               </SortableHead>
               <SortableHead sortKey="status" sort={sort} onSort={onSort}>
-                Fulfilment Status
+                Fulfillment Status
               </SortableHead>
             </TableRow>
           </TableHeader>

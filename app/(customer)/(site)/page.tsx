@@ -3,11 +3,12 @@ import { FurnitureSection } from "@/components/home/furniture-section";
 import { ArtworksSection } from "@/components/home/artworks-section";
 import { ExhibitionsSection } from "@/components/home/exhibitions-section";
 import { ArchitectureSection } from "@/components/home/architecture-section";
+import { featuredFurniture } from "@/lib/furniture";
 
-const HomePage = () => (
+const HomePage = async () => (
   <>
     <IntroSection />
-    <FurnitureSection />
+    <FurnitureSection products={await featuredFurniture()} />
     <ArtworksSection />
     <ExhibitionsSection />
     <ArchitectureSection />

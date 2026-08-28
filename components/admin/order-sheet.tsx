@@ -24,19 +24,19 @@ import {
 } from "@/components/ui/sheet";
 import {
   describeItem,
-  fulfilmentStatuses,
+  fulfillmentStatuses,
   orderTimeline,
   type AdminOrder,
-  type FulfilmentStatus,
+  type FulfillmentStatus,
 } from "@/lib/admin/orders";
 import { cn } from "@/lib/utils";
 
 /**
- * The fulfilment timeline. Every stage is drawn whether or not the order has
+ * The fulfillment timeline. Every stage is drawn whether or not the order has
  * reached it — the pending ones as a grey node on a dotted rail, so the reader
  * can see what is still ahead as well as what has happened.
  */
-const Timeline = ({ order }: { order: AdminOrder }) => {
+const Timeline = ({ order }: { order: AdminOrder; }) => {
   const entries = orderTimeline(order);
 
   return (
@@ -86,11 +86,11 @@ type OrderSheetProps = {
   /** Null keeps the sheet closed; setting an order opens it on that record. */
   order: AdminOrder | null;
   onOpenChange: (open: boolean) => void;
-  onStatusChange: (status: FulfilmentStatus) => void;
+  onStatusChange: (status: FulfillmentStatus) => void;
 };
 
 /**
- * The order detail sheet. It is the only place fulfilment moves, so the select
+ * The order detail sheet. It is the only place fulfillment moves, so the select
  * is a draft until "Update status" commits it — closing the sheet without
  * pressing it leaves the order where it was.
  */
@@ -114,9 +114,9 @@ const OrderSheetBody = ({
   onStatusChange,
 }: {
   order: AdminOrder;
-  onStatusChange: (status: FulfilmentStatus) => void;
+  onStatusChange: (status: FulfillmentStatus) => void;
 }) => {
-  const [status, setStatus] = useState<FulfilmentStatus>(order.status);
+  const [status, setStatus] = useState<FulfillmentStatus>(order.status);
 
   return (
     <>
@@ -139,7 +139,7 @@ const OrderSheetBody = ({
             {order.items.length > 1 ? ` + ${order.items.length - 1} more` : ""}
           </SheetTitle>
           <SheetDescription className="sr-only">
-            Customer, items, delivery address and fulfilment history for order {order.id}.
+            Customer, items, delivery address and fulfillment history for order {order.id}.
           </SheetDescription>
         </div>
 
@@ -172,10 +172,10 @@ const OrderSheetBody = ({
         </SheetPanel>
 
         <div className="flex flex-col gap-1.5">
-          <FieldLabel htmlFor="fulfilment-status">Fulfilment status</FieldLabel>
-          <Select value={status} onValueChange={(value) => setStatus(value as FulfilmentStatus)}>
+          <FieldLabel htmlFor="fulfillment-status">Fulfillment status</FieldLabel>
+          <Select value={status} onValueChange={(value) => setStatus(value as FulfillmentStatus)}>
             <SelectTrigger
-              id="fulfilment-status"
+              id="fulfillment-status"
               className="bg-admin-field border-border-default text-text-primary h-11 w-full rounded-lg text-sm"
             >
               <SelectValue />
@@ -183,7 +183,7 @@ const OrderSheetBody = ({
             {/* Portalled to `body` like the sheet, so it needs the console
                 surface too or it comes back square-cornered. */}
             <SelectContent className="admin-surface bg-popover">
-              {fulfilmentStatuses.map((value) => (
+              {fulfillmentStatuses.map((value) => (
                 <SelectItem key={value} value={value}>
                   {value}
                 </SelectItem>

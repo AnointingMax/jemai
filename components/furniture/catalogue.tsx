@@ -16,7 +16,7 @@ import {
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cn } from "@/lib/utils";
 import { LoadMorePager } from "@/components/shared/load-more-pager";
-import { catalogue, collections, colours } from "@/lib/products";
+import type { CatalogueProduct } from "@/lib/products";
 
 /** How many cards the frame draws before the first "Load more". */
 const PAGE_SIZE = 16;
@@ -58,7 +58,15 @@ const Field = ({ label, value, onChange, children }: FieldProps) => (
   </Select>
 );
 
-export const Catalogue = () => {
+type CatalogueProps = {
+  /** The whole catalogue: every filter below runs on the client, over this list. */
+  products: CatalogueProduct[];
+  /** The tab rail and the colour select, drawn from what the catalogue holds. */
+  collections: string[];
+  colours: string[];
+};
+
+export const Catalogue = ({ products, collections, colours }: CatalogueProps) => {
   const [collection, setCollection] = useState("All");
   const [query, setQuery] = useState("");
   const [availability, setAvailability] = useState("in-stock");
@@ -68,10 +76,10 @@ export const Catalogue = () => {
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
-    const matches = catalogue.filter(
+    const matches = products.filter(
       (product) =>
         (collection === "All" || product.collection === collection) &&
-        (colour === "all" || product.colour === colour) &&
+        (colour === "all" || product.colours.includes(colour)) &&
         product.inStock === (availability === "in-stock") &&
         (needle === "" ||
           product.name.toLowerCase().includes(needle) ||
@@ -84,7 +92,7 @@ export const Catalogue = () => {
     return [...matches].sort((a, b) =>
       sort === "price-asc" ? a.amount - b.amount : b.amount - a.amount,
     );
-  }, [availability, collection, colour, query, sort]);
+  }, [availability, collection, colour, products, query, sort]);
 
   const shown = Math.min(visible, filtered.length);
 

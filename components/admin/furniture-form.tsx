@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useFieldArray, useForm, useWatch } from "react-hook-form";
 import { Plus, Trash2, X } from "lucide-react";
+import { toast } from "sonner";
 
 import {
   FieldHint,
@@ -23,6 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import type { ActionResult } from "@/lib/action-result";
 import { slugify, type ContentAsset } from "@/lib/admin/content";
 import { cn } from "@/lib/utils";
 
@@ -41,7 +44,7 @@ export type FurnitureFormValues = {
   variants: { size: string; colour: string; quantity: string; }[];
   description: string;
   timeline: string;
-  customisation: string;
+  customization: string;
   thumbnail: ContentAsset[];
   media: ContentAsset[];
 };
@@ -56,7 +59,7 @@ export const emptyFurnitureForm: FurnitureFormValues = {
   variants: [{ size: "", colour: "", quantity: "" }],
   description: "",
   timeline: "",
-  customisation: "",
+  customization: "",
   thumbnail: [],
   media: [],
 };
@@ -69,8 +72,14 @@ type FurnitureFormProps = {
    */
   furniture?: FurnitureFormValues;
   categories: string[];
-  /** Server action. Redirects to the product's detail page when it resolves. */
-  action: (values: FurnitureFormValues) => Promise<void>;
+  /**
+   * Server action. Hands back the saved product's slug — which the create
+   * screen does not know in advance, and an edit can change — and this form
+   * does the navigating, so a rejected save can stay on the filled-in fields.
+   */
+  action: (
+    values: FurnitureFormValues,
+  ) => Promise<ActionResult<{ slug: string; name: string; }>>;
   /** Where the close button goes, and where a cancelled edit returns to. */
   cancelHref: string;
   submitLabel: string;
@@ -90,6 +99,7 @@ export const FurnitureForm = ({
   submitLabel,
   heading,
 }: FurnitureFormProps) => {
+  const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [failed, setFailed] = useState<string | null>(null);
   // On an existing product the slug is already settled, so it stops tracking
@@ -128,14 +138,24 @@ export const FurnitureForm = ({
   const onSubmit = handleSubmit((values) => {
     setFailed(null);
     startTransition(async () => {
-      try {
-        await action({ ...values, stock: stockDerived ? String(variantStock) : values.stock });
-      } catch (error) {
-        // `redirect()` throws a control-flow signal on success; anything with a
-        // digest is that, and must be left to bubble.
-        if (error && typeof error === "object" && "digest" in error) throw error;
-        setFailed("Could not save this product. Try again.");
+      const result = await action({
+        ...values,
+        stock: stockDerived ? String(variantStock) : values.stock,
+      });
+
+      if (result.error) {
+        // Twice over: the toast carries it past a long form's scroll position,
+        // the inline line keeps it in front of the reader while they fix it.
+        setFailed(result.message);
+        toast.error(result.message);
+        return;
       }
+
+      toast.success(`${result.data.name} saved`);
+      // The detail screen renders on the server from the row this just wrote,
+      // so the cached one it would otherwise land on has to go first.
+      router.refresh();
+      router.push(`/admin/furniture/${result.data.slug}`);
     });
   });
 
@@ -454,16 +474,16 @@ export const FurnitureForm = ({
                   <FieldHint error={errors.timeline?.message} />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <FieldLabel htmlFor="customisation" required>
-                    Customisation
+                  <FieldLabel htmlFor="customization" required>
+                    Customization
                   </FieldLabel>
                   <Textarea
-                    id="customisation"
+                    id="customization"
                     rows={3}
                     className={cn(fieldChrome, "min-h-20 text-sm md:text-sm")}
-                    {...register("customisation", required("A customisation note is required."))}
+                    {...register("customization", required("A customization note is required."))}
                   />
-                  <FieldHint error={errors.customisation?.message}>
+                  <FieldHint error={errors.customization?.message}>
                     {"Give your product a short and clear description.\n120-160 characters is the recommended length for search engines."}
                   </FieldHint>
                 </div>

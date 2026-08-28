@@ -9,7 +9,10 @@ import { needsAttention, overviewStats, recentOrders } from "@/lib/admin/dashboa
  * and a queue rail. The frame runs the table and the rail side by side from
  * `lg:` up and stacks them below it.
  */
-const AdminOverviewPage = () => (
+const AdminOverviewPage = async () => {
+  const stats = await overviewStats();
+
+  return (
   <div className="flex flex-col gap-6">
     <header className="flex flex-col gap-1">
       <h1 className="text-text-primary text-2xl font-semibold">Welcome back, Admin</h1>
@@ -19,7 +22,7 @@ const AdminOverviewPage = () => (
     </header>
 
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      {overviewStats().map((stat) => (
+      {stats.map((stat) => (
         <Link
           key={stat.label}
           href={stat.href}
@@ -72,6 +75,7 @@ const AdminOverviewPage = () => (
       </Card>
     </div>
   </div>
-);
+  );
+};
 
 export default AdminOverviewPage;

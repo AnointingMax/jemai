@@ -14,8 +14,9 @@ import {
  * Furniture — the catalogue index. The store is read here and flattened to the
  * columns the table draws, so the media and long copy never cross to the client.
  */
-const AdminFurniturePage = () => {
-  const rows: FurnitureRow[] = listFurniture().map((item) => ({
+const AdminFurniturePage = async () => {
+  const furniture = await listFurniture();
+  const rows: FurnitureRow[] = furniture.map((item) => ({
     slug: item.slug,
     name: item.name,
     category: item.category,
@@ -24,7 +25,7 @@ const AdminFurniturePage = () => {
     options: describeVariants(item.variants),
     updatedAt: item.updatedAt,
     updatedLabel: formatUpdatedAt(item.updatedAt),
-    thumbnail: item.thumbnail?.src ?? null,
+    thumbnail: item.thumbnail,
   }));
 
   return (

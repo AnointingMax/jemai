@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 
 import { updateFurnitureAction } from "@/app/admin/(dashboard)/furniture/actions";
 import { FurnitureForm, type FurnitureFormValues } from "@/components/admin/furniture-form";
-import { furnitureCategories, getFurniture } from "@/lib/admin/furniture";
+import { furnitureCategories, getFurniture, toContentAsset } from "@/lib/admin/furniture";
 
 /**
  * Edit — the same form, handed the product as defaults. The action is the update
@@ -10,7 +10,7 @@ import { furnitureCategories, getFurniture } from "@/lib/admin/furniture";
  */
 const AdminFurnitureEditPage = async ({ params }: PageProps<"/admin/furniture/[slug]/edit">) => {
   const { slug } = await params;
-  const furniture = getFurniture(slug);
+  const furniture = await getFurniture(slug);
   if (!furniture) notFound();
 
   const values: FurnitureFormValues = {
@@ -22,16 +22,16 @@ const AdminFurnitureEditPage = async ({ params }: PageProps<"/admin/furniture/[s
     summary: furniture.summary,
     variants: furniture.variants.length
       ? furniture.variants.map((variant) => ({
-          size: variant.size,
-          colour: variant.colour,
-          quantity: String(variant.quantity),
-        }))
+        size: variant.size,
+        colour: variant.colour,
+        quantity: String(variant.quantity),
+      }))
       : [{ size: "", colour: "", quantity: "" }],
     description: furniture.description,
     timeline: furniture.timeline,
-    customisation: furniture.customisation,
-    thumbnail: furniture.thumbnail ? [furniture.thumbnail] : [],
-    media: furniture.media,
+    customization: furniture.customization,
+    thumbnail: furniture.thumbnail ? [toContentAsset(furniture.thumbnail)] : [],
+    media: furniture.media.map(toContentAsset),
   };
 
   return (

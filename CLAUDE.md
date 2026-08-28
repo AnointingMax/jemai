@@ -30,6 +30,18 @@
 Route groups are folders, not URL segments, so `app/(customer)/(site)/about`
 still serves `/about`.
 
+# Server actions
+
+A `"use server"` module sits beside the route it serves, as `actions.ts` —
+`app/admin/(dashboard)/furniture/actions.ts` for the furniture screens,
+`app/admin/(auth)/actions.ts` for sign-in and recovery. `lib/` stays the read
+side: queries, formatters and types a client component can import without
+dragging a server action along.
+
+An action returns `ActionResult<T>` from `lib/action-result`, validates its
+input with a yup schema declared in the same file, and leaves navigation to the
+caller rather than calling `redirect()` itself.
+
 # Tailwind class values
 
 Prefer an existing `@theme` token, then a stock Tailwind scale value, and only

@@ -25,7 +25,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { naira } from "@/lib/admin/furniture";
+import { naira } from "@/lib/admin/content";
 
 /** What the index needs off a product — never the media or the long copy. */
 export type FurnitureRow = {
