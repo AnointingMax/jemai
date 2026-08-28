@@ -6,6 +6,13 @@ const schema = Yup.object({
     .string()
     .oneOf(["development", "test", "production"])
     .default("development"),
+  // Not `.url()` — yup's URL pattern rejects localhost, which is exactly the
+  // value this carries in development.
+  APP_URL: Yup
+    .string()
+    .matches(/^https?:\/\/.+/, "APP_URL must be an absolute http(s) URL")
+    .default("http://localhost:3000")
+    .required(),
   DATABASE_URL: Yup
     .string()
     .required("DATABASE_URL is required — the Postgres connection string"),
@@ -20,7 +27,16 @@ const schema = Yup.object({
   ADMIN_SEED_NAME: Yup.string().default("JEMAI Admin"),
 });
 
-const env = schema.validateSync(process.env, {
+/**
+ * A variable exported as "" is the same as an unset one as far as this file is
+ * concerned, but only `undefined` reaches a yup default — so blanks are folded
+ * in before validation rather than each optional entry having to allow "".
+ */
+const raw = Object.fromEntries(
+  Object.entries(process.env).filter(([, value]) => value !== ""),
+);
+
+const env = schema.validateSync(raw, {
   stripUnknown: true,
   abortEarly: false,
 });

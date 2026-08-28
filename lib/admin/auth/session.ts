@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
 import env from "@/lib/env";
 
@@ -50,4 +51,14 @@ export const readAdminSession = async () => {
 
 export const destroyAdminSession = async () => {
   (await cookies()).delete(ADMIN_SESSION_COOKIE);
+};
+
+/**
+ * The guard every screen under `(dashboard)` runs. A missing or expired cookie
+ * lands the visitor on the sign-in frame instead of a half-rendered console.
+ */
+export const requireAdminSession = async () => {
+  const session = await readAdminSession();
+  if (!session) redirect("/admin/login");
+  return session;
 };

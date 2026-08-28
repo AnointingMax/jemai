@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AuthCard } from "@/components/admin/auth-card";
-import { AuthField } from "@/components/admin/auth-field";
-import { AuthSubmit } from "@/components/admin/auth-submit";
+import { RecoverPasswordForm } from "@/components/admin/recover-password-form";
 
 export const metadata: Metadata = {
   title: "Password recovery — JEMAI Admin",
@@ -13,17 +12,7 @@ const RecoverPasswordPage = () => (
     title="Password Recovery"
     description="Enter the email address associated with your account and we'll send you a link to reset your password."
   >
-    <form className="mt-8.25 flex flex-col gap-6">
-      <AuthField
-        id="email"
-        name="email"
-        type="email"
-        autoComplete="email"
-        placeholder="Enter your email"
-        label="Email"
-      />
-      <AuthSubmit type="submit">Continue</AuthSubmit>
-    </form>
+    <RecoverPasswordForm />
     <p className="text-text-secondary text-body mt-6 text-center">
       Nevermind,{" "}
       <Link

@@ -8,12 +8,12 @@ import {
   ChevronsUpDown,
   GalleryVerticalEnd,
   Layers,
-  LogOut,
   Plus,
   UserRoundCog,
 } from "lucide-react";
 
 import { adminNav } from "@/components/admin/nav";
+import { SignOutItem } from "@/components/admin/sign-out-item";
 import {
   Collapsible,
   CollapsibleContent,
@@ -43,11 +43,6 @@ import {
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
 
-const account = {
-  name: "Admin",
-  email: "admin@jemai.co",
-};
-
 /**
  * The console rail: wordmark, three collapsible sections and the account card.
  * The frame draws each section's rows as a sub-menu — hairline rail, 28px pills
@@ -58,9 +53,12 @@ const account = {
  * render twice: the frame's grouped list at full width, and a flat icon list
  * with tooltips once collapsed. Both read the same `adminNav`.
  */
-export const AdminSidebar = ({
-  ...props
-}: React.ComponentProps<typeof Sidebar>) => {
+type AdminSidebarProps = React.ComponentProps<typeof Sidebar> & {
+  /** The signed-in admin, read from the session by the layout above. */
+  account: { name: string; email: string };
+};
+
+export const AdminSidebar = ({ account, ...props }: AdminSidebarProps) => {
   const pathname = usePathname();
 
   return (
@@ -205,12 +203,7 @@ export const AdminSidebar = ({
                   <UserRoundCog />
                   Account settings
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/admin/login">
-                    <LogOut />
-                    Sign out
-                  </Link>
-                </DropdownMenuItem>
+                <SignOutItem />
               </DropdownMenuContent>
             </DropdownMenu>
           </SidebarMenuItem>
