@@ -29,7 +29,7 @@ import {
   enquiryStatuses,
   type AdminEnquiry,
   type EnquiryStatus,
-} from "@/lib/admin/enquiries";
+} from "@/lib/admin/enquiry-record";
 
 type EnquirySheetProps = {
   /** Null keeps the sheet closed; setting an enquiry opens it on that record. */
@@ -84,7 +84,7 @@ const EnquirySheetBody = ({
             {/* Same accent the order sheet uses for its record number; the style
                 guide publishes no accent orange, so it stays literal hex. */}
             <span className="text-eyebrow-lg text-[#c2410c] whitespace-nowrap uppercase">
-              Enquiry {enquiry.id}
+              Enquiry {enquiry.reference}
             </span>
             <StatusBadge status={enquiry.status} />
             <SheetClose asChild>
@@ -116,13 +116,21 @@ const EnquirySheetBody = ({
 
         <SheetPanel label="Artwork">
           <p className="text-text-primary text-base">{describeArtwork(enquiry)}</p>
-          {/* The enquiry is locked to a piece, so the record is one hop away. */}
-          <Link
-            href={`/admin/artworks/${enquiry.artworkSlug}`}
-            className="text-action-link focus-visible:ring-ring/50 w-fit rounded-sm text-sm underline-offset-4 outline-none hover:underline focus-visible:ring-3"
-          >
-            Open artwork record
-          </Link>
+          {/* The enquiry is locked to a piece, so the record is one hop away —
+              until that piece is deleted, when the link goes and the title
+              above it is all that is left of the work. */}
+          {enquiry.artworkSlug ? (
+            <Link
+              href={`/admin/artworks/${enquiry.artworkSlug}`}
+              className="text-action-link focus-visible:ring-ring/50 w-fit rounded-sm text-sm underline-offset-4 outline-none hover:underline focus-visible:ring-3"
+            >
+              Open artwork record
+            </Link>
+          ) : (
+            <p className="text-text-secondary text-sm">
+              This artwork has since been deleted from the catalogue.
+            </p>
+          )}
         </SheetPanel>
 
         <SheetPanel label="Message">

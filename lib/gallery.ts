@@ -10,7 +10,7 @@ export type ArtworkDetail = Artwork & {
   artist: string;
   /** The summary, set larger on the frame's 28px pitch. */
   lead: string;
-  /** The authored story below it — sanitised HTML, written on save. */
+  /** The authored story below it — sanitized HTML, written on save. */
   story: string;
   /** The framed hero photograph, matted on `surface-tint`. */
   hero: string;

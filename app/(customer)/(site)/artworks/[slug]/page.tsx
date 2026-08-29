@@ -105,6 +105,7 @@ const ArtworkDetailPage = async ({ params }: PageProps<"/artworks/[slug]">) => {
           <div className="mt-5.25">
             <ArtworkEnquiry
               artwork={{
+                slug: artwork.slug,
                 title: artwork.title,
                 artist: artwork.artist,
                 image: artwork.hero,

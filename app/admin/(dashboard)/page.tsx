@@ -11,6 +11,7 @@ import { needsAttention, overviewStats, recentOrders } from "@/lib/admin/dashboa
  */
 const AdminOverviewPage = async () => {
   const stats = await overviewStats();
+  const attention = await needsAttention();
 
   return (
   <div className="flex flex-col gap-6">
@@ -55,7 +56,7 @@ const AdminOverviewPage = async () => {
           <CardTitle className="text-text-primary font-sans text-xl font-semibold">Needs attention</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col">
-          {needsAttention.map((item) => (
+          {attention.map((item) => (
             <Link
               key={item.title}
               href={item.href}

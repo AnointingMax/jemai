@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, type ComponentProps } from "react";
+import { useState, useTransition, type ComponentProps } from "react";
 import Image from "next/image";
 import { useForm, type Path, type UseFormRegister } from "react-hook-form";
-import { X } from "lucide-react";
+import { CircleAlert, X } from "lucide-react";
+import { sendArtworkEnquiryAction } from "@/app/(customer)/(site)/artworks/[slug]/actions";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -16,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
 type EnquiryValues = {
-  fullName: string;
+  name: string;
   email: string;
   phone: string;
   message: string;
@@ -25,16 +26,9 @@ type EnquiryValues = {
 type EnquireModalProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** The piece the enquiry is about — locked, and shown in both panes. */
-  artwork: { title: string; artist: string; image: string; };
+  artwork: { slug: string; title: string; artist: string; image: string; };
 };
 
-/**
- * Field rhythm, measured off `design-reference/modal wrapper.png`: the rules sit
- * 84px apart (y=1136, 1220), each row is 25px of lead, a 14px eyebrow label,
- * 6px, then a 37px control closing on the rule. That is the Contact field
- * recipe on a 9px shorter lead.
- */
 const fieldClass = "border-border-default border-b pt-6.25";
 const labelClass = "text-eyebrow text-text-secondary block uppercase";
 const controlClass =
@@ -46,60 +40,66 @@ type FieldProps = ComponentProps<typeof Input> & {
   register: UseFormRegister<EnquiryValues>;
 };
 
-/** Module scope on purpose — declared inside the form it would remount on every
- *  render and drop focus mid-keystroke. */
 const Field = ({ label, name, register, ...props }: FieldProps) => (
   <div className={fieldClass}>
     <span className={labelClass}>{label}</span>
     <Input
       aria-label={label}
       className={controlClass}
-      {...register(name, { required: true })}
+      {...register(name)}
       {...props}
     />
   </div>
 );
 
-/**
- * The 1124 × 715 enquiry wrapper: a 423px photograph on the left with its
- * caption block inset 32px, and a 702px `surface-page` panel on the right
- * padded 48px all round. Same shape as the checkout modal, a different measure.
- */
 export const EnquireModal = ({
   open,
   onOpenChange,
   artwork,
 }: EnquireModalProps) => {
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { isSubmitSuccessful },
-  } = useForm<EnquiryValues>({
-    defaultValues: { fullName: "", email: "", phone: "", message: "" },
+  const [pending, startTransition] = useTransition();
+  const [sent, setSent] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const { register, handleSubmit, reset } = useForm<EnquiryValues>({
+    defaultValues: { name: "", email: "", phone: "", message: "" },
   });
 
-  /* No endpoint exists and no frame draws a sent state, so the modal
-     acknowledges in place — `onSubmit` is the seam to point at a real handler. */
-  useEffect(() => {
-    if (!open) reset();
-  }, [open, reset]);
+  const handleOpenChange = (next: boolean) => {
+    if (!next) {
+      reset();
+      setSent(null);
+      setError(null);
+    }
+    onOpenChange(next);
+  };
+
+  const onSubmit = handleSubmit((values) =>
+    startTransition(async () => {
+      setError(null);
+      const result = await sendArtworkEnquiryAction(artwork.slug, values);
+
+      if (result.error) {
+        setError(result.message);
+        return;
+      }
+
+      setSent(result.data);
+      reset();
+    }),
+  );
 
   const caption = `${artwork.title} · ${artwork.artist}`;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
         onOpenAutoFocus={(event) => {
-          /* Radix focuses the close button by default, which the frame draws
-             bare; sending focus to the first field is both closer and kinder. */
           event.preventDefault();
           (event.target as HTMLElement | null)
             ?.querySelector<HTMLInputElement>("input")
             ?.focus();
         }}
         className="flex h-178.75 w-[min(1124px,calc(100vw-2rem))] max-w-none overflow-hidden max-lg:h-auto max-lg:max-h-[calc(100dvh-2rem)] max-lg:overflow-y-auto">
-        {/* Left: the piece, with its caption block */}
         <div className="bg-surface-inverse relative hidden w-105.75 shrink-0 lg:block">
           <Image
             src={artwork.image}
@@ -140,7 +140,7 @@ export const EnquireModal = ({
             </DialogClose>
           </div>
 
-          <form onSubmit={handleSubmit(() => {})} noValidate className="mt-6.25">
+          <form onSubmit={onSubmit} noValidate className="mt-6.25">
             <p className={labelClass}>Artwork</p>
             <p className="bg-surface-subtle text-body-sm text-text-primary mt-1.5 flex min-h-14 items-center px-3 py-3">
               {caption}
@@ -152,11 +152,10 @@ export const EnquireModal = ({
             <Field
               register={register}
               label="Full name"
-              name="fullName"
+              name="name"
               placeholder="Enter your full name"
             />
 
-            {/* Two 290px columns on a 24px gutter — the 604px measure split. */}
             <div className="grid gap-x-6 sm:grid-cols-2">
               <Field
                 register={register}
@@ -184,30 +183,41 @@ export const EnquireModal = ({
               />
             </div>
 
-            {isSubmitSuccessful ? (
+            {sent ? (
               <p role="status" className="text-body-sm text-text-primary mt-8">
-                Thank you — your enquiry is with the JEMAI art team. We will be
-                in touch shortly.
+                {sent}
               </p>
             ) : (
-              <div className="mt-8 flex flex-wrap gap-3">
-                <Button
-                  type="submit"
-                  variant="jemai"
-                  size="cta"
-                  className="px-6"
-                >
-                  Send enquiry
-                </Button>
-                <DialogClose asChild>
-                  <Button
-                    type="button"
-                    size="cta"
-                    className="border-border-strong text-text-primary rounded-none border bg-transparent px-6 hover:bg-transparent"
+              <div className="mt-8 flex flex-col gap-3">
+                {error ? (
+                  <p
+                    role="alert"
+                    className="bg-surface-subtle text-body-sm border-destructive text-destructive flex items-start gap-2 border-l-3 px-3.5 py-3"
                   >
-                    Cancel
+                    <CircleAlert aria-hidden className="mt-0.5 size-4 shrink-0" />
+                    <span>{error}</span>
+                  </p>
+                ) : null}
+                <div className="flex flex-wrap gap-3">
+                  <Button
+                    type="submit"
+                    variant="jemai"
+                    size="cta"
+                    disabled={pending}
+                    className="px-6"
+                  >
+                    {pending ? "Sending…" : "Send enquiry"}
                   </Button>
-                </DialogClose>
+                  <DialogClose asChild>
+                    <Button
+                      type="button"
+                      size="cta"
+                      className="border-border-strong text-text-primary rounded-none border bg-transparent px-6 hover:bg-transparent"
+                    >
+                      Cancel
+                    </Button>
+                  </DialogClose>
+                </div>
               </div>
             )}
           </form>

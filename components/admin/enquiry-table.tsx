@@ -1,7 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useOptimistic, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
+import { toast } from "sonner";
+
+import { updateEnquiryStatusAction } from "@/app/admin/(dashboard)/artwork-enquiries/actions";
 
 import { EnquirySheet } from "@/components/admin/enquiry-sheet";
 import { SortableHead, nextSort, type SortState } from "@/components/admin/sortable-head";
@@ -29,9 +33,9 @@ import {
   enquiryStatuses,
   type AdminEnquiry,
   type EnquiryStatus,
-} from "@/lib/admin/enquiries";
+} from "@/lib/admin/enquiry-record";
 
-type RowKey = "id" | "name" | "artworkTitle" | "receivedAt" | "status";
+type RowKey = "reference" | "name" | "artworkTitle" | "receivedAt" | "status";
 
 const PAGE_SIZE = 10;
 
@@ -59,17 +63,32 @@ export const EnquiryTable = ({ enquiries }: { enquiries: AdminEnquiry[] }) => {
   const [sort, setSort] = useState<SortState<RowKey>>({ key: "receivedAt", direction: "desc" });
   const [page, setPage] = useState(1);
   const [openId, setOpenId] = useState<string | null>(null);
-  // Status edits live here until the enquiry endpoint exists, so the sheet's
-  // select and the table's pill stay in agreement for the session.
-  const [overrides, setOverrides] = useState<Record<string, EnquiryStatus>>({});
-
-  const rows = useMemo(
-    () =>
-      enquiries.map((enquiry) =>
-        overrides[enquiry.id] ? { ...enquiry, status: overrides[enquiry.id] } : enquiry
-      ),
-    [enquiries, overrides]
+  const router = useRouter();
+  const [, startTransition] = useTransition();
+  // The pill and the sheet's select move the moment the reader commits, then
+  // the refreshed server data replaces the guess. A failed write leaves the
+  // optimistic value behind with it, so the row snaps back to the truth.
+  const [rows, applyStatus] = useOptimistic(
+    enquiries,
+    (current, edit: { id: string; status: EnquiryStatus }) =>
+      current.map((enquiry) =>
+        enquiry.id === edit.id ? { ...enquiry, status: edit.status } : enquiry
+      )
   );
+
+  const onStatusChange = (id: string, status: EnquiryStatus) =>
+    startTransition(async () => {
+      applyStatus({ id, status });
+      const result = await updateEnquiryStatusAction({ id, status });
+
+      if (result.error) {
+        toast.error(result.message);
+        return;
+      }
+
+      toast.success(result.data);
+      router.refresh();
+    });
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -157,7 +176,7 @@ export const EnquiryTable = ({ enquiries }: { enquiries: AdminEnquiry[] }) => {
             <Table className="min-w-[860px]">
               <TableHeader className="bg-admin-muted">
                 <TableRow className="border-border-default hover:bg-transparent">
-                  <SortableHead sortKey="id" sort={sort} onSort={onSort} className="h-11 px-6">
+                  <SortableHead sortKey="reference" sort={sort} onSort={onSort} className="h-11 px-6">
                     Enquiry
                   </SortableHead>
                   <SortableHead sortKey="name" sort={sort} onSort={onSort} className="h-11">
@@ -195,7 +214,7 @@ export const EnquiryTable = ({ enquiries }: { enquiries: AdminEnquiry[] }) => {
                         }}
                         className="text-text-primary focus-visible:ring-ring/50 cursor-pointer rounded-sm text-sm outline-none focus-visible:ring-3"
                       >
-                        {enquiry.id}
+                        {enquiry.reference}
                       </button>
                     </TableCell>
                     <TableCell className="py-5 pr-6 pl-0">
@@ -230,9 +249,7 @@ export const EnquiryTable = ({ enquiries }: { enquiries: AdminEnquiry[] }) => {
       <EnquirySheet
         enquiry={open}
         onOpenChange={(next) => !next && setOpenId(null)}
-        onStatusChange={(status) =>
-          open && setOverrides((value) => ({ ...value, [open.id]: status }))
-        }
+        onStatusChange={(status) => open && onStatusChange(open.id, status)}
       />
     </div>
   );

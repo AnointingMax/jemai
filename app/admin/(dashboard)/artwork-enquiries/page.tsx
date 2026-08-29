@@ -1,14 +1,15 @@
 import { EnquiryTable } from "@/components/admin/enquiry-table";
 import { ExportCsvButton } from "@/components/admin/export-csv-button";
-import { describeArtwork, enquiredOn, listEnquiries } from "@/lib/admin/enquiries";
+import { listEnquiries } from "@/lib/admin/enquiries";
+import { describeArtwork, enquiredOn } from "@/lib/admin/enquiry-record";
 
 /**
  * Artwork enquiries — the follow-up queue. Every enquiry is read here and handed
  * to the table whole, because the side sheet draws the same record and a second
  * fetch per row would buy nothing at this size.
  */
-const AdminArtworkEnquiriesPage = () => {
-  const enquiries = listEnquiries();
+const AdminArtworkEnquiriesPage = async () => {
+  const enquiries = await listEnquiries();
 
   return (
     <div className="flex flex-col gap-6">
@@ -26,7 +27,7 @@ const AdminArtworkEnquiriesPage = () => {
           filename="jemai-artwork-enquiries.csv"
           headers={["Enquiry", "Name", "Email", "Phone", "Artwork", "Received", "Status", "Message"]}
           rows={enquiries.map((enquiry) => [
-            enquiry.id,
+            enquiry.reference,
             enquiry.name,
             enquiry.email,
             enquiry.phone,

@@ -1,5 +1,5 @@
 import type { ConsultationStatus } from "@/lib/admin/consultations";
-import type { EnquiryStatus } from "@/lib/admin/enquiries";
+import type { EnquiryStatus } from "@/lib/admin/enquiry-record";
 import type { ExhibitionStatus } from "@/lib/admin/exhibitions";
 import type { FulfillmentStatus } from "@/lib/admin/orders";
 import { Badge } from "@/components/ui/badge";

@@ -11,7 +11,7 @@ import { EnquireModal } from "@/components/artworks/enquire-modal";
 export const ArtworkEnquiry = ({
   artwork,
 }: {
-  artwork: { title: string; artist: string; image: string; };
+  artwork: { slug: string; title: string; artist: string; image: string; };
 }) => {
   const [open, setOpen] = useState(false);
 

@@ -1,0 +1,25 @@
+/// An enquiry raised from an artwork's detail page — the four fields the
+/// enquire modal collects, plus the piece it was locked to.
+model Enquiry {
+  id        String @id @default(uuid(7))
+  reference Int    @unique @default(autoincrement())
+
+  artwork      Artwork? @relation(fields: [artworkId], references: [id], onDelete: SetNull)
+  artworkId    String?
+  artworkTitle String
+  artist       String
+
+  name    String
+  email   String
+  phone   String
+  message String @db.Text
+
+  status String @default("New")
+
+  receivedAt DateTime @default(now())
+
+  @@index([artworkId])
+  @@index([status])
+  @@index([receivedAt])
+  @@map("artwork_enquiries")
+}
