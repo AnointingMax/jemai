@@ -1,7 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { SubscribeForm } from "@/components/site/subscribe-form";
 import {
   HouseIcon,
   InstagramSolidIcon,
@@ -143,28 +142,20 @@ export const SiteFooter = () => (
             Subscribe to our newsletter and never miss an update, from fresh
             arrivals to exclusive deals tailored just for you.
           </p>
-          <form className="mt-5 flex flex-col gap-2">
-            <label htmlFor="footer-email" className="sr-only">
-              Your E-mail
-            </label>
-            <Input
-              id="footer-email"
-              type="email"
-              name="email"
-              autoComplete="email"
-              placeholder="Your E-mail"
-              className="text-body bg-surface-tint text-text-primary placeholder:text-text-primary/60 h-14 w-full border-transparent px-4"
-            />
-            <Button type="submit" size="cta" className="h-14 w-full">
-              Subscribe
-            </Button>
+          <SubscribeForm
+            id="footer-email"
+            source="Footer form"
+            className="mt-5"
+            inputClassName="text-body bg-surface-tint text-text-primary placeholder:text-text-primary/60 h-14 w-full border-transparent px-4"
+            buttonClassName="h-14 w-full"
+          >
             <p className="text-body-xs text-text-inverse mt-2">
               By clicking the button you agree to the{" "}
               <Link href="/privacy" className="underline-offset-2 hover:underline">
                 Privacy Policy
               </Link>
             </p>
-          </form>
+          </SubscribeForm>
         </div>
       </div>
 

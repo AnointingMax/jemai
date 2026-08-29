@@ -1,7 +1,6 @@
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Eyebrow } from "@/components/site/eyebrow";
+import { SubscribeForm } from "@/components/site/subscribe-form";
 
 /**
  * Newsletter / Desktop (`240:15599`) — the journal sign-up that closes the
@@ -28,28 +27,14 @@ export const Newsletter = () => (
                 considered ideas for the spaces you live and work in.
               </p>
 
-              <form className="flex flex-col gap-2 lg:max-w-121">
-                <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-start">
-                  <label htmlFor="newsletter-email" className="sr-only">
-                    Your E-mail
-                  </label>
-                  <Input
-                    id="newsletter-email"
-                    type="email"
-                    name="email"
-                    autoComplete="email"
-                    placeholder="Your E-mail"
-                    className="text-body placeholder:text-text-secondary h-12.5 w-full bg-white px-3.5 lg:max-w-82"
-                  />
-                  <Button
-                    type="submit"
-                    size="cta"
-                    className="h-13 w-full sm:w-37"
-                  >
-                    Subscribe
-                  </Button>
-                </div>
-
+              <SubscribeForm
+                id="newsletter-email"
+                source="Footer form"
+                className="lg:max-w-121"
+                fieldClassName="sm:flex-row sm:items-start"
+                inputClassName="text-body placeholder:text-text-secondary h-12.5 w-full bg-white px-3.5 lg:max-w-82"
+                buttonClassName="h-13 w-full sm:w-37"
+              >
                 <p className="text-body-xs text-text-secondary">
                   By subscribing, you agree to receive news and updates from
                   JEMAI. You can unsubscribe at any time. View our{" "}
@@ -58,7 +43,7 @@ export const Newsletter = () => (
                   </Link>
                   .
                 </p>
-              </form>
+              </SubscribeForm>
             </div>
           </div>
         </div>

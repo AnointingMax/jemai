@@ -1,4 +1,6 @@
 import { formatDateTimeShort } from "@/lib/admin/content";
+import { prisma } from "@/lib/prisma";
+import type { Subscriber as SubscriberRecord } from "@/lib/generated/prisma/client";
 
 /**
  * Where a sign-up came from. The storefront has exactly three places that take
@@ -9,7 +11,8 @@ export type SubscriberSource = "Footer form" | "Exhibition" | "Checkout";
 export const subscriberSources: SubscriberSource[] = ["Footer form", "Exhibition", "Checkout"];
 
 export type Subscriber = {
-  /** The address is the identity — the list is keyed on it, not on a row id. */
+  id: string;
+  /** The address is the identity — the table is unique on it, not on the id. */
   email: string;
   /** Blank for a footer sign-up, which only asks for an address. */
   name: string;
@@ -22,23 +25,51 @@ export type Subscriber = {
 export const subscribedAt = (subscriber: Pick<Subscriber, "subscribedAt">) =>
   formatDateTimeShort(subscriber.subscribedAt);
 
-const store: Subscriber[] = [
-  { email: "nneka.obi@example.com", name: "Nneka Obi", source: "Footer form", subscribedAt: "2026-08-18T07:56:00.000Z" },
-  { email: "tolu.martins@example.com", name: "Tolu Martins", source: "Exhibition", subscribedAt: "2026-08-17T14:08:00.000Z" },
-  { email: "ada.okafor@example.com", name: "Ada Okafor", source: "Checkout", subscribedAt: "2026-08-16T12:45:00.000Z" },
-  { email: "sade.bello@example.com", name: "Sade Bello", source: "Footer form", subscribedAt: "2026-08-15T10:22:00.000Z" },
-  { email: "femi.cole@example.com", name: "Femi Cole", source: "Footer form", subscribedAt: "2026-08-14T09:31:00.000Z" },
-  { email: "chidi.eze@example.com", name: "Chidi Eze", source: "Exhibition", subscribedAt: "2026-08-13T18:04:00.000Z" },
-  { email: "amaka.nwosu@example.com", name: "Amaka Nwosu", source: "Checkout", subscribedAt: "2026-08-12T11:17:00.000Z" },
-  { email: "kelechi.udo@example.com", name: "", source: "Footer form", subscribedAt: "2026-08-11T08:49:00.000Z" },
-  { email: "yemi.adeyemi@example.com", name: "Yemi Adeyemi", source: "Footer form", subscribedAt: "2026-08-10T16:35:00.000Z" },
-  { email: "ifeoma.balogun@example.com", name: "Ifeoma Balogun", source: "Exhibition", subscribedAt: "2026-08-09T13:02:00.000Z" },
-  { email: "seyi.ogunlade@example.com", name: "Seyi Ogunlade", source: "Checkout", subscribedAt: "2026-08-08T19:20:00.000Z" },
-  { email: "hauwa.ibrahim@example.com", name: "Hauwa Ibrahim", source: "Footer form", subscribedAt: "2026-08-07T07:11:00.000Z" },
-  { email: "obinna.aneke@example.com", name: "", source: "Exhibition", subscribedAt: "2026-08-06T15:58:00.000Z" },
-  { email: "zainab.lawal@example.com", name: "Zainab Lawal", source: "Footer form", subscribedAt: "2026-08-05T10:07:00.000Z" },
-];
+/** The row as the console's one subscriber shape. */
+const toSubscriber = (record: SubscriberRecord): Subscriber => ({
+  id: record.id,
+  email: record.email,
+  name: record.name,
+  // The column is free text in the database; anything the console never wrote
+  // still has to land on one of the three the Source column knows about.
+  source: (subscriberSources.find((source) => source === record.source) ??
+    "Footer form") as SubscriberSource,
+  subscribedAt: record.subscribedAt.toISOString(),
+});
 
 /** Newest first — the order the index draws before the reader sorts it. */
-export const listSubscribers = () =>
-  [...store].sort((a, b) => b.subscribedAt.localeCompare(a.subscribedAt));
+export const listSubscribers = async () => {
+  const records = await prisma.subscriber.findMany({ orderBy: { subscribedAt: "desc" } });
+  return records.map(toSubscriber);
+};
+
+/** A count query, not a fetch of the whole list. */
+export const countSubscribers = () => prisma.subscriber.count();
+
+export type SubscriberInput = {
+  email: string;
+  name: string;
+  source: SubscriberSource;
+};
+
+/**
+ * Records a sign-up. Idempotent by address: subscribing again refreshes the
+ * date and the source rather than failing on the unique index, and only fills
+ * in a name if this sign-up carried one — the footer form asks for an address
+ * alone, and it must not wipe a name a checkout already gave us.
+ */
+export const subscribe = async (input: SubscriberInput) => {
+  const email = input.email.trim().toLowerCase();
+
+  const record = await prisma.subscriber.upsert({
+    where: { email },
+    update: {
+      source: input.source,
+      subscribedAt: new Date(),
+      ...(input.name ? { name: input.name } : {}),
+    },
+    create: { email, name: input.name, source: input.source },
+  });
+
+  return toSubscriber(record);
+};

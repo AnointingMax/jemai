@@ -7,8 +7,8 @@ import { listSubscribers, subscribedAt } from "@/lib/admin/newsletter";
  * console's job is to let someone find an address and hand the whole list to
  * whatever sends the mail.
  */
-const AdminNewsletterPage = () => {
-  const subscribers = listSubscribers();
+const AdminNewsletterPage = async () => {
+  const subscribers = await listSubscribers();
   const rows: SubscriberRow[] = subscribers.map((subscriber) => ({
     email: subscriber.email,
     name: subscriber.name,

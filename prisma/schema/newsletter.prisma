@@ -1,0 +1,12 @@
+model Subscriber {
+  id    String @id @default(uuid(7))
+  email String @unique
+
+  name   String @default("")
+  source String
+
+  subscribedAt DateTime @default(now())
+
+  @@index([subscribedAt])
+  @@map("newsletter_subscribers")
+}
