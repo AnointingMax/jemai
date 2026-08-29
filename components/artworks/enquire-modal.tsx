@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useTransition, type ComponentProps } from "react";
+import { useTransition, type ComponentProps } from "react";
 import Image from "next/image";
 import { useForm, type Path, type UseFormRegister } from "react-hook-form";
-import { CircleAlert, X } from "lucide-react";
+import { X } from "lucide-react";
+import { toast } from "sonner";
+
 import { sendArtworkEnquiryAction } from "@/app/(customer)/(site)/artworks/[slug]/actions";
 import { Button } from "@/components/ui/button";
 import {
@@ -58,33 +60,29 @@ export const EnquireModal = ({
   artwork,
 }: EnquireModalProps) => {
   const [pending, startTransition] = useTransition();
-  const [sent, setSent] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const { register, handleSubmit, reset } = useForm<EnquiryValues>({
     defaultValues: { name: "", email: "", phone: "", message: "" },
   });
 
+  /* The modal clears its fields on the way out, so the next piece a reader
+     enquires about opens on an empty form. Every close routes through here: the
+     two buttons, Escape, the overlay and a successful send alike. */
   const handleOpenChange = (next: boolean) => {
-    if (!next) {
-      reset();
-      setSent(null);
-      setError(null);
-    }
+    if (!next) reset();
     onOpenChange(next);
   };
 
   const onSubmit = handleSubmit((values) =>
     startTransition(async () => {
-      setError(null);
       const result = await sendArtworkEnquiryAction(artwork.slug, values);
 
       if (result.error) {
-        setError(result.message);
+        toast.error(result.message);
         return;
       }
 
-      setSent(result.data);
-      reset();
+      toast.success(result.data);
+      handleOpenChange(false);
     }),
   );
 
@@ -156,6 +154,7 @@ export const EnquireModal = ({
               placeholder="Enter your full name"
             />
 
+            {/* Two 290px columns on a 24px gutter — the 604px measure split. */}
             <div className="grid gap-x-6 sm:grid-cols-2">
               <Field
                 register={register}
@@ -183,43 +182,26 @@ export const EnquireModal = ({
               />
             </div>
 
-            {sent ? (
-              <p role="status" className="text-body-sm text-text-primary mt-8">
-                {sent}
-              </p>
-            ) : (
-              <div className="mt-8 flex flex-col gap-3">
-                {error ? (
-                  <p
-                    role="alert"
-                    className="bg-surface-subtle text-body-sm border-destructive text-destructive flex items-start gap-2 border-l-3 px-3.5 py-3"
-                  >
-                    <CircleAlert aria-hidden className="mt-0.5 size-4 shrink-0" />
-                    <span>{error}</span>
-                  </p>
-                ) : null}
-                <div className="flex flex-wrap gap-3">
-                  <Button
-                    type="submit"
-                    variant="jemai"
-                    size="cta"
-                    disabled={pending}
-                    className="px-6"
-                  >
-                    {pending ? "Sending…" : "Send enquiry"}
-                  </Button>
-                  <DialogClose asChild>
-                    <Button
-                      type="button"
-                      size="cta"
-                      className="border-border-strong text-text-primary rounded-none border bg-transparent px-6 hover:bg-transparent"
-                    >
-                      Cancel
-                    </Button>
-                  </DialogClose>
-                </div>
-              </div>
-            )}
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Button
+                type="submit"
+                variant="jemai"
+                size="cta"
+                disabled={pending}
+                className="px-6"
+              >
+                {pending ? "Sending…" : "Send enquiry"}
+              </Button>
+              <DialogClose asChild>
+                <Button
+                  type="button"
+                  size="cta"
+                  className="border-border-strong text-text-primary rounded-none border bg-transparent px-6 hover:bg-transparent"
+                >
+                  Cancel
+                </Button>
+              </DialogClose>
+            </div>
           </form>
         </div>
       </DialogContent>

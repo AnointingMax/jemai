@@ -2,9 +2,9 @@
 
 import { useEffect, useState, useTransition, type ReactNode } from "react";
 import { useForm } from "react-hook-form";
-import { CircleAlert, CircleCheck } from "lucide-react";
 
 import { subscribeToNewsletterAction } from "@/app/(customer)/(site)/actions";
+import { FormStatus } from "@/components/shared/form-status";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -92,25 +92,7 @@ export const SubscribeForm = ({
         </Button>
       </div>
 
-      {status && (
-        <div
-          role="status"
-          aria-live="polite"
-          className={cn(
-            "bg-surface-tint flex items-start gap-2 border-l-3 px-3.5 py-3 text-body-sm font-medium",
-            status.error
-              ? "border-destructive text-destructive"
-              : "border-action-primary text-action-primary",
-          )}
-        >
-          {status.error ? (
-            <CircleAlert aria-hidden className="mt-0.5 size-4 shrink-0" />
-          ) : (
-            <CircleCheck aria-hidden className="mt-0.5 size-4 shrink-0" />
-          )}
-          <span>{status.message}</span>
-        </div>
-      )}
+      {status ? <FormStatus error={status.error}>{status.message}</FormStatus> : null}
 
       {children}
     </form>
