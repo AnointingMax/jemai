@@ -29,7 +29,7 @@ const DetailRow = ({ label, value }: { label: string; value: string }) => (
  */
 const AdminArtworkDetailPage = async ({ params }: PageProps<"/admin/artworks/[slug]">) => {
   const { slug } = await params;
-  const artwork = getArtwork(slug);
+  const artwork = await getArtwork(slug);
   if (!artwork) notFound();
 
   return (
@@ -43,6 +43,8 @@ const AdminArtworkDetailPage = async ({ params }: PageProps<"/admin/artworks/[sl
             <ContentActionsMenu
               editHref={`/admin/artworks/${artwork.slug}/edit`}
               name={artwork.title}
+              deleteLabel="Delete artwork"
+              deletedHref="/admin/artworks"
               onDelete={deleteArtworkAction.bind(null, artwork.slug)}
             />
           </div>
@@ -107,7 +109,7 @@ const AdminArtworkDetailPage = async ({ params }: PageProps<"/admin/artworks/[sl
             {artwork.thumbnail ? (
               /* eslint-disable-next-line @next/next/no-img-element */
               <img
-                src={artwork.thumbnail.src}
+                src={artwork.thumbnail}
                 alt={artwork.title}
                 className="bg-surface-subtle aspect-3/4 w-36 rounded-md object-cover"
               />
@@ -131,12 +133,12 @@ const AdminArtworkDetailPage = async ({ params }: PageProps<"/admin/artworks/[sl
           <CardContent>
             {artwork.media.length ? (
               <ul className="grid grid-cols-3 gap-3">
-                {artwork.media.map((asset) => (
-                  <li key={asset.id}>
+                {artwork.media.map((src, index) => (
+                  <li key={src}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={asset.src}
-                      alt={asset.name}
+                      src={src}
+                      alt={`${artwork.title} — view ${index + 2}`}
                       className="bg-surface-subtle aspect-square w-full rounded-md object-cover"
                     />
                   </li>

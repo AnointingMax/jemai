@@ -3,16 +3,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArtworkEnquiry } from "@/components/artworks/artwork-enquiry";
-import { artworks, getArtworkDetail } from "@/lib/artworks";
-
-export const generateStaticParams = () =>
-  artworks.map((work) => ({ slug: work.slug }));
+import { getArtworkDetail } from "@/lib/artworks";
 
 export const generateMetadata = async ({
   params,
 }: PageProps<"/artworks/[slug]">): Promise<Metadata> => {
   const { slug } = await params;
-  const artwork = getArtworkDetail(slug);
+  const artwork = await getArtworkDetail(slug);
   if (!artwork) return { title: "Not found | JEMAI" };
 
   return { title: `${artwork.title} | JEMAI`, description: artwork.lead };
@@ -53,7 +50,7 @@ const Breadcrumb = ({ title }: { title: string; }) => (
 
 const ArtworkDetailPage = async ({ params }: PageProps<"/artworks/[slug]">) => {
   const { slug } = await params;
-  const artwork = getArtworkDetail(slug);
+  const artwork = await getArtworkDetail(slug);
   if (!artwork) notFound();
 
   return (
@@ -96,9 +93,15 @@ const ArtworkDetailPage = async ({ params }: PageProps<"/artworks/[slug]">) => {
           <p className="text-h4 text-text-primary">
             {artwork.lead}
           </p>
-          <p className="text-body-lg text-text-primary mt-6.5">
-            {artwork.body}
-          </p>
+          {/* Authored in the console's own editor and put through
+              `sanitizeRichText` on every write, so the only markup that can
+              reach here is the toolbar's own. */}
+          {artwork.story ? (
+            <div
+              className="text-body-lg text-text-primary mt-6.5 [&_p:not(:last-child)]:mb-6"
+              dangerouslySetInnerHTML={{ __html: artwork.story }}
+            />
+          ) : null}
           <div className="mt-5.25">
             <ArtworkEnquiry
               artwork={{
@@ -111,29 +114,36 @@ const ArtworkDetailPage = async ({ params }: PageProps<"/artworks/[slug]">) => {
         </div>
       </div>
 
-      {/* Unlike every section rule on the site, this one is `border-default`
-          rather than the 3px `border-strong`. */}
-      <div className="mt-10 w-full px-4 sm:px-6 lg:px-page-gutter">
-        <hr className="border-border-default mx-auto w-full max-w-432 border-t-2" />
-      </div>
+      {/* A work whose documentation has not been uploaded yet closes on the
+          enquiry rather than on a rule with nothing under it. */}
+      {artwork.gallery.length ? (
+        <>
+        {/* Unlike every section rule on the site, this one is `border-default`
+            rather than the 3px `border-strong`. */}
+        <div className="mt-10 w-full px-4 sm:px-6 lg:px-page-gutter">
+          <hr className="border-border-default mx-auto w-full max-w-432 border-t-2" />
+        </div>
 
-      {/* Six-up documentation grid: three 426.67px columns on a 16px gutter,
-          rows on a 40px gutter — the frame's own two gutters. */}
-      <div className="mt-9.75 w-full px-4 sm:px-6 lg:px-page-gutter">
-        <ul className="mx-auto grid w-full max-w-432 grid-cols-1 gap-x-4 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
-          {artwork.gallery.map((shot, index) => (
-            <li key={`${shot.src}-${index}`} className="relative aspect-427/327">
-              <Image
-                src={shot.src}
-                alt={shot.alt}
-                fill
-                sizes="(min-width: 1024px) 427px, (min-width: 640px) 50vw, 100vw"
-                className="object-cover"
-              />
-            </li>
-          ))}
-        </ul>
-      </div>
+        {/* Six-up documentation grid: three 426.67px columns on a 16px gutter,
+            rows on a 40px gutter — the frame's own two gutters. */}
+        <div className="mt-9.75 w-full px-4 sm:px-6 lg:px-page-gutter">
+          <ul className="mx-auto grid w-full max-w-432 grid-cols-1 gap-x-4 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+            {artwork.gallery.map((shot, index) => (
+              <li key={`${shot.src}-${index}`} className="relative aspect-427/327">
+                <Image
+                  src={shot.src}
+                  alt={shot.alt}
+                  fill
+                  sizes="(min-width: 1024px) 427px, (min-width: 640px) 50vw, 100vw"
+                  className="object-cover"
+                />
+              </li>
+            ))}
+          </ul>
+        </div>
+        </>
+      ) : null}
+
     </section>
   );
 };

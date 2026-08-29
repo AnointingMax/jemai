@@ -1,3 +1,4 @@
+import { countArtworks } from "@/lib/admin/artworks";
 import { countFurniture } from "@/lib/admin/furniture";
 import { listOrders } from "@/lib/admin/orders";
 
@@ -21,13 +22,13 @@ export const needsAttention: AttentionItem[] = [
 export type OverviewStat = { label: string; value: number; href: string };
 
 /**
- * The four counters across the top. Furniture counts the catalogue table, so a
- * product created in the console moves the number; the rest are fixtures until
- * their own stores land.
+ * The four counters across the top. Furniture and artworks count their own
+ * tables, so a record created in the console moves the number; the rest are
+ * fixtures until their own stores land.
  */
 export const overviewStats = async (): Promise<OverviewStat[]> => [
   { label: "Furniture products", value: await countFurniture(), href: "/admin/furniture" },
-  { label: "Artworks", value: 18, href: "/admin/artworks" },
+  { label: "Artworks", value: await countArtworks(), href: "/admin/artworks" },
   { label: "Upcoming exhibitions", value: 3, href: "/admin/exhibitions" },
   { label: "Open requests", value: needsAttention.reduce((sum, item) => sum + item.count, 0), href: "/admin/consultation-requests" },
 ];

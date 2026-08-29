@@ -28,7 +28,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { slugify, type ContentAsset } from "@/lib/admin/content";
 import type { ExhibitionStatus } from "@/lib/admin/exhibitions";
-import type { Artwork } from "@/lib/artworks";
+import type { Artwork } from "@/lib/gallery";
 import { cn } from "@/lib/utils";
 
 /**

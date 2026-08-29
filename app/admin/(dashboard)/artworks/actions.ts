@@ -1,53 +1,140 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+import * as Yup from "yup";
 
-import type { ArtworkFormValues } from "@/components/admin/artwork-form";
+import { failWith, ok, validate, fail, type ActionResult } from "@/lib/action-result";
+import { readAdminSession } from "@/lib/admin/auth/session";
+import { hasPermission } from "@/lib/admin/auth/permissions";
 import {
+  artworkMediums,
   createArtwork,
   deleteArtwork,
   updateArtwork,
   type ArtworkInput,
 } from "@/lib/admin/artworks";
 
-/** The one place the form's values become the store's record. */
-const toInput = (values: ArtworkFormValues): ArtworkInput => ({
-  slug: values.slug.trim(),
-  title: values.title.trim(),
-  artist: values.artist.trim(),
+
+const requireArtworkAccess = async (): Promise<ActionResult<string>> => {
+  const session = await readAdminSession();
+  if (!session) return fail("Your session has expired. Sign in again.");
+  if (!hasPermission(session.permissions, "artworks"))
+    return fail("You do not have access to the gallery catalogue.");
+  return ok(session.sub);
+};
+
+const artworkPayload = () => {
+  const asset = Yup.object({
+    src: Yup.string().trim().required("Every uploaded image needs a source."),
+  });
+
+  return Yup.object({
+    title: Yup.string().trim().required("An artwork title is required."),
+    slug: Yup.string().trim().default(""),
+    artist: Yup.string().trim().required("An artist is required."),
+    medium: Yup
+      .string()
+      .trim()
+      .default("")
+      .oneOf(["", ...artworkMediums], "Pick a medium from the list."),
+    year: Yup
+      .string()
+      .trim()
+      .default("")
+      .matches(/^(\d{4})?$/, "Pick a year from the list."),
+    dimensions: Yup.string().trim().required("Dimensions are required."),
+    summary: Yup.string().trim().required("A short summary is required."),
+    story: Yup.string().default(""),
+    curatorsPick: Yup.boolean().default(false),
+    thumbnail: Yup.array(asset).max(1, "An artwork has one thumbnail.").default([]),
+    media: Yup.array(asset).default([]),
+  });
+};
+
+type ArtworkPayload = Yup.InferType<ReturnType<typeof artworkPayload>>;
+
+const toInput = (values: ArtworkPayload): ArtworkInput => ({
+  slug: values.slug,
+  title: values.title,
+  artist: values.artist,
   medium: values.medium,
   year: values.year,
-  dimensions: values.dimensions.trim(),
-  summary: values.summary.trim(),
-  // Left as authored here; the store sanitises it, so every write goes through
-  // the same filter whatever calls it.
+  dimensions: values.dimensions,
+  summary: values.summary,
   story: values.story,
   curatorsPick: values.curatorsPick,
-  thumbnail: values.thumbnail[0] ?? null,
-  media: values.media,
+  thumbnail: values.thumbnail[0]?.src ?? null,
+  media: values.media.map((asset) => asset.src),
 });
 
-/** Creates the artwork, then lands the author on its detail page. */
-export const createArtworkAction = async (values: ArtworkFormValues) => {
-  const created = createArtwork(toInput(values));
+const revalidateArtwork = (slug?: string) => {
   revalidatePath("/admin/artworks");
+  revalidatePath("/admin/exhibitions");
   revalidatePath("/admin");
-  redirect(`/admin/artworks/${created.slug}`);
+  revalidatePath("/artworks");
+  revalidatePath("/");
+  if (slug) {
+    revalidatePath(`/admin/artworks/${slug}`);
+    revalidatePath(`/artworks/${slug}`);
+  }
 };
 
-/** Same trip for an edit — the slug can change, so the redirect uses the new one. */
-export const updateArtworkAction = async (slug: string, values: ArtworkFormValues) => {
-  const updated = updateArtwork(slug, toInput(values));
-  if (!updated) redirect("/admin/artworks");
-  revalidatePath("/admin/artworks");
-  revalidatePath(`/admin/artworks/${updated.slug}`);
-  redirect(`/admin/artworks/${updated.slug}`);
+/** Creates the artwork. The caller navigates to the slug that comes back. */
+export const createArtworkAction = async (
+  values: unknown,
+): Promise<ActionResult<{ slug: string; title: string; }>> => {
+  const access = await requireArtworkAccess();
+  if (access.error) return access;
+
+  const parsed = await validate(artworkPayload(), values);
+  if (parsed.error) return parsed;
+
+  try {
+    const created = await createArtwork(toInput(parsed.data));
+    revalidateArtwork(created.slug);
+    return ok({ slug: created.slug, title: created.title });
+  } catch (error) {
+    return failWith("Could not save this artwork. Try again.", error);
+  }
 };
 
-export const deleteArtworkAction = async (slug: string) => {
-  deleteArtwork(slug);
-  revalidatePath("/admin/artworks");
-  revalidatePath("/admin");
-  redirect("/admin/artworks");
+/** Same trip for an edit — the slug can change, so the new one comes back. */
+export const updateArtworkAction = async (
+  slug: string,
+  values: unknown,
+): Promise<ActionResult<{ slug: string; title: string; }>> => {
+  const access = await requireArtworkAccess();
+  if (access.error) return access;
+
+  const parsed = await validate(artworkPayload(), values);
+  if (parsed.error) return parsed;
+
+  try {
+    const updated = await updateArtwork(slug, toInput(parsed.data));
+    if (!updated) return fail("That artwork no longer exists.");
+
+    revalidateArtwork(updated.slug);
+    if (updated.slug !== slug) revalidateArtwork(slug);
+
+    return ok({ slug: updated.slug, title: updated.title });
+  } catch (error) {
+    return failWith("Could not save this artwork. Try again.", error);
+  }
+};
+
+export const deleteArtworkAction = async (
+  slug: string,
+): Promise<ActionResult<string>> => {
+  const access = await requireArtworkAccess();
+  if (access.error) return access;
+
+  try {
+    const deleted = await deleteArtwork(slug);
+    if (!deleted) return fail("That artwork no longer exists.");
+
+    revalidateArtwork(slug);
+    return ok("Artwork deleted");
+  } catch (error) {
+    return failWith("Could not delete this artwork. Try again.", error);
+  }
 };

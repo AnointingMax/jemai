@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { updateExhibitionAction } from "@/app/admin/(dashboard)/exhibitions/actions";
 import { ExhibitionForm, type ExhibitionFormValues } from "@/components/admin/exhibition-form";
 import { exhibitionStatuses, getExhibition } from "@/lib/admin/exhibitions";
-import { artworks } from "@/lib/artworks";
+import { listArtworks } from "@/lib/artworks";
 
 /**
  * Edit — the same form, handed the exhibition as defaults. The action is the
@@ -39,7 +39,7 @@ const AdminExhibitionEditPage = async ({
   return (
     <ExhibitionForm
       exhibition={values}
-      artworks={artworks}
+      artworks={await listArtworks()}
       statuses={exhibitionStatuses}
       action={updateExhibitionAction.bind(null, exhibition.slug)}
       cancelHref={`/admin/exhibitions/${exhibition.slug}`}

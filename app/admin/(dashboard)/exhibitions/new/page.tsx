@@ -1,12 +1,12 @@
 import { createExhibitionAction } from "@/app/admin/(dashboard)/exhibitions/actions";
 import { ExhibitionForm } from "@/components/admin/exhibition-form";
 import { exhibitionStatuses } from "@/lib/admin/exhibitions";
-import { artworks } from "@/lib/artworks";
+import { listArtworks } from "@/lib/artworks";
 
 /** Add new Exhibition — the create half of the shared exhibition form. */
-const AdminExhibitionNewPage = () => (
+const AdminExhibitionNewPage = async () => (
   <ExhibitionForm
-    artworks={artworks}
+    artworks={await listArtworks()}
     statuses={exhibitionStatuses}
     action={createExhibitionAction}
     cancelHref="/admin/exhibitions"

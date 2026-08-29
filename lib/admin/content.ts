@@ -14,6 +14,20 @@ export type ContentAsset = {
   src: string;
 };
 
+/**
+ * The uploader works in `ContentAsset`s, but only their `src` is worth keeping:
+ * a record carries one thumbnail and an ordered list of gallery sources on its
+ * own row. This turns a stored source back into the shape the picker draws,
+ * naming it from the last path segment — a re-opened edit form shows the file
+ * name it was uploaded under for a real URL, and a generic one for a data URL.
+ */
+export const toContentAsset = (src: string): ContentAsset => ({
+  id: src,
+  name: src.startsWith("data:") ? "Uploaded image" : (src.split("/").pop() || src),
+  size: 0,
+  src,
+});
+
 /** Naira, whole units, hand-grouped so server and client always agree. */
 export const naira = (amount: number) =>
   `₦${amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;

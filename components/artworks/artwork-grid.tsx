@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { LoadMorePager } from "@/components/shared/load-more-pager";
-import { artworks, ARTWORK_PAGE_SIZE } from "@/lib/artworks";
+import { ARTWORK_PAGE_SIZE, type Artwork } from "@/lib/gallery";
 
 /**
  * The catalogue grid: three columns of 383px cards on a 17px gutter, each a
@@ -14,7 +14,7 @@ import { artworks, ARTWORK_PAGE_SIZE } from "@/lib/artworks";
  * The grid sits on its own 1183px measure (x 128 → 1310), narrower than the
  * page gutter the rule above it uses — as drawn.
  */
-export const ArtworkGrid = () => {
+export const ArtworkGrid = ({ artworks }: { artworks: Artwork[]; }) => {
   const [visible, setVisible] = useState(ARTWORK_PAGE_SIZE);
   const shown = Math.min(visible, artworks.length);
 

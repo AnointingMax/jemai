@@ -5,10 +5,10 @@ model Furniture {
   category      String
   price         Int
   stock         Int    @default(0)
-  summary       String
-  description   String
-  timeline      String
-  customization String
+  summary       String @db.Text
+  description   String @db.Text
+  timeline      String @db.Text
+  customization String @db.Text
 
   thumbnail String?
   /// The detail frame's thumbnail rail, in the order it draws them. Sources

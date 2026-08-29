@@ -10,8 +10,9 @@ import { formatUpdatedAt } from "@/lib/admin/content";
  * columns the table draws, so the media and the story HTML never cross to the
  * client.
  */
-const AdminArtworksPage = () => {
-  const rows: ArtworkRow[] = listArtworks().map((item) => ({
+const AdminArtworksPage = async () => {
+  const artworks = await listArtworks();
+  const rows: ArtworkRow[] = artworks.map((item) => ({
     slug: item.slug,
     title: item.title,
     artist: item.artist,
@@ -19,7 +20,7 @@ const AdminArtworksPage = () => {
     curatorsPick: item.curatorsPick,
     updatedAt: item.updatedAt,
     updatedLabel: formatUpdatedAt(item.updatedAt),
-    thumbnail: item.thumbnail?.src ?? null,
+    thumbnail: item.thumbnail,
   }));
 
   return (

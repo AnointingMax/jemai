@@ -1,30 +1,11 @@
 import { Prisma } from "@/lib/generated/prisma/client";
-import {
-  naira,
-  slugify,
-  uniqueSlug,
-  type ContentAsset,
-} from "@/lib/admin/content";
+import { naira, slugify, uniqueSlug } from "@/lib/admin/content";
 import { prisma } from "@/lib/prisma";
 
 // Prices are formatted the same way in every catalogue, so `naira` lives in the
 // shared module. Re-exported here because the furniture screens reach for it
 // through this store.
 export { naira };
-
-/**
- * The uploader works in `ContentAsset`s, but only their `src` is worth keeping:
- * a product carries one thumbnail and an ordered list of gallery sources on its
- * own row. This turns a stored source back into the shape the picker draws,
- * naming it from the last path segment — a re-opened edit form shows the file
- * name it was uploaded under for a real URL, and a generic one for a data URL.
- */
-export const toContentAsset = (src: string): ContentAsset => ({
-  id: src,
-  name: src.startsWith("data:") ? "Uploaded image" : (src.split("/").pop() || src),
-  size: 0,
-  src,
-});
 
 /**
  * One buyable combination. The frames drew variants as two free-text tag rails

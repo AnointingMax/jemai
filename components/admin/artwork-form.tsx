@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { X } from "lucide-react";
+import { toast } from "sonner";
 
 import {
   FieldHint,
@@ -25,6 +27,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import type { ActionResult } from "@/lib/action-result";
 import { slugify, type ContentAsset } from "@/lib/admin/content";
 import { cn } from "@/lib/utils";
 
@@ -65,7 +68,14 @@ type ArtworkFormProps = {
   artwork?: ArtworkFormValues;
   mediums: string[];
   years: string[];
-  action: (values: ArtworkFormValues) => Promise<void>;
+  /**
+   * Server action. Hands back the saved work's slug — which the create screen
+   * does not know in advance, and an edit can change — and this form does the
+   * navigating, so a rejected save can stay on the filled-in fields.
+   */
+  action: (
+    values: ArtworkFormValues,
+  ) => Promise<ActionResult<{ slug: string; title: string; }>>;
   cancelHref: string;
   submitLabel: string;
   heading: string;
@@ -85,6 +95,7 @@ export const ArtworkForm = ({
   submitLabel,
   heading,
 }: ArtworkFormProps) => {
+  const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [failed, setFailed] = useState<string | null>(null);
   const [slugLocked, setSlugLocked] = useState(Boolean(artwork));
@@ -112,14 +123,21 @@ export const ArtworkForm = ({
   const onSubmit = handleSubmit((values) => {
     setFailed(null);
     startTransition(async () => {
-      try {
-        await action(values);
-      } catch (error) {
-        // `redirect()` throws a control-flow signal on success; anything with a
-        // digest is that, and must be left to bubble.
-        if (error && typeof error === "object" && "digest" in error) throw error;
-        setFailed("Could not save this artwork. Try again.");
+      const result = await action(values);
+
+      if (result.error) {
+        // Twice over: the toast carries it past a long form's scroll position,
+        // the inline line keeps it in front of the reader while they fix it.
+        setFailed(result.message);
+        toast.error(result.message);
+        return;
       }
+
+      toast.success(`${result.data.title} saved`);
+      // The detail screen renders on the server from the row this just wrote,
+      // so the cached one it would otherwise land on has to go first.
+      router.refresh();
+      router.push(`/admin/artworks/${result.data.slug}`);
     });
   });
 

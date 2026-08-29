@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { ContentAsset } from "@/lib/admin/content";
 import { describeAdmission, exhibitionSpan, getExhibition } from "@/lib/admin/exhibitions";
-import { artworks } from "@/lib/artworks";
+import { listArtworks } from "@/lib/artworks";
 
 /**
  * One of the two single-image cards: an Upload link into the form, and a trash
@@ -105,6 +105,7 @@ const AdminExhibitionDetailPage = async ({ params }: PageProps<"/admin/exhibitio
   if (!exhibition) notFound();
 
   const editHref = `/admin/exhibitions/${exhibition.slug}/edit`;
+  const artworks = await listArtworks();
   const featured = exhibition.featured
     .map((held) => artworks.find((artwork) => artwork.slug === held))
     .filter((artwork) => artwork !== undefined);

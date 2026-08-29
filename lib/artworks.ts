@@ -1,106 +1,83 @@
-export type Artwork = {
-  slug: string;
-  title: string;
-  /** "Mixed media on canvas · 2 ft × 3 ft" — medium and size, drawn as one run. */
-  medium: string;
-  src: string;
+import { prisma } from "@/lib/prisma";
+import type { Artwork, ArtworkDetail, CuratedArtwork } from "@/lib/gallery";
+import type { Artwork as ArtworkRecord } from "@/lib/generated/prisma/client";
+
+/**
+ * The storefront's read side of the gallery catalogue. Everything here runs on
+ * the server — `lib/gallery` keeps the types and the page size, so the client
+ * components that share them never pull the database in behind them.
+ */
+
+/** Stands in for a work whose photography has not been uploaded yet. */
+const PLACEHOLDER_IMAGE = "/figma/artworks/work-01.jpg";
+
+/** Thumbnail first, then the gallery in its authored order, de-duplicated. */
+const images = (record: ArtworkRecord) => {
+  const sources = [
+    ...new Set([...(record.thumbnail ? [record.thumbnail] : []), ...record.gallery]),
+  ];
+  return sources.length ? sources : [PLACEHOLDER_IMAGE];
+};
+
+/** The caption run: medium and dimensions, whichever of the two is filled in. */
+const caption = (record: ArtworkRecord) =>
+  [record.medium, record.dimensions].filter(Boolean).join(" · ");
+
+const toArtwork = (record: ArtworkRecord): Artwork => ({
+  slug: record.slug,
+  title: record.title,
+  medium: caption(record),
+  src: images(record)[0],
+});
+
+/** The whole catalogue, newest first — what the grid pages through. */
+export const listArtworks = async (): Promise<Artwork[]> => {
+  const records = await prisma.artwork.findMany({ orderBy: { createdAt: "desc" } });
+  return records.map(toArtwork);
 };
 
 /**
- * The fifteen works the catalogue frame draws, with their photographs recovered
- * straight out of the frame export (each sits unobstructed at 383 × 339).
- *
- * **The titles are placeholder data in the design itself** — every one of the
- * fifteen cards reads "Of Mind and Myth · Mixed media on canvas · 2 ft × 3 ft".
- * Reproduced as drawn so the grid matches its frame; replace with the real
- * catalogue when it exists, at which point the slugs become meaningful.
+ * The curated introduction above the grid, and the home page's carousel. Works
+ * flagged in the console come first; the newest top the list up when there are
+ * fewer flagged than the frame draws, so the carousel is never short.
  */
-const works: Artwork[] = Array.from({ length: 15 }, (_, i) => ({
-  slug: `work-${String(i + 1).padStart(2, "0")}`,
-  title: "Of Mind and Myth",
-  medium: "Mixed media on canvas · 2 ft × 3 ft",
-  src: `/figma/artworks/work-${String(i + 1).padStart(2, "0")}.jpg`,
-}));
+export const curatedArtworks = async (limit = 3): Promise<CuratedArtwork[]> => {
+  const records = await prisma.artwork.findMany({
+    orderBy: [{ curatorsPick: "desc" }, { createdAt: "desc" }],
+    take: limit,
+  });
 
-/**
- * The frame draws fifteen cards *and* a live "Load more", which needs a set
- * larger than one page. The fifteen run twice — the first page is then exactly
- * the grid the frame draws. Drop the repeat once the real catalogue lands; this
- * is the same stand-in `rotation` the furniture catalogue uses.
- */
-export const artworks: Artwork[] = [
-  ...works,
-  ...works.map((work) => ({ ...work, slug: `${work.slug}-b` })),
-];
-
-/**
- * The frame's pager reads "1-12 of 16 pieces" while the grid draws fifteen
- * cards — the same kind of internal contradiction the furniture catalogue has
- * (16 cards, "44 ITEMS", "1-12 of 16"). The build keeps the dominant visual,
- * which is the grid as drawn, and derives the pager from the data.
- */
-export const ARTWORK_PAGE_SIZE = 15;
-
-export type ArtworkDetail = Artwork & {
-  artist: string;
-  /** The lead paragraph — larger, set on the frame's 28px pitch. */
-  lead: string;
-  /** The supporting paragraph below it. */
-  body: string;
-  /** The framed hero photograph, matted on `surface-tint`. */
-  hero: string;
-  /** The six-up documentation grid below the rule. */
-  gallery: { src: string; alt: string; }[];
+  return records.map((record) => ({
+    slug: record.slug,
+    title: record.title,
+    artist: record.artist,
+    summary: record.summary,
+    medium: record.medium,
+    dimensions: record.dimensions,
+    src: images(record)[0],
+  }));
 };
 
-/**
- * The six photographs the detail frame draws below its rule, cropped straight
- * out of the export at their drawn 427 × 327. The frame repeats one shot in the
- * first and last cell — reproduced as drawn; swap in real documentation when it
- * exists.
- */
-const drawnGallery = [
-  { src: "/figma/artworks/detail/gallery-1.jpg", alt: "The artist beside the hanging work" },
-  { src: "/figma/artworks/detail/gallery-2.jpg", alt: "The work seen straight on, full height" },
-  { src: "/figma/artworks/detail/gallery-3.jpg", alt: "Visitors reading the work up close" },
-  { src: "/figma/artworks/detail/gallery-4.jpg", alt: "The work beside its wall label" },
-  { src: "/figma/artworks/detail/gallery-5.jpg", alt: "The gallery room during the hang" },
-  { src: "/figma/artworks/detail/gallery-6.jpg", alt: "The artist beside the hanging work" },
-];
+export const getArtworkDetail = async (slug: string): Promise<ArtworkDetail | null> => {
+  const record = await prisma.artwork.findUnique({ where: { slug } });
+  if (!record) return null;
 
-/**
- * The one piece the detail frame draws, transcribed. Note the frame and its
- * enquiry modal disagree about the artist — the page reads "Marcellina
- * Akpojotor" and the modal's caption reads "Amina Bako". The page's name wins
- * here and the modal takes whatever piece it is opened on; worth raising with
- * the designer.
- */
-const featured: Omit<ArtworkDetail, "slug"> = {
-  title: "Threads of Becoming",
-  medium: "Mixed media on canvas · 2 ft × 3 ft",
-  src: "/figma/artworks/detail/hero.jpg",
-  artist: "Marcellina Akpojotor",
-  hero: "/figma/artworks/detail/hero.jpg",
-  lead: "Threads Of Becoming unfolds through repetition, material and gradual changes in tone. Suspended forms move from pale grey to deep umber, creating a rhythmic field that appears both ordered and organic.",
-  body: "Individual strands gather into a larger whole, turning fibre into a meditation on continuity, transformation and the memories carried through material. Subtle variations in colour and tension prevent the repeated elements from becoming uniform; each retains a character of its own.",
-  gallery: drawnGallery,
-};
-
-/**
- * Only one detail frame exists, so `work-01` — the slug the curator's pick
- * already points at — carries the drawn piece exactly and every other catalogue
- * entry reuses its shape with its own catalogue title. Replace with the real
- * records when the catalogue lands.
- */
-export const getArtworkDetail = (slug: string): ArtworkDetail | undefined => {
-  const work = artworks.find((entry) => entry.slug === slug);
-  if (!work) return undefined;
-  if (slug === "work-01") return { ...featured, slug };
+  const [hero, ...rest] = images(record);
 
   return {
-    ...featured,
-    ...work,
-    hero: work.src,
-    gallery: drawnGallery,
+    slug: record.slug,
+    title: record.title,
+    medium: caption(record),
+    src: hero,
+    artist: record.artist,
+    lead: record.summary,
+    story: record.story,
+    hero,
+    // The frame draws six documentation shots below the rule; a work with fewer
+    // simply draws fewer cells rather than repeating one to fill the grid.
+    gallery: rest.slice(0, 6).map((src, index) => ({
+      src,
+      alt: `${record.title} — view ${index + 2}`,
+    })),
   };
 };

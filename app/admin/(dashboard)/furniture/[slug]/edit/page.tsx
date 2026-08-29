@@ -2,7 +2,8 @@ import { notFound } from "next/navigation";
 
 import { updateFurnitureAction } from "@/app/admin/(dashboard)/furniture/actions";
 import { FurnitureForm, type FurnitureFormValues } from "@/components/admin/furniture-form";
-import { furnitureCategories, getFurniture, toContentAsset } from "@/lib/admin/furniture";
+import { furnitureCategories, getFurniture } from "@/lib/admin/furniture";
+import { toContentAsset } from "@/lib/admin/content";
 
 /**
  * Edit — the same form, handed the product as defaults. The action is the update

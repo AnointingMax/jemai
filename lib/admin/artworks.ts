@@ -1,12 +1,6 @@
-import {
-  identifyAssets,
-  sanitizeRichText,
-  slugify,
-  uniqueSlug,
-  type ContentAsset,
-} from "@/lib/admin/content";
-
-export type ArtworkAsset = ContentAsset;
+import { sanitizeRichText, slugify, uniqueSlug } from "@/lib/admin/content";
+import { prisma } from "@/lib/prisma";
+import type { Artwork as ArtworkRecord } from "@/lib/generated/prisma/client";
 
 /**
  * A gallery record. Deliberately without a price or any purchase field: the
@@ -15,6 +9,7 @@ export type ArtworkAsset = ContentAsset;
  * how that promise would quietly get broken.
  */
 export type Artwork = {
+  id: string;
   slug: string;
   title: string;
   artist: string;
@@ -27,8 +22,11 @@ export type Artwork = {
   /** Authored HTML from the story editor, sanitised on the way in. */
   story: string;
   curatorsPick: boolean;
-  thumbnail: ArtworkAsset | null;
-  media: ArtworkAsset[];
+  /** Source of the single thumbnail shot, or null before one is uploaded. */
+  thumbnail: string | null;
+  /** Gallery sources, in the order the detail frame's grid draws them. */
+  media: string[];
+  /** ISO string; the index sorts on it and renders it as "15 May 2020 9:00 pm". */
   updatedAt: string;
 };
 
@@ -48,177 +46,100 @@ export const artworkYears = Array.from({ length: 30 }, (_, i) =>
   String(new Date().getUTCFullYear() - i)
 );
 
-const asset = (name: string, src: string): ArtworkAsset => ({
-  id: `${name}-${src}`,
-  name,
-  size: 167301,
-  src,
+/** The row as the console's one artwork shape. */
+const toArtwork = (record: ArtworkRecord): Artwork => ({
+  id: record.id,
+  slug: record.slug,
+  title: record.title,
+  artist: record.artist,
+  medium: record.medium,
+  year: record.year,
+  dimensions: record.dimensions,
+  summary: record.summary,
+  story: record.story,
+  curatorsPick: record.curatorsPick,
+  thumbnail: record.thumbnail,
+  media: record.gallery,
+  updatedAt: record.updatedAt.toISOString(),
 });
 
-const galleryAssets = [1, 2, 3, 4, 5, 6].map((n) =>
-  asset(`gallery-${n}.jpg`, `/figma/artworks/detail/gallery-${n}.jpg`)
-);
+/** Newest first — the order the index draws. */
+export const listArtworks = async () => {
+  const records = await prisma.artwork.findMany({ orderBy: { updatedAt: "desc" } });
+  return records.map(toArtwork);
+};
 
-const story = `<p>Threads Of Becoming unfolds through repetition, material and gradual changes in tone. Suspended forms move from pale grey to deep umber, creating a rhythmic field that appears both ordered and organic.</p><p>Individual strands gather into a larger whole, turning fibre into a meditation on continuity, transformation and the memories carried through material. Subtle variations in colour and tension prevent the repeated elements from becoming uniform; each retains a character of its own.</p>`;
+/** The overview's counter. A count query, not a fetch of the whole catalogue. */
+export const countArtworks = () => prisma.artwork.count();
 
-type Seed = Omit<Artwork, "story" | "thumbnail" | "media"> & Partial<Artwork>;
+export const getArtwork = async (slug: string) => {
+  const record = await prisma.artwork.findUnique({ where: { slug } });
+  return record ? toArtwork(record) : null;
+};
 
-const seed = (input: Seed): Artwork => ({
-  story,
-  thumbnail: asset("hero.jpg", "/figma/artworks/detail/hero.jpg"),
-  media: galleryAssets,
-  ...input,
-});
+export type ArtworkInput = Omit<Artwork, "id" | "slug" | "updatedAt"> & {
+  slug: string;
+};
 
 /**
- * In module memory, like the furniture store: this console has no backend, so
- * creates and edits survive for the life of the server process and no longer.
+ * A slug no other work holds, suffixed `-2`, `-3`, … if one does. Only the
+ * candidate's own family is fetched rather than the whole catalogue, and
+ * `ignore` is the record's current slug so re-saving it unchanged does not push
+ * it to `-2`.
  */
-const store: Artwork[] = [
-  seed({
-    slug: "threads-of-becoming",
-    title: "Threads of Becoming",
-    artist: "Amina Bako",
-    medium: "Textile installation",
-    year: "2026",
-    dimensions: "180 × 240 cm",
-    summary:
-      "A rhythmic study in fibre and repetition, moving from light into shadow as individual strands gather into a meditation on change, continuity and memory.",
-    curatorsPick: true,
-    updatedAt: "2020-05-15T21:00:00.000Z",
-  }),
-  seed({
-    slug: "drops-of-effervescence",
-    title: "Drops of effervescence",
-    artist: "Mobi Aderemi",
-    medium: "Bronze sculpture",
-    year: "2025",
-    dimensions: "60 × 40 × 40 cm",
-    summary: "Cast bronze caught mid-motion, its surface broken into rising points of light.",
-    curatorsPick: false,
-    thumbnail: asset("work-02.jpg", "/figma/artworks/work-02.jpg"),
-    updatedAt: "2020-05-15T20:00:00.000Z",
-  }),
-  seed({
-    slug: "contour-of-class",
-    title: "Contour of Class",
-    artist: "Marcellina Akpojotor",
-    medium: "Mixed media",
-    year: "2024",
-    dimensions: "2 ft × 3 ft",
-    summary: "Layered paper and pigment tracing the outlines of inherited social form.",
-    curatorsPick: false,
-    thumbnail: asset("work-03.jpg", "/figma/artworks/work-03.jpg"),
-    updatedAt: "2020-05-15T19:00:00.000Z",
-  }),
-  seed({
-    slug: "golden-thread",
-    title: "Golden Thread",
-    artist: "Amina Bako",
-    medium: "Textile",
-    year: "2024",
-    dimensions: "120 × 150 cm",
-    summary: "A single warm line drawn through a field of muted weave.",
-    curatorsPick: false,
-    thumbnail: asset("work-04.jpg", "/figma/artworks/work-04.jpg"),
-    updatedAt: "2020-05-15T17:00:00.000Z",
-  }),
-  seed({
-    slug: "golden-thread-oil",
-    title: "Golden Thread",
-    artist: "Mobi Aderemi",
-    medium: "Oil Painting",
-    year: "2023",
-    dimensions: "90 × 120 cm",
-    summary: "Oil on linen, worked wet into wet until the seam between figure and ground closes.",
-    curatorsPick: false,
-    thumbnail: asset("work-05.jpg", "/figma/artworks/work-05.jpg"),
-    updatedAt: "2020-05-15T23:00:00.000Z",
-  }),
-  seed({
-    slug: "golden-thread-bronze",
-    title: "Golden Thread",
-    artist: "Amina Bako",
-    medium: "Bronze sculpture",
-    year: "2023",
-    dimensions: "45 × 30 × 30 cm",
-    summary: "A cast filament held upright, catching light along its full length.",
-    curatorsPick: false,
-    thumbnail: asset("work-06.jpg", "/figma/artworks/work-06.jpg"),
-    updatedAt: "2020-05-15T22:00:00.000Z",
-  }),
-  seed({
-    slug: "golden-thread-mixed",
-    title: "Golden Thread",
-    artist: "Marcellina Akpojotor",
-    medium: "Mixed media",
-    year: "2022",
-    dimensions: "2 ft × 3 ft",
-    summary: "Found paper, thread and pigment built into a shallow relief.",
-    curatorsPick: false,
-    thumbnail: asset("work-07.jpg", "/figma/artworks/work-07.jpg"),
-    updatedAt: "2020-05-15T18:00:00.000Z",
-  }),
-  seed({
-    slug: "golden-thread-study",
-    title: "Golden Thread",
-    artist: "Mobi Aderemi",
-    medium: "Mixed media",
-    year: "2022",
-    dimensions: "50 × 70 cm",
-    summary: "A working study for the larger piece, kept for its unresolved edges.",
-    curatorsPick: false,
-    thumbnail: asset("work-08.jpg", "/figma/artworks/work-08.jpg"),
-    updatedAt: "2020-05-15T18:00:00.000Z",
-  }),
-];
+const availableSlug = async (candidate: string, title: string, ignore?: string) => {
+  const base = slugify(candidate || title) || "artwork";
+  const taken = await prisma.artwork.findMany({
+    where: { slug: { startsWith: base } },
+    select: { slug: true },
+  });
+  return uniqueSlug(
+    taken.map((row) => row.slug),
+    base,
+    "artwork",
+    ignore,
+  );
+};
 
-const byRecency = (a: Artwork, b: Artwork) => b.updatedAt.localeCompare(a.updatedAt);
-
-export const listArtworks = () => [...store].sort(byRecency);
-
-export const getArtwork = (slug: string) => store.find((item) => item.slug === slug);
-
-export type ArtworkInput = Omit<Artwork, "slug" | "updatedAt"> & { slug: string };
-
-/** Shared by create and update: slug settled, story sanitised, assets identified. */
-const normalise = (input: ArtworkInput, slug: string): Artwork => ({
-  ...input,
-  slug,
+/**
+ * The columns both writes set. The story is sanitised here rather than in the
+ * action, so every write goes through the same filter whatever calls it.
+ */
+const columns = (input: ArtworkInput) => ({
+  title: input.title,
+  artist: input.artist,
+  medium: input.medium,
+  year: input.year,
+  dimensions: input.dimensions,
+  summary: input.summary,
   story: sanitizeRichText(input.story),
+  curatorsPick: input.curatorsPick,
   thumbnail: input.thumbnail,
-  media: identifyAssets(input.media),
-  updatedAt: new Date().toISOString(),
+  gallery: input.media,
 });
 
-export const createArtwork = (input: ArtworkInput) => {
-  const slug = uniqueSlug(
-    store.map((item) => item.slug),
-    slugify(input.slug || input.title),
-    "artwork"
-  );
-  const created = normalise(input, slug);
-  store.push(created);
-  return created;
+export const createArtwork = async (input: ArtworkInput) => {
+  const record = await prisma.artwork.create({
+    data: { slug: await availableSlug(input.slug, input.title), ...columns(input) },
+  });
+  return toArtwork(record);
 };
 
-export const updateArtwork = (slug: string, input: ArtworkInput) => {
-  const index = store.findIndex((item) => item.slug === slug);
-  if (index === -1) return undefined;
-  const next = uniqueSlug(
-    store.map((item) => item.slug),
-    slugify(input.slug || input.title),
-    "artwork",
-    slug
-  );
-  const updated = normalise(input, next);
-  store[index] = updated;
-  return updated;
+export const updateArtwork = async (slug: string, input: ArtworkInput) => {
+  const existing = await prisma.artwork.findUnique({ where: { slug }, select: { id: true } });
+  if (!existing) return null;
+
+  const record = await prisma.artwork.update({
+    where: { id: existing.id },
+    data: {
+      slug: await availableSlug(input.slug, input.title, slug),
+      ...columns(input),
+    },
+  });
+  return toArtwork(record);
 };
 
-export const deleteArtwork = (slug: string) => {
-  const index = store.findIndex((item) => item.slug === slug);
-  if (index === -1) return false;
-  store.splice(index, 1);
-  return true;
+export const deleteArtwork = async (slug: string) => {
+  const { count } = await prisma.artwork.deleteMany({ where: { slug } });
+  return count > 0;
 };

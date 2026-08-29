@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { updateArtworkAction } from "@/app/admin/(dashboard)/artworks/actions";
 import { ArtworkForm, type ArtworkFormValues } from "@/components/admin/artwork-form";
 import { artworkMediums, artworkYears, getArtwork } from "@/lib/admin/artworks";
+import { toContentAsset } from "@/lib/admin/content";
 
 /**
  * Edit — the same form, handed the artwork as defaults. The action is the update
@@ -10,7 +11,7 @@ import { artworkMediums, artworkYears, getArtwork } from "@/lib/admin/artworks";
  */
 const AdminArtworkEditPage = async ({ params }: PageProps<"/admin/artworks/[slug]/edit">) => {
   const { slug } = await params;
-  const artwork = getArtwork(slug);
+  const artwork = await getArtwork(slug);
   if (!artwork) notFound();
 
   const values: ArtworkFormValues = {
@@ -23,8 +24,8 @@ const AdminArtworkEditPage = async ({ params }: PageProps<"/admin/artworks/[slug
     summary: artwork.summary,
     story: artwork.story,
     curatorsPick: artwork.curatorsPick,
-    thumbnail: artwork.thumbnail ? [artwork.thumbnail] : [],
-    media: artwork.media,
+    thumbnail: artwork.thumbnail ? [toContentAsset(artwork.thumbnail)] : [],
+    media: artwork.media.map(toContentAsset),
   };
 
   return (

@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { Check } from "lucide-react";
 
-import type { Artwork } from "@/lib/artworks";
+import type { Artwork } from "@/lib/gallery";
 import { cn } from "@/lib/utils";
 
 /**

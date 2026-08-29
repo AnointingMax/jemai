@@ -5,49 +5,28 @@ import {
   CuratorCarousel,
   type CuratorPick,
 } from "@/components/site/curator-carousel";
+import { curatedArtworks } from "@/lib/artworks";
+import type { CuratedArtwork } from "@/lib/gallery";
 
-/* Three picks so the arrows have somewhere to go. The gallery photograph
-   behind the panel stays put; only the panel and the framed work advance. */
-const curatorPicks: CuratorPick[] = [
-  {
-    title: "Currents Of Stillness",
-    copy:
-      "Dynamic compositions that embody movement and grace, bringing bold energy and artistic expression into any space.",
-    href: "/artworks/currents-of-stillness",
-    image: {
-      src: "/figma/home/art-featured.jpg",
-      alt: "Mixed media on canvas in a gilt frame",
-    },
-    medium: "Mixed Media On Canvas",
-    dimensions: "2 ft \u00d7 3 ft",
-  },
-  {
-    title: "A Collection Of Quiet Hours",
-    copy:
-      "Studies in repetition and restraint, selected for the way they slow a room and reward a longer second look.",
-    href: "/artworks/quiet-hours",
-    image: {
-      src: "/figma/home/art-collection.jpg",
-      alt: "Framed works hung together in a gallery",
-    },
-    medium: "Oil On Linen",
-    dimensions: "3 ft \u00d7 4 ft",
-  },
-  {
-    title: "The Maker\u2019s Hand",
-    copy:
-      "Work that keeps the gesture visible \u2014 colour laid down with intent, and a surface that carries the making.",
-    href: "/artworks/makers-hand",
-    image: {
-      src: "/figma/home/art-artist.jpg",
-      alt: "Portrait of a featured JEMAI artist at work",
-    },
-    medium: "Acrylic On Canvas",
-    dimensions: "2.5 ft \u00d7 3.5 ft",
-  },
-];
+/**
+ * Three picks so the arrows have somewhere to go — whichever works the console
+ * has flagged as Curator's Pick, topped up with the newest when fewer than
+ * three are flagged. The gallery photograph behind the panel stays put; only
+ * the panel and the framed work advance.
+ */
+const toPick = (artwork: CuratedArtwork): CuratorPick => ({
+  title: artwork.title,
+  copy: artwork.summary,
+  href: `/artworks/${artwork.slug}`,
+  image: { src: artwork.src, alt: artwork.title },
+  medium: artwork.medium,
+  dimensions: artwork.dimensions,
+});
 
-export const ArtworksSection = () => (
+export const ArtworksSection = async () => {
+  const picks = (await curatedArtworks(3)).map(toPick);
+
+  return (
   <section className="flex w-full flex-col items-center">
     <div className="flex w-full max-w-432 flex-col gap-stack-loose px-4 sm:px-6 lg:px-page-gutter">
       <hr className="border-border-strong w-full border-t-3" />
@@ -77,7 +56,7 @@ export const ArtworksSection = () => (
           className="absolute inset-0 bg-linear-to-b from-[rgba(121,121,121,0.1)] to-[rgba(19,19,19,0.5)]"
         />
 
-        <CuratorCarousel picks={curatorPicks} />
+        {picks.length ? <CuratorCarousel picks={picks} /> : null}
       </div>
     </div>
 
@@ -106,4 +85,5 @@ export const ArtworksSection = () => (
       mediaSide="left"
     />
   </section>
-);
+  );
+};

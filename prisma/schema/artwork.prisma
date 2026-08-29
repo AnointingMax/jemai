@@ -1,0 +1,25 @@
+model Artwork {
+  id         String @id @default(uuid(7))
+  slug       String @unique
+  title      String
+  artist     String
+  medium     String
+  year       String
+  /// Free text, e.g. "180 × 240 cm".
+  dimensions String
+  summary    String @db.Text
+  story      String @default("") @db.Text
+
+  curatorsPick Boolean @default(false)
+
+  thumbnail String?
+  gallery   String[] @default([])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([medium])
+  @@index([curatorsPick])
+  @@index([updatedAt])
+  @@map("artworks")
+}
