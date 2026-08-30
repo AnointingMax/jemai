@@ -1,30 +1,23 @@
 "use client";
 
-import { useId, useRef, useState } from "react";
+import { useId, useRef, useState, useTransition } from "react";
 import { GripVertical, X } from "lucide-react";
 
+import { uploadImageAction } from "@/app/admin/(dashboard)/actions";
 import { Button } from "@/components/ui/button";
 import { formatFileSize, type ContentAsset } from "@/lib/admin/content";
+import {
+  ALLOWED_IMAGE_ACCEPT,
+  ALLOWED_IMAGE_LABEL,
+  MAX_GALLERY_IMAGES,
+  MAX_IMAGE_SIZE_MB,
+} from "@/lib/constants";
+import { validateImageBatch } from "@/lib/image-upload";
 import { cn } from "@/lib/utils";
 
-/**
- * Reads a picked file into a data URL. There is no upload endpoint yet, so the
- * bytes ride along in the form payload and land in the in-memory store; swapping
- * this for a real upload is the one change the rest of the form needs.
- */
-const toAsset = (file: File) =>
-  new Promise<ContentAsset>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(reader.error);
-    reader.onload = () =>
-      resolve({
-        id: `${file.name}-${file.size}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-        name: file.name,
-        size: file.size,
-        src: String(reader.result),
-      });
-    reader.readAsDataURL(file);
-  });
+/** Distinguishes two pictures with the same name picked in the same second. */
+const assetId = (file: File) =>
+  `${file.name}-${file.size}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
 type FileDropProps = {
   assets: ContentAsset[];
@@ -47,16 +40,69 @@ export const FileDrop = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const [over, setOver] = useState(false);
   const [dragging, setDragging] = useState<string | null>(null);
+  const [problem, setProblem] = useState<string | null>(null);
+  const [uploading, startUpload] = useTransition();
 
-  const accept = async (files: FileList | null) => {
+  /** A single slot holds one picture; a gallery holds the catalogue's ceiling. */
+  const capacity = multiple ? MAX_GALLERY_IMAGES - assets.length : 1;
+
+  /**
+   * Picked files are checked before anything leaves the browser, then posted one
+   * per request to the upload action, which puts them on Cloudinary and answers
+   * with the URL. The form itself only ever carries those URLs.
+   *
+   * The batch is all or nothing on validation: a rejected file means nothing is
+   * uploaded and the author is told which one, rather than half a gallery
+   * landing and the rest disappearing silently.
+   */
+  const accept = (files: FileList | null) => {
     if (!files?.length) return;
-    const picked = await Promise.all(
-      Array.from(files)
-        .filter((file) => file.type.startsWith("image/"))
-        .map(toAsset)
-    );
-    if (!picked.length) return;
-    onChange(multiple ? [...assets, ...picked] : picked.slice(0, 1));
+    setProblem(null);
+
+    const picked = Array.from(files);
+
+    if (picked.length > capacity) {
+      setProblem(
+        multiple
+          ? `You can only upload a maximum of ${MAX_GALLERY_IMAGES} images.`
+          : "This slot holds one image.",
+      );
+      return;
+    }
+
+    startUpload(async () => {
+      const invalid = await validateImageBatch(picked, capacity);
+      if (invalid) {
+        setProblem(invalid);
+        return;
+      }
+
+      const results = await Promise.all(
+        picked.map(async (file) => {
+          const body = new FormData();
+          body.append("file", file);
+          return { file, result: await uploadImageAction(body) };
+        }),
+      );
+
+      const uploaded: ContentAsset[] = [];
+      for (const { file, result } of results) {
+        // One failure fails the pick: the author sees why, and no half-added
+        // gallery is left behind to work out.
+        if (result.error) {
+          setProblem(result.message);
+          return;
+        }
+        uploaded.push({
+          id: assetId(file),
+          name: file.name,
+          size: file.size,
+          src: result.data,
+        });
+      }
+
+      onChange(multiple ? [...assets, ...uploaded] : uploaded.slice(0, 1));
+    });
   };
 
   const remove = (id: string) => onChange(assets.filter((asset) => asset.id !== id));
@@ -83,7 +129,7 @@ export const FileDrop = ({
         onDrop={(event) => {
           event.preventDefault();
           setOver(false);
-          void accept(event.dataTransfer.files);
+          accept(event.dataTransfer.files);
         }}
         className={cn(
           "border-border-strong/40 flex flex-col items-center gap-1 rounded-lg border border-dashed px-6 py-6 text-center transition-colors",
@@ -91,30 +137,45 @@ export const FileDrop = ({
         )}
       >
         <p className="text-text-secondary text-sm">
-          Drop your file here, or{" "}
-          <label
-            htmlFor={inputId}
-            className="text-[#6d28d9] cursor-pointer underline-offset-2 hover:underline"
-          >
-            click to browse
-          </label>
+          {uploading ? (
+            "Uploading…"
+          ) : (
+            <>
+              Drop your file here, or{" "}
+              <label
+                htmlFor={inputId}
+                className="cursor-pointer text-[#6d28d9] underline-offset-2 hover:underline"
+              >
+                click to browse
+              </label>
+            </>
+          )}
         </p>
-        <p className="text-text-secondary text-xs">1200 × 1600 (3:4) recommended</p>
+        <p className="text-text-secondary text-xs">
+          {ALLOWED_IMAGE_LABEL}, up to {MAX_IMAGE_SIZE_MB}MB · 1200 × 1600 (3:4) recommended
+        </p>
         <input
           ref={inputRef}
           id={inputId}
           type="file"
-          accept="image/*"
+          disabled={uploading}
+          accept={ALLOWED_IMAGE_ACCEPT}
           multiple={multiple}
           aria-label={label}
           className="sr-only"
           onChange={(event) => {
-            void accept(event.target.files);
+            accept(event.target.files);
             // Let the same file be picked again after it has been removed.
             event.target.value = "";
           }}
         />
       </div>
+
+      {problem ? (
+        <p role="alert" className="mt-2 text-sm text-[#e11d48]">
+          {problem}
+        </p>
+      ) : null}
 
       {assets.length ? (
         <ul className="flex flex-col">
@@ -143,8 +204,9 @@ export const FileDrop = ({
                   className="text-text-secondary size-4 shrink-0 cursor-grab"
                 />
               ) : null}
-              {/* A data URL from the picker, so this stays a plain img rather
-                  than going through the image optimiser. */}
+              {/* A Cloudinary URL, drawn at 48px in a list that can hold a
+                  dozen — a plain img rather than a dozen optimiser round trips
+                  for thumbnails this size. */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={asset.src}

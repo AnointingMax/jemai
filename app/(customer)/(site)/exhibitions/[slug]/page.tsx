@@ -1,40 +1,52 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { ArtistNote } from "@/components/exhibitions/artist-note";
 import { ExhibitionIntro } from "@/components/exhibitions/exhibition-intro";
 import { RegisterButton } from "@/components/exhibitions/register-button";
-import { upcomingExhibitions, getExhibition } from "@/lib/exhibitions";
-
-export const generateStaticParams = () =>
-  upcomingExhibitions.map((entry) => ({ slug: entry.slug }));
+import { RegistrationOutcome } from "@/components/exhibitions/registration-outcome";
+import { getExhibition } from "@/lib/exhibitions";
 
 export const generateMetadata = async ({
   params,
 }: PageProps<"/exhibitions/[slug]">): Promise<Metadata> => {
   const { slug } = await params;
-  const exhibition = getExhibition(slug, "upcoming");
+  const exhibition = await getExhibition(slug, "upcoming");
   if (!exhibition) return { title: "Not found | JEMAI" };
 
   return { title: `${exhibition.title} | JEMAI`, description: exhibition.lead };
 };
 
+/**
+ * An exhibition's status is derived from its run, so this page's content can go
+ * out of date with nothing having been written — the day simply turns. Hourly
+ * revalidation is what moves a show that closed overnight without waiting for
+ * an author to save something.
+ */
+export const revalidate = 3600;
+
 const UpcomingExhibitionPage = async ({
   params,
 }: PageProps<"/exhibitions/[slug]">) => {
   const { slug } = await params;
-  const exhibition = getExhibition(slug, "upcoming");
+  const exhibition = await getExhibition(slug, "upcoming");
   if (!exhibition) notFound();
 
   return (
     <div className="flex w-full flex-col">
+      <Suspense>
+        <RegistrationOutcome />
+      </Suspense>
+
       <ExhibitionIntro
         exhibition={exhibition}
         action={
           <RegisterButton
             exhibition={{
+              slug: exhibition.slug,
               title: exhibition.title,
               artist: exhibition.artist,
-              when: "15 Aug 2026",
+              when: exhibition.opensOn,
               image: exhibition.hero,
               ticket: exhibition.ticket,
             }}
@@ -49,7 +61,7 @@ const UpcomingExhibitionPage = async ({
       </div>
 
       <div className="mt-10">
-        <ArtistNote />
+        <ArtistNote note={exhibition.artistNote} />
       </div>
     </div>
   );

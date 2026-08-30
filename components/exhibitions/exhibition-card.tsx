@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import type { Exhibition } from "@/lib/exhibitions";
+import type { ExhibitionSummary } from "@/lib/exhibitions";
 
 /**
  * The 411 × 434 card both listing frames use: a 411 × 341 `surface-subtle` mat
@@ -14,13 +14,11 @@ import type { Exhibition } from "@/lib/exhibitions";
  */
 export const ExhibitionCard = ({
   exhibition,
-  href,
 }: {
-  exhibition: Exhibition;
-  href: string;
+  exhibition: ExhibitionSummary;
 }) => (
   <Link
-    href={href}
+    href={exhibition.href}
     className="border-border-default hover:border-border-strong/60 group flex flex-col border transition-colors"
   >
     {/* `fill` rather than an intrinsic image on purpose: an intrinsic one taller

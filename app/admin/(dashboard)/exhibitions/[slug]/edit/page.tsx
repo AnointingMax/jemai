@@ -2,7 +2,8 @@ import { notFound } from "next/navigation";
 
 import { updateExhibitionAction } from "@/app/admin/(dashboard)/exhibitions/actions";
 import { ExhibitionForm, type ExhibitionFormValues } from "@/components/admin/exhibition-form";
-import { exhibitionStatuses, getExhibition } from "@/lib/admin/exhibitions";
+import { toContentAsset } from "@/lib/admin/content";
+import { getExhibition } from "@/lib/admin/exhibitions";
 import { listArtworks } from "@/lib/artworks";
 
 /**
@@ -14,7 +15,7 @@ const AdminExhibitionEditPage = async ({
   params,
 }: PageProps<"/admin/exhibitions/[slug]/edit">) => {
   const { slug } = await params;
-  const exhibition = getExhibition(slug);
+  const exhibition = await getExhibition(slug);
   if (!exhibition) notFound();
 
   const values: ExhibitionFormValues = {
@@ -26,13 +27,14 @@ const AdminExhibitionEditPage = async ({
     venue: exhibition.venue,
     admission: exhibition.admission.paid ? "paid" : "free",
     price: exhibition.admission.price ? String(exhibition.admission.price) : "",
-    status: exhibition.status,
     summary: exhibition.summary,
     content: exhibition.content,
     artistBio: exhibition.artistBio,
-    thumbnail: exhibition.thumbnail ? [exhibition.thumbnail] : [],
-    artistProfile: exhibition.artistProfile ? [exhibition.artistProfile] : [],
-    media: exhibition.media,
+    thumbnail: exhibition.thumbnail ? [toContentAsset(exhibition.thumbnail)] : [],
+    artistProfile: exhibition.artistProfile
+      ? [toContentAsset(exhibition.artistProfile)]
+      : [],
+    media: exhibition.media.map(toContentAsset),
     featured: exhibition.featured,
   };
 
@@ -40,7 +42,6 @@ const AdminExhibitionEditPage = async ({
     <ExhibitionForm
       exhibition={values}
       artworks={await listArtworks()}
-      statuses={exhibitionStatuses}
       action={updateExhibitionAction.bind(null, exhibition.slug)}
       cancelHref={`/admin/exhibitions/${exhibition.slug}`}
       heading={`Edit ${exhibition.name}`}

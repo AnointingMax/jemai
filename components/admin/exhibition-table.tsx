@@ -146,14 +146,26 @@ export const ExhibitionTable = ({ rows }: { rows: ExhibitionRow[] }) => {
                       <StatusBadge status={row.status} />
                     </TableCell>
                     <TableCell className="px-6 py-4 text-right">
-                      <Button
-                        variant="link"
-                        size="sm"
-                        asChild
-                        className="text-action-link h-auto p-0"
-                      >
-                        <Link href={`/admin/exhibitions/${row.slug}/edit`}>Edit</Link>
-                      </Button>
+                      <div className="flex items-center justify-end gap-3">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          asChild
+                          className="border-border-default h-8 px-3 text-sm"
+                        >
+                          <Link href={`/admin/exhibitions/${row.slug}/attendees`}>
+                            View attendees
+                          </Link>
+                        </Button>
+                        <Button
+                          variant="link"
+                          size="sm"
+                          asChild
+                          className="text-action-link h-auto p-0"
+                        >
+                          <Link href={`/admin/exhibitions/${row.slug}/edit`}>Edit</Link>
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

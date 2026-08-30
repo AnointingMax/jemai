@@ -13,6 +13,7 @@ import {
   updateFurniture,
   type FurnitureInput,
 } from "@/lib/admin/furniture";
+import { imageAssetSchema } from "@/lib/cloudinary";
 
 /**
  * The console's own layout already turns an unauthenticated visitor away, but a
@@ -32,14 +33,8 @@ const requireFurnitureAccess = async (): Promise<ActionResult<string>> => {
  * action because the create and the edit are the same form posting the same
  * shape — it stays in this file, next to its only two callers.
  */
-const furniturePayload = () => {
-  // The picker posts whole assets — an id, a file name and a byte size beside
-  // the source — but only the source is stored, so only it is validated.
-  const asset = Yup.object({
-    src: Yup.string().trim().required("Every uploaded image needs a source."),
-  });
-
-  return Yup.object({
+const furniturePayload = () =>
+  Yup.object({
     name: Yup.string().trim().required("A product name is required."),
     slug: Yup.string().trim().default(""),
     category: Yup
@@ -77,10 +72,9 @@ const furniturePayload = () => {
         }),
       )
       .default([]),
-    thumbnail: Yup.array(asset).max(1, "A product has one thumbnail.").default([]),
-    media: Yup.array(asset).default([]),
+    thumbnail: Yup.array(imageAssetSchema).max(1, "A product has one thumbnail.").default([]),
+    media: Yup.array(imageAssetSchema).default([]),
   });
-};
 
 type FurniturePayload = Yup.InferType<ReturnType<typeof furniturePayload>>;
 

@@ -7,8 +7,8 @@ import type { Shot } from "@/lib/exhibitions";
 /**
  * The installation rail on the past-detail frame: 1088 × 762 slides on a 20px
  * gutter, starting 10px right of the page gutter and running off the right edge
- * of the page. The frame's counter reads "1/12", so the set is twelve; the
- * export only carries the first slide unclipped.
+ * of the page. The frame's counter reads "1/12"; it counts the exhibition's own
+ * media instead, which is however many the console uploaded.
  *
  * The counter is right-aligned to the *first* slide's right edge, which is
  * where the frame puts it.
@@ -59,7 +59,7 @@ export const InstallRail = ({ shots }: { shots: Shot[]; }) => {
 
       <div className="mt-3.75 w-full px-4 sm:px-6 lg:pr-0 lg:pl-18.5">
         <p className="text-body-sm text-text-secondary w-[min(1088px,86vw)] text-right">
-          {index + 1}/12
+          {index + 1}/{shots.length}
         </p>
       </div>
     </section>

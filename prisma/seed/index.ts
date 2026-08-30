@@ -5,14 +5,15 @@ import { prisma } from "../../lib/prisma";
 import { seedAdmin } from "./admin";
 import { seedArtworks } from "./artworks";
 import { seedEnquiries } from "./enquiries";
+import { seedExhibitions } from "./exhibitions";
 import { seedFurniture } from "./furniture";
 import { seedSubscribers } from "./newsletter";
 
 /**
  * The seed's running order. Each table's fixtures live in their own module
  * beside this one; this file only says what runs, in what order, and what it
- * reports. Order matters in one place — enquiries resolve their pieces against
- * the artworks table, so they follow it.
+ * reports. Order matters in one place — enquiries and exhibitions
+ * resolve their pieces against the artworks table, so they follow it.
  */
 const main = async () => {
   const admin = await seedAdmin();
@@ -25,6 +26,7 @@ const main = async () => {
     { run: seedArtworks, one: "artwork", many: "artworks", subject: "Artworks" },
     { run: seedSubscribers, one: "newsletter subscriber", many: "newsletter subscribers", subject: "Subscribers" },
     { run: seedEnquiries, one: "artwork enquiry", many: "artwork enquiries", subject: "Enquiries" },
+    { run: seedExhibitions, one: "exhibition", many: "exhibitions", subject: "Exhibitions" },
   ];
 
   for (const seed of seeds) {

@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, type ComponentProps } from "react";
+import { useEffect, useTransition, type ComponentProps } from "react";
 import Image from "next/image";
 import { useForm, type Path, type UseFormRegister } from "react-hook-form";
 import { X } from "lucide-react";
+import { toast } from "sonner";
+import { registerForExhibitionAction } from "@/app/(customer)/(site)/exhibitions/actions";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -22,6 +24,8 @@ import {
 type RegisterValues = { fullName: string; email: string; phone: string; };
 
 export type RegisterExhibition = {
+  /** The show being registered for — what the action prices the place off. */
+  slug: string;
   title: string;
   artist: string;
   /** "12 Sep 2026" — the frame draws the opening date beside the title. */
@@ -73,12 +77,8 @@ export const RegisterModal = ({
   onOpenChange,
   exhibition,
 }: RegisterModalProps) => {
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { isSubmitSuccessful },
-  } = useForm<RegisterValues>({
+  const [pending, startTransition] = useTransition();
+  const { register, handleSubmit, reset } = useForm<RegisterValues>({
     defaultValues: { fullName: "", email: "", phone: "" },
   });
 
@@ -87,6 +87,30 @@ export const RegisterModal = ({
   }, [open, reset]);
 
   const paid = Boolean(exhibition.ticket);
+
+  const onSubmit = handleSubmit((values) =>
+    startTransition(async () => {
+      const result = await registerForExhibitionAction(exhibition.slug, values);
+
+      if (result.error) {
+        toast.error(result.message);
+        return;
+      }
+
+      // A paid place is not taken until Paystack says so, so the modal hands
+      // the browser over rather than congratulating anyone. Paystack returns
+      // the payer to this exhibition, where the outcome panel picks the
+      // reference up.
+      if (result.data.authorizationUrl) {
+        window.location.href = result.data.authorizationUrl;
+        return;
+      }
+
+      toast.success(result.data.message);
+      onOpenChange(false);
+    }),
+  );
+
   const caption = `${exhibition.title} · ${exhibition.artist}`;
 
   return (
@@ -148,7 +172,7 @@ export const RegisterModal = ({
             </DialogClose>
           </div>
 
-          <form onSubmit={handleSubmit(() => {})} noValidate className="mt-6.25">
+          <form onSubmit={onSubmit} noValidate className="mt-6.25">
             <p className={modalLabelClass}>Exhibition</p>
             <p className="bg-surface-subtle text-body-sm text-text-primary mt-1.5 flex min-h-14 items-center px-3 py-3">
               {exhibition.title} &middot; {exhibition.when}
@@ -202,40 +226,37 @@ export const RegisterModal = ({
               />
             </div>
 
-            {isSubmitSuccessful ? (
-              <p role="status" className="text-body-sm text-text-primary mt-6">
-                {paid
-                  ? "Thank you — we are handing you to Paystack to complete the payment."
-                  : "Thank you — your place is reserved. A confirmation is on its way to your inbox."}
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Button
+                type="submit"
+                variant="jemai"
+                size="cta"
+                disabled={pending}
+                className="px-6"
+              >
+                {pending
+                  ? paid
+                    ? "Opening Paystack…"
+                    : "Reserving…"
+                  : paid
+                    ? "Continue to secure payment"
+                    : "Complete registration"}
+              </Button>
+              <DialogClose asChild>
+                <Button
+                  type="button"
+                  size="cta"
+                  className="border-border-strong text-action-primary rounded-none border bg-transparent px-6 hover:bg-transparent"
+                >
+                  Cancel
+                </Button>
+              </DialogClose>
+            </div>
+            {paid && (
+              <p className="text-body-xs text-text-secondary mt-5.75">
+                You&rsquo;ll be redirected to Paystack. JEMAI does not store your
+                card or bank details.
               </p>
-            ) : (
-              <>
-                <div className="mt-6 flex flex-wrap gap-3">
-                  <Button
-                    type="submit"
-                    variant="jemai"
-                    size="cta"
-                    className="px-6"
-                  >
-                    {paid ? "Continue to secure payment" : "Complete registration"}
-                  </Button>
-                  <DialogClose asChild>
-                    <Button
-                      type="button"
-                      size="cta"
-                      className="border-border-strong text-action-primary rounded-none border bg-transparent px-6 hover:bg-transparent"
-                    >
-                      Cancel
-                    </Button>
-                  </DialogClose>
-                </div>
-                {paid && (
-                  <p className="text-body-xs text-text-secondary mt-5.75">
-                    You&rsquo;ll be redirected to Paystack. JEMAI does not store
-                    your card or bank details.
-                  </p>
-                )}
-              </>
             )}
           </form>
         </div>

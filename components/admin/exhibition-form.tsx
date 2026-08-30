@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { X } from "lucide-react";
+import { toast } from "sonner";
 
 import { ArtworkPicker } from "@/components/admin/artwork-picker";
 import { FileDrop } from "@/components/admin/file-drop";
@@ -18,16 +20,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import type { ActionResult } from "@/lib/action-result";
 import { slugify, type ContentAsset } from "@/lib/admin/content";
-import type { ExhibitionStatus } from "@/lib/admin/exhibitions";
 import type { Artwork } from "@/lib/gallery";
 import { cn } from "@/lib/utils";
 
@@ -46,7 +41,6 @@ export type ExhibitionFormValues = {
   /** "free" | "paid" — the radio pair's value. */
   admission: string;
   price: string;
-  status: ExhibitionStatus;
   summary: string;
   content: string;
   artistBio: string;
@@ -65,7 +59,6 @@ export const emptyExhibitionForm: ExhibitionFormValues = {
   venue: "",
   admission: "free",
   price: "",
-  status: "Upcoming",
   summary: "",
   content: "",
   artistBio: "",
@@ -84,9 +77,13 @@ type ExhibitionFormProps = {
   exhibition?: ExhibitionFormValues;
   /** The catalogue the Featured Artworks grid draws. */
   artworks: Artwork[];
-  statuses: ExhibitionStatus[];
-  /** Server action. Redirects to the exhibition's detail page when it resolves. */
-  action: (values: ExhibitionFormValues) => Promise<void>;
+  /**
+   * Server action. Hands back the saved show's slug — which the create screen
+   * has no way of knowing, and an edit can change — so the caller navigates.
+   */
+  action: (
+    values: ExhibitionFormValues,
+  ) => Promise<ActionResult<{ slug: string; name: string; }>>;
   /** Where the close button goes, and where a cancelled edit returns to. */
   cancelHref: string;
   submitLabel: string;
@@ -101,12 +98,12 @@ const required = (message: string) => ({
 export const ExhibitionForm = ({
   exhibition,
   artworks,
-  statuses,
   action,
   cancelHref,
   submitLabel,
   heading,
 }: ExhibitionFormProps) => {
+  const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [failed, setFailed] = useState<string | null>(null);
   // On an existing exhibition the slug is already settled, so it stops tracking
@@ -125,7 +122,6 @@ export const ExhibitionForm = ({
   });
 
   const admission = useWatch({ control, name: "admission" });
-  const status = useWatch({ control, name: "status" });
   const thumbnail = useWatch({ control, name: "thumbnail" });
   const artistProfile = useWatch({ control, name: "artistProfile" });
   const media = useWatch({ control, name: "media" });
@@ -135,14 +131,21 @@ export const ExhibitionForm = ({
   const onSubmit = handleSubmit((values) => {
     setFailed(null);
     startTransition(async () => {
-      try {
-        await action(values);
-      } catch (error) {
-        // `redirect()` throws a control-flow signal on success; anything with a
-        // digest is that, and must be left to bubble.
-        if (error && typeof error === "object" && "digest" in error) throw error;
-        setFailed("Could not save this exhibition. Try again.");
+      const result = await action(values);
+
+      if (result.error) {
+        // Twice over: the toast carries it past a long form's scroll position,
+        // the inline line keeps it in front of the reader while they fix it.
+        setFailed(result.message);
+        toast.error(result.message);
+        return;
       }
+
+      toast.success(`${result.data.name} saved`);
+      // The detail screen renders on the server from the row this just wrote,
+      // so the cached one it would otherwise land on has to go first.
+      router.refresh();
+      router.push(`/admin/exhibitions/${result.data.slug}`);
     });
   });
 
@@ -241,27 +244,12 @@ export const ExhibitionForm = ({
                     {...register("artist")}
                   />
                 </div>
-                <div className="flex flex-col gap-1.5">
-                  <FieldLabel htmlFor="status">Status</FieldLabel>
-                  {/* Not in the add frames, but the index promises the author can
-                      archive a show once it has run — this is that control. */}
-                  <Select
-                    value={status}
-                    onValueChange={(value) =>
-                      setValue("status", value as ExhibitionStatus, { shouldValidate: true })
-                    }
-                  >
-                    <SelectTrigger id="status" className={cn(fieldChrome, "h-11 w-full text-sm")}>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {statuses.map((value) => (
-                        <SelectItem key={value} value={value}>
-                          {value}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                <div className="flex flex-col gap-1.5 sm:col-span-2">
+                  <p className="text-text-secondary text-xs">
+                    The run decides where the show appears: it is listed as upcoming
+                    until it opens, open while it runs, and moves into the past
+                    record the day after it ends.
+                  </p>
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <FieldLabel htmlFor="startDate" required>

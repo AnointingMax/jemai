@@ -2,10 +2,16 @@ import type { ConsultationStatus } from "@/lib/admin/consultations";
 import type { EnquiryStatus } from "@/lib/admin/enquiry-record";
 import type { ExhibitionStatus } from "@/lib/admin/exhibitions";
 import type { FulfillmentStatus } from "@/lib/admin/orders";
+import type { RegistrationStatus } from "@/lib/admin/registration-record";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-type AdminStatus = FulfillmentStatus | ExhibitionStatus | EnquiryStatus | ConsultationStatus;
+type AdminStatus =
+  | FulfillmentStatus
+  | ExhibitionStatus
+  | EnquiryStatus
+  | ConsultationStatus
+  | RegistrationStatus;
 
 /**
  * Dot colour per state — the badge chrome itself is the same hairline pill.
@@ -18,6 +24,8 @@ const dot: Record<AdminStatus, string> = {
   "Ready for dispatch": "bg-[#ffcc00]",
   Delivered: "bg-[#34c759]",
   Upcoming: "bg-[#2f8f4e]",
+  // A show that is on right now, which only the derived status can tell you.
+  "Open now": "bg-[#ffcc00]",
   Archived: "bg-text-primary",
   // The request queues have no frames of their own, so they borrow the
   // fulfillment palette: in-progress amber, settled green.
@@ -25,6 +33,11 @@ const dot: Record<AdminStatus, string> = {
   Reviewing: "bg-[#ff8d28]",
   Scheduled: "bg-[#ffcc00]",
   Closed: "bg-[#34c759]",
+  // Registrations borrow the same palette: settled green, in-flight amber, and
+  // the one state on the console that is genuinely bad in red.
+  Confirmed: "bg-[#34c759]",
+  "Pending payment": "bg-[#ff8d28]",
+  Failed: "bg-[#e11d48]",
 };
 
 /** The status pill the order and exhibition tables share: a 6px dot, the label, a hairline border. */

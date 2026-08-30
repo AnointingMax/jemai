@@ -1,36 +1,35 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Trash2 } from "lucide-react";
 
 import {
   clearExhibitionImageAction,
   deleteExhibitionAction,
 } from "@/app/admin/(dashboard)/exhibitions/actions";
+import { ClearImageButton } from "@/components/admin/clear-image-button";
 import { ContentActionsMenu } from "@/components/admin/content-actions-menu";
 import { CopyPanel, DetailRow } from "@/components/admin/record-panels";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { Accordion } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { ContentAsset } from "@/lib/admin/content";
+import type { ActionResult } from "@/lib/action-result";
 import { describeAdmission, exhibitionSpan, getExhibition } from "@/lib/admin/exhibitions";
 import { listArtworks } from "@/lib/artworks";
 
 /**
  * One of the two single-image cards: an Upload link into the form, and a trash
- * button that clears the slot on its own. The button is a plain submit inside a
- * form, so the card stays a server component.
+ * button that clears the slot on its own.
  */
 const ImageCard = ({
   title,
-  asset,
+  src,
   editHref,
   onClear,
 }: {
   title: string;
-  asset: ContentAsset | null;
+  src: string | null;
   editHref: string;
-  onClear: () => Promise<void>;
+  onClear: () => Promise<ActionResult<string>>;
 }) => (
   <Card className="ring-border-default py-6">
     <CardHeader>
@@ -39,26 +38,19 @@ const ImageCard = ({
         <Button variant="outline" size="lg" asChild className="border-border-default h-9 text-sm">
           <Link href={editHref}>Upload</Link>
         </Button>
-        <form action={onClear}>
-          <Button
-            type="submit"
-            variant="outline"
-            size="icon"
-            disabled={!asset}
-            aria-label={`Remove ${title.toLowerCase()}`}
-            className="border-border-default text-text-secondary hover:text-[#e11d48] size-9"
-          >
-            <Trash2 />
-          </Button>
-        </form>
+        <ClearImageButton
+          label={title.toLowerCase()}
+          disabled={!src}
+          onClear={onClear}
+        />
       </div>
     </CardHeader>
     <CardContent>
-      {asset ? (
+      {src ? (
         /* eslint-disable-next-line @next/next/no-img-element */
         <img
-          src={asset.src}
-          alt={asset.name}
+          src={src}
+          alt={title}
           className="bg-surface-subtle aspect-4/3 w-38 rounded-md object-cover"
         />
       ) : (
@@ -101,7 +93,7 @@ const GalleryCard = ({
  */
 const AdminExhibitionDetailPage = async ({ params }: PageProps<"/admin/exhibitions/[slug]">) => {
   const { slug } = await params;
-  const exhibition = getExhibition(slug);
+  const exhibition = await getExhibition(slug);
   if (!exhibition) notFound();
 
   const editHref = `/admin/exhibitions/${exhibition.slug}/edit`;
@@ -121,12 +113,25 @@ const AdminExhibitionDetailPage = async ({ params }: PageProps<"/admin/exhibitio
               </CardTitle>
               <StatusBadge status={exhibition.status} />
             </div>
-            <ContentActionsMenu
-              name={exhibition.name}
-              editHref={editHref}
-              deleteLabel="Delete exhibition"
-              onDelete={deleteExhibitionAction.bind(null, exhibition.slug)}
-            />
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="lg"
+                asChild
+                className="border-border-default h-9 text-sm"
+              >
+                <Link href={`/admin/exhibitions/${exhibition.slug}/attendees`}>
+                  Attendees
+                </Link>
+              </Button>
+              <ContentActionsMenu
+                name={exhibition.name}
+                editHref={editHref}
+                deleteLabel="Delete exhibition"
+                deletedHref="/admin/exhibitions"
+                onDelete={deleteExhibitionAction.bind(null, exhibition.slug)}
+              />
+            </div>
           </div>
           <p className="text-text-secondary max-w-[60ch] text-sm">{exhibition.summary}</p>
         </CardHeader>
@@ -157,25 +162,25 @@ const AdminExhibitionDetailPage = async ({ params }: PageProps<"/admin/exhibitio
       <div className="flex flex-col gap-4">
         <ImageCard
           title="Thumbnail"
-          asset={exhibition.thumbnail}
+          src={exhibition.thumbnail}
           editHref={editHref}
           onClear={clearExhibitionImageAction.bind(null, exhibition.slug, "thumbnail")}
         />
         <ImageCard
           title="Artist profile"
-          asset={exhibition.artistProfile}
+          src={exhibition.artistProfile}
           editHref={editHref}
           onClear={clearExhibitionImageAction.bind(null, exhibition.slug, "artistProfile")}
         />
 
         <GalleryCard title="Media" editHref={editHref} columns="grid-cols-3">
           {exhibition.media.length ? (
-            exhibition.media.map((asset) => (
-              <li key={asset.id}>
+            exhibition.media.map((src, index) => (
+              <li key={src}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={asset.src}
-                  alt={asset.name}
+                  src={src}
+                  alt={`${exhibition.name} — installation view ${index + 1}`}
                   className="bg-surface-subtle aspect-square w-full rounded-md object-cover"
                 />
               </li>

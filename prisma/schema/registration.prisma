@@ -1,0 +1,27 @@
+model ExhibitionRegistration {
+  id        String @id @default(uuid(7))
+  reference String @unique
+
+  exhibition      Exhibition? @relation(fields: [exhibitionId], references: [id], onDelete: SetNull)
+  exhibitionId    String?
+  exhibitionTitle String
+
+  name  String
+  email String
+  phone String
+
+  amount     Int  @default(0)
+  /// Whole naira, as Paystack settled it — null until it has.
+  amountPaid Int?
+
+  status String    @default("Confirmed")
+  paidAt DateTime?
+
+  registeredAt DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([exhibitionId])
+  @@index([status])
+  @@index([registeredAt])
+  @@map("exhibition_registrations")
+}

@@ -16,6 +16,7 @@ model Artwork {
   gallery   String[] @default([])
 
   enquiries Enquiry[]
+  featured  ExhibitionArtwork[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

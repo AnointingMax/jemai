@@ -4,22 +4,50 @@ import {
   naira,
   slugify,
   uniqueSlug,
-  type ContentAsset,
 } from "@/lib/admin/content";
+import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@/lib/generated/prisma/client";
 
-/** Upcoming shows are live on the storefront; archived ones sit in the past record. */
-export type ExhibitionStatus = "Upcoming" | "Archived";
+/**
+ * Where a show sits in its own run. Derived from the dates on every read, never
+ * stored and never chosen: a run that ended last night is archived this morning
+ * whether or not anybody opened the console, which is the one thing a status
+ * field can never promise.
+ */
+export type ExhibitionStatus = "Upcoming" | "Open now" | "Archived";
 
-export const exhibitionStatuses: ExhibitionStatus[] = ["Upcoming", "Archived"];
+/**
+ * Today as the date columns hold it — UTC midnight — so a comparison is a
+ * comparison of days rather than of instants, and a show whose last day is
+ * today is still open at 11pm in Lagos.
+ */
+export const startOfToday = () => {
+  const now = new Date();
+  return new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
+  );
+};
+
+/** The status the dates imply. Both ends are inclusive: a run includes its last day. */
+export const exhibitionStatus = (start: Date, end: Date): ExhibitionStatus => {
+  const today = startOfToday();
+  if (end < today) return "Archived";
+  if (start > today) return "Upcoming";
+  return "Open now";
+};
+
+/** Only archived shows sit in the storefront's past record; the rest are live. */
+export const isArchived = (status: ExhibitionStatus) => status === "Archived";
 
 /**
  * Admission is either free or a single ticket price. The frames draw it as a
  * radio pair with an amount field that only matters on the paid branch, so the
  * price is kept even while free — flipping back and forth must not lose it.
  */
-export type Admission = { paid: boolean; price: number };
+export type Admission = { paid: boolean; price: number; };
 
 export type Exhibition = {
+  id: string;
   slug: string;
   name: string;
   artist: string;
@@ -34,11 +62,14 @@ export type Exhibition = {
   content: string;
   /** The "About the Artist" panel. */
   artistBio: string;
+  /** Derived from the run — see `exhibitionStatus`. Never written. */
   status: ExhibitionStatus;
-  thumbnail: ContentAsset | null;
+  /** Source of the thumbnail shot, or null before one is uploaded. */
+  thumbnail: string | null;
   /** The artist's portrait — its own single slot, beside the thumbnail. */
-  artistProfile: ContentAsset | null;
-  media: ContentAsset[];
+  artistProfile: string | null;
+  /** Installation sources, in the order the detail rail draws them. */
+  media: string[];
   /** Slugs out of the artwork catalogue, linked onto the exhibition page. */
   featured: string[];
   /** ISO string; the index sorts on it. */
@@ -57,161 +88,168 @@ export const exhibitionDates = (exhibition: Pick<Exhibition, "startDate" | "endD
 export const exhibitionSpan = (exhibition: Pick<Exhibition, "startDate" | "endDate">) =>
   formatDateSpan(exhibition.startDate, exhibition.endDate);
 
-const asset = (name: string, src: string): ContentAsset => ({
-  id: `${name}-${src}`,
-  name,
-  size: 167301,
-  src,
+/**
+ * A `DATE` column back as the `yyyy-mm-dd` a date field speaks. The driver
+ * hands it over as UTC midnight, so the UTC parts are the authored day — the
+ * local ones would be the day before for half the world.
+ */
+export const toDateField = (value: Date) => value.toISOString().slice(0, 10);
+
+/** The other direction: a date field's value as the UTC midnight it means. */
+const toDateColumn = (value: string) => new Date(`${value}T00:00:00.000Z`);
+
+/** Every read below pulls its linked works in the author's order. */
+const withFeatured = {
+  featured: {
+    orderBy: { position: "asc" },
+    select: { artwork: { select: { slug: true } } },
+  },
+} satisfies Prisma.ExhibitionInclude;
+
+type ExhibitionRecord = Prisma.ExhibitionGetPayload<{ include: typeof withFeatured; }>;
+
+const toExhibition = (record: ExhibitionRecord): Exhibition => ({
+  id: record.id,
+  slug: record.slug,
+  name: record.name,
+  artist: record.artist,
+  startDate: toDateField(record.startDate),
+  endDate: toDateField(record.endDate),
+  venue: record.venue,
+  admission: { paid: record.paid, price: record.price },
+  summary: record.summary,
+  content: record.content,
+  artistBio: record.artistBio,
+  status: exhibitionStatus(record.startDate, record.endDate),
+  thumbnail: record.thumbnail,
+  artistProfile: record.artistProfile,
+  media: record.gallery,
+  featured: record.featured.map((link) => link.artwork.slug),
+  updatedAt: record.updatedAt.toISOString(),
 });
 
-const summary =
-  "The exhibition asks how land remembers the people who pass through it, and how the places that shape us continue to live within us, even after we have moved on.";
+/** Newest first — the order the index draws. */
+export const listExhibitions = async () => {
+  const records = await prisma.exhibition.findMany({
+    orderBy: { updatedAt: "desc" },
+    include: withFeatured,
+  });
+  return records.map(toExhibition);
+};
 
-const content =
-  "Threads Of Becoming unfolds through repetition, material and gradual changes in tone. Suspended forms move from pale grey to deep umber, creating a rhythmic field that appears both ordered and organic.\n\nIndividual strands gather into a larger whole, turning fibre into a meditation on continuity, transformation and the memories carried through material. Subtle variations in colour and tension prevent the repeated elements from becoming uniform; each retains a character of its own.";
+/**
+ * The overview's counter: shows still to run — everything that has not ended,
+ * which is the same question the derivation answers, asked in SQL so the whole
+ * programme is not read to count it.
+ */
+export const countUpcomingExhibitions = () =>
+  prisma.exhibition.count({ where: { endDate: { gte: startOfToday() } } });
 
-const artistBio =
-  "Amina Bako is a Nigerian painter whose practice explores the relationship between land, memory and belonging. Drawing from the Guinea savannah and her memories of family compounds in Kaduna, she approaches landscape not simply as scenery, but as a living record of the people, rituals and histories held within it.\n\nWorking through layered colour, textured surfaces and recurring images of trees, pathways and gathering places, Bako creates paintings that move between observation and remembrance. Woven cloth, weathered walls, red earth and shifting light reappear throughout her work, allowing familiar environments to carry both personal and collective meaning.";
+export const getExhibition = async (slug: string) => {
+  const record = await prisma.exhibition.findUnique({
+    where: { slug },
+    include: withFeatured,
+  });
+  return record ? toExhibition(record) : null;
+};
 
-type Seed = Pick<
+export type ExhibitionInput = Omit<
   Exhibition,
-  "slug" | "name" | "startDate" | "endDate" | "venue" | "status" | "updatedAt"
-> & { admission?: Admission };
+  "id" | "slug" | "status" | "updatedAt"
+> & { slug: string; };
 
 /**
- * The eight rows the index frame draws. As everywhere else in this design the
- * copy is placeholder — one artist across every show, three titles repeated —
- * so it is transcribed as drawn rather than invented around.
+ * A slug no other exhibition holds, suffixed `-2`, `-3`, … if one does. Only
+ * the candidate's own family is fetched rather than the whole programme, and
+ * `ignore` is the record's current slug so re-saving it unchanged does not push
+ * it to `-2`.
  */
-const seed = ({ admission, ...input }: Seed): Exhibition => ({
-  artist: "Amina Bako",
-  admission: admission ?? { paid: false, price: 0 },
-  summary,
-  content,
-  artistBio,
-  thumbnail: asset("threads-of-becoming.jpg", "/figma/exhibitions/artist-portrait.jpg"),
-  artistProfile: asset("amina-bako.jpg", "/figma/exhibitions/artist-portrait.jpg"),
-  media: [
-    asset("install-01.jpg", "/figma/artworks/work-01.jpg"),
-    asset("install-02.jpg", "/figma/artworks/work-02.jpg"),
-    asset("install-03.jpg", "/figma/artworks/work-03.jpg"),
-  ],
-  featured: ["work-01", "work-02", "work-03", "work-04"],
-  ...input,
+const availableSlug = async (candidate: string, name: string, ignore?: string) => {
+  const base = slugify(candidate || name) || "exhibition";
+  const taken = await prisma.exhibition.findMany({
+    where: { slug: { startsWith: base } },
+    select: { slug: true },
+  });
+  return uniqueSlug(
+    taken.map((row) => row.slug),
+    base,
+    "exhibition",
+    ignore,
+  );
+};
+
+/** The columns both writes set — everything except the slug and the links. */
+const columns = (input: ExhibitionInput) => ({
+  name: input.name,
+  artist: input.artist,
+  startDate: toDateColumn(input.startDate),
+  endDate: toDateColumn(input.endDate),
+  venue: input.venue,
+  paid: input.admission.paid,
+  price: input.admission.price,
+  summary: input.summary,
+  content: input.content,
+  artistBio: input.artistBio,
+  thumbnail: input.thumbnail,
+  artistProfile: input.artistProfile,
+  gallery: input.media,
 });
 
 /**
- * The programme lives in module memory: this console has no backend yet, so
- * creates and edits survive for the life of the server process and no longer.
- * Swapping this for a real store means replacing the five functions below and
- * nothing that imports them.
+ * The featured rows for the slugs the picker sent, in the order it sent them.
+ * A slug that no longer resolves is dropped rather than failing the save — the
+ * work it named was deleted while the form was open, which is not the author's
+ * problem to fix mid-save.
  */
-const store: Exhibition[] = [
-  seed({
-    slug: "the-land-knows-our-names",
-    name: "The Land Knows Our Names",
-    startDate: "2026-08-15",
-    endDate: "2026-09-14",
-    venue: "JEMAI Gallery, Lagos",
-    admission: { paid: true, price: 15000 },
-    status: "Upcoming",
-    updatedAt: "2026-05-15T21:00:00.000Z",
-  }),
-  seed({
-    slug: "between-earth-and-light",
-    name: "Between Earth and Light",
-    startDate: "2026-09-12",
-    endDate: "2026-09-26",
-    venue: "JEMAI Gallery, Lagos",
-    status: "Upcoming",
-    updatedAt: "2026-05-15T20:00:00.000Z",
-  }),
-  seed({
-    slug: "material-memory",
-    name: "Material Memory",
-    startDate: "2026-10-18",
-    endDate: "2026-11-02",
-    venue: "Victoria Island",
-    status: "Upcoming",
-    updatedAt: "2026-05-15T19:00:00.000Z",
-  }),
-  seed({
-    slug: "forms-of-stillness",
-    name: "Forms of Stillness",
-    startDate: "2025-07-12",
-    endDate: "2025-07-25",
-    venue: "Victoria Island",
-    status: "Archived",
-    updatedAt: "2026-05-15T18:00:00.000Z",
-  }),
-  seed({
-    slug: "between-earth-and-light-2025",
-    name: "Between Earth and Light",
-    startDate: "2025-05-12",
-    endDate: "2025-05-25",
-    venue: "Victoria Island",
-    status: "Archived",
-    updatedAt: "2026-05-15T17:00:00.000Z",
-  }),
-  seed({
-    slug: "between-earth-and-light-lagos",
-    name: "Between Earth and Light",
-    startDate: "2025-05-12",
-    endDate: "2025-05-25",
-    venue: "JEMAI Gallery, Lagos",
-    status: "Archived",
-    updatedAt: "2026-05-15T16:00:00.000Z",
-  }),
-  seed({
-    slug: "the-land-knows-our-names-2024",
-    name: "The Land Knows Our Names",
-    startDate: "2024-05-18",
-    endDate: "2024-06-02",
-    venue: "Victoria Island",
-    status: "Archived",
-    updatedAt: "2026-05-15T15:00:00.000Z",
-  }),
-  seed({
-    slug: "material-memory-2024",
-    name: "Material Memory",
-    startDate: "2024-03-15",
-    endDate: "2024-04-14",
-    venue: "Victoria Island",
-    status: "Archived",
-    updatedAt: "2026-05-15T14:00:00.000Z",
-  }),
-];
+const featuredLinks = async (slugs: string[]) => {
+  if (!slugs.length) return [];
+  const artworks = await prisma.artwork.findMany({
+    where: { slug: { in: slugs } },
+    select: { id: true, slug: true },
+  });
+  const ids = new Map(artworks.map((artwork) => [artwork.slug, artwork.id]));
 
-/** Newest first — the order the index draws and the order the seeds imply. */
-const byRecency = (a: Exhibition, b: Exhibition) => b.updatedAt.localeCompare(a.updatedAt);
-
-export const listExhibitions = () => [...store].sort(byRecency);
-
-export const getExhibition = (slug: string) => store.find((item) => item.slug === slug);
-
-export type ExhibitionInput = Omit<Exhibition, "updatedAt">;
-
-const slugsInUse = () => store.map((item) => item.slug);
-
-export const createExhibition = (input: ExhibitionInput) => {
-  const slug = uniqueSlug(slugsInUse(), slugify(input.slug || input.name), "exhibition");
-  const created: Exhibition = { ...input, slug, updatedAt: new Date().toISOString() };
-  store.push(created);
-  return created;
+  return slugs
+    .map((slug, position) => ({ artworkId: ids.get(slug), position }))
+    .filter((link): link is { artworkId: string; position: number; } =>
+      Boolean(link.artworkId),
+    );
 };
 
-export const updateExhibition = (slug: string, input: ExhibitionInput) => {
-  const index = store.findIndex((item) => item.slug === slug);
-  if (index === -1) return undefined;
-  const next = uniqueSlug(slugsInUse(), slugify(input.slug || input.name), "exhibition", slug);
-  const updated: Exhibition = { ...input, slug: next, updatedAt: new Date().toISOString() };
-  store[index] = updated;
-  return updated;
+export const createExhibition = async (input: ExhibitionInput) => {
+  const record = await prisma.exhibition.create({
+    data: {
+      slug: await availableSlug(input.slug, input.name),
+      ...columns(input),
+      featured: { create: await featuredLinks(input.featured) },
+    },
+    include: withFeatured,
+  });
+  return toExhibition(record);
 };
 
-export const deleteExhibition = (slug: string) => {
-  const index = store.findIndex((item) => item.slug === slug);
-  if (index === -1) return false;
-  store.splice(index, 1);
-  return true;
+export const updateExhibition = async (slug: string, input: ExhibitionInput) => {
+  const existing = await prisma.exhibition.findUnique({
+    where: { slug },
+    select: { id: true },
+  });
+  if (!existing) return null;
+
+  const record = await prisma.exhibition.update({
+    where: { id: existing.id },
+    data: {
+      slug: await availableSlug(input.slug, input.name, slug),
+      ...columns(input),
+      // The links carry no state of their own, so the picker's list replaces
+      // them outright rather than being diffed row by row.
+      featured: { deleteMany: {}, create: await featuredLinks(input.featured) },
+    },
+    include: withFeatured,
+  });
+  return toExhibition(record);
+};
+
+export const deleteExhibition = async (slug: string) => {
+  const { count } = await prisma.exhibition.deleteMany({ where: { slug } });
+  return count > 0;
 };

@@ -1,0 +1,46 @@
+model Exhibition {
+  id     String @id @default(uuid(7))
+  slug   String @unique
+  name   String
+  artist String
+
+  startDate DateTime @db.Date
+  endDate   DateTime @db.Date
+  venue     String   @default("")
+
+  paid  Boolean @default(false)
+  price Int     @default(0)
+
+  summary   String @db.Text
+  content   String @db.Text
+  artistBio String @db.Text
+
+  thumbnail     String?
+  artistProfile String?
+  gallery       String[] @default([])
+
+  featured      ExhibitionArtwork[]
+  registrations ExhibitionRegistration[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([startDate])
+  @@index([endDate])
+  @@index([updatedAt])
+  @@map("exhibitions")
+}
+
+model ExhibitionArtwork {
+  exhibitionId String
+  exhibition   Exhibition @relation(fields: [exhibitionId], references: [id], onDelete: Cascade)
+
+  artworkId String
+  artwork   Artwork @relation(fields: [artworkId], references: [id], onDelete: Cascade)
+
+  position Int @default(0)
+
+  @@id([exhibitionId, artworkId])
+  @@index([artworkId])
+  @@map("exhibition_artworks")
+}

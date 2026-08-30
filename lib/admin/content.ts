@@ -101,6 +101,13 @@ export const formatDateSpan = (start: string, end: string) => {
   return `${from.day} ${monthNames[from.month]}–${to.day} ${monthNames[to.month]} ${to.year}`;
 };
 
+/** "15 Aug 2026" — one end of a run, as the register modal draws it. */
+export const formatDateShort = (value: string) => {
+  const date = parts(value);
+  if (!date) return "—";
+  return `${date.day} ${months[date.month]} ${date.year}`;
+};
+
 /** File sizes as the upload rows draw them: "163.38 KB". */
 export const formatFileSize = (bytes: number) => {
   if (bytes < 1024) return `${bytes} B`;

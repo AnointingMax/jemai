@@ -1,31 +1,52 @@
+import {
+  formatDateShort,
+  formatDateSpan,
+  naira,
+} from "@/lib/admin/content";
+import {
+  exhibitionStatus,
+  isArchived,
+  startOfToday,
+  toDateField,
+} from "@/lib/admin/exhibitions";
+import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@/lib/generated/prisma/client";
+
 /**
- * Exhibition data, transcribed from the four exhibition frames.
+ * The storefront's read side of the exhibition programme. Everything here runs
+ * on the server; the shapes below are what the exhibition components read, and
+ * the client ones import them as types only.
  *
- * The design draws one artist (Amina Bako) across every frame and repeats a
- * handful of titles, so most of this is placeholder content in the file itself
- * — see `build-plan.md` for the specific contradictions. Replace with the real
- * programme; the shapes here are what the components read.
+ * Which record a page draws is decided by its run, not by a stored status: a
+ * show is live on `/exhibitions` until the day after it ends, and in the
+ * archive from then on. Nothing has to be updated for a run to end.
  */
 
 export type ExhibitionStatus = "upcoming" | "past";
 
-/** A photograph with its intrinsic size, so `next/image` can reserve the box. */
-export type Shot = { src: string; width: number; height: number; alt: string; };
+/** A photograph and the line a screen reader gets for it. */
+export type Shot = { src: string; alt: string; };
 
-/** One work in the past-detail rail, each at its own natural aspect. */
+/** One work in the past-detail rail. */
 export type ExhibitionWork = Shot & { title: string; year: string; href: string; };
+
+/** One exhibition as either index draws it, in its card. */
+export type ExhibitionSummary = {
+  slug: string;
+  title: string;
+  /** The card's second line: the artist for upcoming, the run for past. */
+  cardMeta: string;
+  card: Shot;
+  href: string;
+};
 
 export type Exhibition = {
   slug: string;
   title: string;
   artist: string;
   status: ExhibitionStatus;
-  /** "Aug 15 – Sep 14, 2026" — the detail page's date line. */
+  /** "12 September–4 October 2026" — the detail page's date line. */
   dates: string;
-  /** The card's second line: the artist for upcoming, the run for past. */
-  cardMeta: string;
-  /** The card's matted photograph. */
-  card: Shot;
   /** The detail page's full-bleed hero. */
   hero: string;
   /** Lead paragraph, set in `text-h4` on the 800px measure. */
@@ -39,276 +60,244 @@ export type Exhibition = {
   ticket?: { label: string; price: string; };
 };
 
-const bako = {
-  artist: "Amina Bako",
-  lead: "JEMAI presents The Land Knows Our Names, a solo exhibition by Nigerian painter Amina Bako. Across this new body of work, Bako considers the tree not as scenery, but as witness—a keeper of gathering, movement, shelter and return.",
-  body: [
-    "Drawing from the Guinea savannah and memories of family compounds in Kaduna, Bako constructs landscapes that move between lived place and inherited memory. Umbrella canopies stretch across layered skies, while textured grounds recall woven cloth, weathered walls and the red earth after rain.",
-    "The exhibition asks how land remembers the people who pass through it—and how the places that shape us continue to live within us, even after we have moved on.",
-  ],
+/** The artist block both detail frames close on. */
+export type ArtistNote = {
+  heading: string;
+  portrait: Shot;
+  paragraphs: string[];
 };
 
-/**
- * The artist note both detail frames close on. The *past* frame draws a bio for
- * a different artist entirely (a David Lynch biography, pasted in from another
- * file); the design's own Bako copy is used on both pages instead — a
- * deliberate departure, since the frame's own text names the wrong person.
- */
-export const artistNote = {
-  heading: "About the Artist",
-  portrait: {
-    src: "/figma/exhibitions/artist-portrait.jpg",
-    width: 576,
-    height: 864,
-    alt: "Amina Bako photographed in her studio",
-  },
-  paragraphs: [
-    "Amina Bako is a Nigerian painter whose practice explores the relationship between land, memory and belonging. Drawing from the Guinea savannah and her memories of family compounds in Kaduna, she approaches landscape not simply as scenery, but as a living record of the people, rituals and histories held within it.",
-    "Working through layered colour, textured surfaces and recurring images of trees, pathways and gathering places, Bako creates paintings that move between observation and remembrance. Woven cloth, weathered walls, red earth and shifting light reappear throughout her work, allowing familiar environments to carry both personal and collective meaning.",
-    "Her paintings often begin with remembered fragments—a canopy seen from a childhood courtyard, the changing colour of the ground after rain, or the quiet movement of people beneath the trees. These details are gradually reworked into landscapes that feel at once recognisable and imagined.",
-    "Through her practice, Bako considers how place continues to shape identity long after we have left it. Her work asks what the land remembers, what we inherit from the spaces that raised us, and how painting can preserve the emotional geography of home.",
-  ],
+export type ExhibitionDetail = Exhibition & {
+  /** The opening date on its own, which the register modal draws. */
+  opensOn: string;
+  /** Installation views — the past frame's rail. */
+  installShots: Shot[];
+  /** The linked catalogue works, in the order the console arranged them. */
+  works: ExhibitionWork[];
+  artistNote: ArtistNote;
 };
 
 /** The featured "UP NEXT" block on the upcoming index. */
-export const upNext = {
-  slug: "the-land-knows-our-names",
-  eyebrow: "Up next",
-  title: "The Land Knows Our Names",
-  copy: "The exhibition asks how land remembers the people who pass through it—and how the places that shape us continue to live within us, even after we have moved on.",
-  rows: [
-    { label: "Date", value: "12 September–4 October 2026" },
-    { label: "Venue", value: "JEMAI Gallery, Lagos" },
-    { label: "Opening", value: "Saturday, 12 September · 5:00 PM" },
-  ],
-  image: {
-    src: "/figma/exhibitions/up-next.jpg",
-    width: 688,
-    height: 516,
-    alt: "The Land Knows Our Names — a layered landscape in oil",
-  },
+export type UpNext = Pick<Exhibition, "slug" | "title" | "artist" | "ticket"> & {
+  eyebrow: string;
+  copy: string;
+  image: Shot;
+  rows: { label: string; value: string; }[];
+  opensOn: string;
 };
 
-/** Three slides run behind both index heroes; the frames draw only the first. */
+/** Stands in for a show whose photography has not been uploaded yet. */
+const PLACEHOLDER_HERO = "/figma/exhibitions/detail-hero.jpg";
+const PLACEHOLDER_PORTRAIT = "/figma/exhibitions/artist-portrait.jpg";
+
+/**
+ * Three slides run behind both index heroes. These are the frames' own
+ * photography rather than programme data — no exhibition owns the band, so it
+ * stays a fixture here.
+ */
 export const upcomingHero: Shot[] = [
-  {
-    src: "/figma/exhibitions/hero-upcoming.jpg",
-    width: 1440,
-    height: 501,
-    alt: "A JEMAI gallery room hung with framed landscapes",
-  },
-  {
-    src: "/figma/artworks/hero.jpg",
-    width: 1440,
-    height: 500,
-    alt: "Visitors viewing framed works in the JEMAI gallery",
-  },
-  {
-    src: "/figma/home/ex-sculpture.jpg",
-    width: 1440,
-    height: 500,
-    alt: "A sculpture on a plinth in the gallery",
-  },
+  { src: "/figma/exhibitions/hero-upcoming.jpg", alt: "A JEMAI gallery room hung with framed landscapes" },
+  { src: "/figma/artworks/hero.jpg", alt: "Visitors viewing framed works in the JEMAI gallery" },
+  { src: "/figma/home/ex-sculpture.jpg", alt: "A sculpture on a plinth in the gallery" },
 ];
 
 export const pastHero: Shot[] = [
-  {
-    src: "/figma/exhibitions/hero-past.jpg",
-    width: 1440,
-    height: 501,
-    alt: "Three framed paintings on a deep red gallery wall",
-  },
-  {
-    src: "/figma/artworks/hero.jpg",
-    width: 1440,
-    height: 500,
-    alt: "Visitors viewing framed works in the JEMAI gallery",
-  },
-  {
-    src: "/figma/home/ex-slide-1.jpg",
-    width: 1440,
-    height: 500,
-    alt: "Visitors before a framed work in the gallery",
-  },
+  { src: "/figma/exhibitions/hero-past.jpg", alt: "Three framed paintings on a deep red gallery wall" },
+  { src: "/figma/artworks/hero.jpg", alt: "Visitors viewing framed works in the JEMAI gallery" },
+  { src: "/figma/home/ex-slide-1.jpg", alt: "Visitors before a framed work in the gallery" },
 ];
 
-const shot = (name: string, width: number, height: number, alt: string): Shot => ({
-  src: `/figma/exhibitions/${name}.jpg`,
-  width,
-  height,
-  alt,
-});
+/** The console stores the long copy as plain text; blank lines are paragraphs. */
+const paragraphs = (copy: string) =>
+  copy
+    .split(/\n\s*\n/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean);
+
+/** The two trees the storefront draws, out of the three states a run has. */
+const status = (start: Date, end: Date): ExhibitionStatus =>
+  isArchived(exhibitionStatus(start, end)) ? "past" : "upcoming";
 
 /**
- * The two "Coming soon" cards. The frame fills only two of the grid's three
- * tracks, so the third is left empty as drawn.
+ * Still to end — everything the upcoming index lists, running shows included —
+ * and its opposite, the archive.
+ *
+ * Both are functions, not constants: a module stays loaded for as long as the
+ * server runs, so a boundary computed once at import would still be yesterday's
+ * midnight tomorrow, and a show that ended overnight would never move.
  */
-export const upcomingExhibitions: Exhibition[] = [
-  {
-    slug: "material-memory",
-    title: "Material Memory",
-    status: "upcoming",
-    dates: "Oct 18 – Nov 15, 2026",
-    cardMeta: "Amina Bako",
-    card: shot("soon-1", 292, 324, "Material Memory — gold and green impasto in a deep red frame"),
-    hero: "/figma/exhibitions/detail-hero.jpg",
-    ...bako,
+const live = () => ({ endDate: { gte: startOfToday() } });
+
+const ended = () => ({ endDate: { lt: startOfToday() } });
+
+/** Where a show's own pages live, which its status decides. */
+export const exhibitionHref = (slug: string, state: ExhibitionStatus) =>
+  state === "past" ? `/exhibitions/past/${slug}` : `/exhibitions/${slug}`;
+
+const withDetail = {
+  featured: {
+    orderBy: { position: "asc" },
+    select: {
+      artwork: {
+        select: { slug: true, title: true, year: true, thumbnail: true, gallery: true },
+      },
+    },
   },
-  {
-    slug: "between-earth-and-light",
-    title: "Between Earth And Light",
-    status: "upcoming",
-    dates: "Nov 22 – Dec 20, 2026",
-    cardMeta: "Amina Bako",
-    card: shot("soon-2", 395, 290, "Between Earth And Light — a woven relief in natural fibre"),
-    hero: "/figma/exhibitions/detail-hero.jpg",
-    ...bako,
-  },
-  /**
-   * The piece the "UP NEXT" block and both detail frames draw. It is a paid
-   * event, which is the state the paid register modal covers.
-   */
-  {
-    slug: upNext.slug,
-    title: upNext.title,
-    status: "upcoming",
-    dates: "Aug 15 – Sep 14, 2026",
-    cardMeta: "Amina Bako",
-    card: shot("up-next", 688, 516, upNext.title),
-    hero: "/figma/exhibitions/detail-hero.jpg",
-    ticket: { label: "General admission", price: "₦15,000" },
-    ...bako,
-  },
-];
+} satisfies Prisma.ExhibitionInclude;
+
+type DetailRecord = Prisma.ExhibitionGetPayload<{ include: typeof withDetail; }>;
+type CardRecord = Pick<
+  DetailRecord,
+  "slug" | "name" | "artist" | "startDate" | "endDate" | "thumbnail"
+>;
+
+const ticketFor = (record: Pick<DetailRecord, "paid" | "price">) =>
+  record.paid
+    ? { label: "General admission", price: naira(record.price) }
+    : undefined;
+
+const toCard = (record: CardRecord): ExhibitionSummary => {
+  const state = status(record.startDate, record.endDate);
+  const run = formatDateSpan(toDateField(record.startDate), toDateField(record.endDate));
+
+  return {
+    slug: record.slug,
+    title: record.name,
+    // Upcoming cards name the artist, past ones the run — as both frames draw.
+    cardMeta: state === "past" ? run : record.artist,
+    card: { src: record.thumbnail ?? PLACEHOLDER_HERO, alt: record.name },
+    href: exhibitionHref(record.slug, state),
+  };
+};
+
+const cardColumns = {
+  slug: true,
+  name: true,
+  artist: true,
+  startDate: true,
+  endDate: true,
+  thumbnail: true,
+} satisfies Prisma.ExhibitionSelect;
 
 /**
- * The nine past cards, transcribed as drawn. **The frame repeats "Queit
- * Witnesses" in cards 6 and 9 with the same run of dates, and spells "Quiet"
- * as "Queit" in both** — kept as drawn rather than corrected.
+ * The programme still to run, soonest first — the upcoming index's cards. A
+ * show that opened last week has not ended, so it is still here rather than in
+ * the archive.
  */
-type PastRow = [slug: string, title: string, run: string, file: string, w: number, h: number];
+export const listUpcomingExhibitions = async (): Promise<ExhibitionSummary[]> => {
+  const records = await prisma.exhibition.findMany({
+    where: live(),
+    orderBy: { startDate: "asc" },
+    select: cardColumns,
+  });
+  return records.map(toCard);
+};
 
-const pastRows: PastRow[] = [
-  ["a-delicate-balance", "A Delicate Balance", "18 July–8 August 2026", "past-1", 243, 324],
-  ["war-in-heaven", "War in Heaven", "20 June–11 July 2026", "past-2", 251, 324],
-  ["woven-geometries", "Woven Geometries", "23 May–13 June 2026", "past-3", 320, 324],
-  ["the-centre-holds", "The Centre Holds", "18 April–9 May 2026", "past-4", 336, 324],
-  ["lines-between-us", "Lines Between Us", "14 March–4 April 2026", "past-5", 319, 324],
-  ["queit-witnesses", "Queit Witnesses", "7–28 February 2026", "past-6", 236, 324],
-  ["tidal-memory", "Tidal Memory", "10–31 January 2026", "past-7", 394, 305],
-  ["between-earth-and-light-2025", "Between Earth And Light", "6–21 December 2025", "past-8", 283, 324],
-  ["queit-witnesses-2", "Queit Witnesses", "7–28 February 2026", "past-9", 298, 324],
-];
+/** The archive, most recently closed first. */
+export const listPastExhibitions = async (): Promise<ExhibitionSummary[]> => {
+  const records = await prisma.exhibition.findMany({
+    where: ended(),
+    orderBy: { endDate: "desc" },
+    select: cardColumns,
+  });
+  return records.map(toCard);
+};
 
-export const pastExhibitions: Exhibition[] = pastRows.map(
-  ([slug, title, run, file, w, h]) => ({
-    slug,
-    title,
-    status: "past" as const,
-    dates: "May 15 – Aug 14, 2026",
-    cardMeta: run,
-    card: shot(file, w, h, title),
-    hero: "/figma/exhibitions/detail-hero.jpg",
-    ...bako,
-  }),
-);
+const toDetail = (record: DetailRecord): ExhibitionDetail => {
+  const startDate = toDateField(record.startDate);
+  const [lead, ...body] = paragraphs(record.summary);
 
-export const getExhibition = (slug: string, status: ExhibitionStatus) =>
-  (status === "upcoming" ? upcomingExhibitions : pastExhibitions).find(
-    (entry) => entry.slug === slug,
-  );
-
-/**
- * The past-detail frame's installation rail. It draws two slides and a "1/12"
- * counter, so the set is twelve; the export only carries the first, and the
- * second is clipped by the frame edge.
- */
-export const installShots: Shot[] = [
-  {
-    src: "/figma/exhibitions/install-1.jpg",
-    width: 1088,
-    height: 762,
-    alt: "Installation view — a visitor crossing the main gallery",
-  },
-  {
-    src: "/figma/artworks/hero.jpg",
-    width: 1440,
-    height: 500,
-    alt: "Installation view — the north wall",
-  },
-  {
-    src: "/figma/exhibitions/hero-past.jpg",
-    width: 1440,
-    height: 501,
-    alt: "Installation view — three framed paintings on the red wall",
-  },
-];
-
-/** The single work the past-detail frame features between its copy blocks. */
-export const featuredWork = {
-  src: "/figma/exhibitions/featured-work.jpg",
-  width: 900,
-  height: 720,
-  alt: "After The First Rain, 2026 — a layered canopy in oil",
+  return {
+    slug: record.slug,
+    title: record.name,
+    artist: record.artist,
+    status: status(record.startDate, record.endDate),
+    dates: formatDateSpan(startDate, toDateField(record.endDate)),
+    hero: record.thumbnail ?? PLACEHOLDER_HERO,
+    lead: lead ?? "",
+    // The summary is one paragraph in practice, so the detail copy is the body;
+    // anything the summary carried beyond its first paragraph leads it.
+    body: [...body, ...paragraphs(record.content)],
+    ticket: ticketFor(record),
+    opensOn: formatDateShort(startDate),
+    installShots: record.gallery.map((src, index) => ({
+      src,
+      alt: `${record.name} — installation view ${index + 1}`,
+    })),
+    works: record.featured.map(({ artwork }) => ({
+      src: artwork.thumbnail ?? artwork.gallery[0] ?? PLACEHOLDER_HERO,
+      alt: `${artwork.title}, ${artwork.year}`,
+      title: artwork.title,
+      year: artwork.year,
+      href: `/artworks/${artwork.slug}`,
+    })),
+    artistNote: {
+      heading: "About the Artist",
+      portrait: {
+        src: record.artistProfile ?? PLACEHOLDER_PORTRAIT,
+        alt: record.artist
+          ? `${record.artist} photographed in their studio`
+          : "The artist photographed in their studio",
+      },
+      paragraphs: paragraphs(record.artistBio),
+    },
+  };
 };
 
 /**
- * The four works the past-detail frame rails below its copy. Each is 300px wide
- * at its own natural height, so the row is top-aligned and every caption sits
- * directly under its own image.
+ * One exhibition, for the detail page of the tree that asked. `state` is the
+ * tree, so an archived show does not answer on `/exhibitions/[slug]` and an
+ * upcoming one does not answer in the archive — each has one canonical URL.
  */
-export const exhibitionWorks: ExhibitionWork[] = [
-  {
-    src: "/figma/exhibitions/work-1.jpg",
-    width: 300,
-    height: 538,
-    title: "Keeper Of The Crossing",
-    year: "2026",
-    href: "/artworks/work-01",
-    alt: "Keeper Of The Crossing, 2026",
-  },
-  {
-    src: "/figma/exhibitions/work-2.jpg",
-    width: 300,
-    height: 192,
-    title: "After The First Rain",
-    year: "2026",
-    href: "/artworks/work-02",
-    alt: "After The First Rain, 2026",
-  },
-  {
-    src: "/figma/exhibitions/work-3.jpg",
-    width: 300,
-    height: 386,
-    title: "A Place To Return To",
-    year: "2026",
-    href: "/artworks/work-03",
-    alt: "A Place To Return To, 2026",
-  },
-  {
-    src: "/figma/exhibitions/work-4.jpg",
-    width: 300,
-    height: 537,
-    title: "The Long Shade",
-    year: "2026",
-    href: "/artworks/work-04",
-    alt: "The Long Shade, 2026",
-  },
-];
+export const getExhibition = async (
+  slug: string,
+  state: ExhibitionStatus,
+): Promise<ExhibitionDetail | null> => {
+  const record = await prisma.exhibition.findUnique({
+    where: { slug },
+    include: withDetail,
+  });
+  if (!record || status(record.startDate, record.endDate) !== state) return null;
+
+  return toDetail(record);
+};
 
 /**
- * The nine-line block the past-detail frame draws **twice**, once above the
- * featured work and once below it, verbatim. Reproduced as drawn so the page
- * matches its frame; `bodyAfter` is the duplicate and is the field to replace
- * with real copy.
+ * The next show to open, which the upcoming index features above its cards.
+ *
+ * The frame's third row is an opening time; the console records a run and a
+ * venue but no opening hour, so admission takes that row rather than inventing
+ * a time the gallery never entered.
  */
-export const pastNarrative = {
-  bodyBefore: [
-    "In Bako's paintings, the landscape is never empty. It bears the imprint of those who cultivate it, cross it, gather beneath it and carry its memory elsewhere. Trees appear as quiet custodians—rooted in place while witnessing generations of movement and change. Her surfaces are built through thick pigment, broken colour and repeated gestures. Greens arrive with the force of the rainy season; pale blues recall the clarity of morning after harmattan; ochres and deep browns carry the warmth of laterite earth. The paintings resist photographic description, allowing memory, weather and imagination to alter what is seen.",
-    "Across the series, branches reach towards one another like bodies gathering under a shared canopy. What begins as a study of landscape becomes a meditation on belonging: the homes we inherit, the places we leave and the ground that continues to recognise us.",
-  ],
-  bodyAfter: [
-    "In Bako's paintings, the landscape is never empty. It bears the imprint of those who cultivate it, cross it, gather beneath it and carry its memory elsewhere. Trees appear as quiet custodians—rooted in place while witnessing generations of movement and change. Her surfaces are built through thick pigment, broken colour and repeated gestures. Greens arrive with the force of the rainy season; pale blues recall the clarity of morning after harmattan; ochres and deep browns carry the warmth of laterite earth. The paintings resist photographic description, allowing memory, weather and imagination to alter what is seen.",
-    "Across the series, branches reach towards one another like bodies gathering under a shared canopy. What begins as a study of landscape becomes a meditation on belonging: the homes we inherit, the places we leave and the ground that continues to recognise us.",
-  ],
+export const getUpNext = async (): Promise<UpNext | null> => {
+  const record = await prisma.exhibition.findFirst({
+    where: live(),
+    orderBy: { startDate: "asc" },
+    include: withDetail,
+  });
+  if (!record) return null;
+
+  const detail = toDetail(record);
+
+  return {
+    slug: detail.slug,
+    title: detail.title,
+    artist: detail.artist,
+    ticket: detail.ticket,
+    eyebrow: "Up next",
+    copy: detail.lead,
+    image: {
+      src: record.thumbnail ?? PLACEHOLDER_HERO,
+      alt: detail.title,
+    },
+    rows: [
+      { label: "Date", value: detail.dates },
+      { label: "Venue", value: record.venue || "JEMAI Gallery, Lagos" },
+      {
+        label: "Admission",
+        value: detail.ticket ? `${detail.ticket.label} · ${detail.ticket.price}` : "Free",
+      },
+    ],
+    opensOn: detail.opensOn,
+  };
 };

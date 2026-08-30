@@ -13,8 +13,9 @@ import {
  * the columns the table draws, so the media and long copy never cross to the
  * client.
  */
-const AdminExhibitionsPage = () => {
-  const rows: ExhibitionRow[] = listExhibitions().map((exhibition) => ({
+const AdminExhibitionsPage = async () => {
+  const exhibitions = await listExhibitions();
+  const rows: ExhibitionRow[] = exhibitions.map((exhibition) => ({
     slug: exhibition.slug,
     name: exhibition.name,
     dates: exhibitionDates(exhibition),
@@ -30,8 +31,9 @@ const AdminExhibitionsPage = () => {
         <div className="flex flex-col gap-1">
           <h1 className="text-text-primary text-2xl font-semibold">Exhibitions</h1>
           <p className="text-text-secondary max-w-[70ch] text-sm">
-            Create and edit upcoming exhibitions, then archive them when they move into
-            JEMAI&rsquo;s past-exhibitions record.
+            Create and edit the programme. A show&rsquo;s status follows its run:
+            it moves into JEMAI&rsquo;s past-exhibitions record the day after it ends,
+            with nothing to archive by hand.
           </p>
         </div>
         <Button asChild size="lg" className="h-11 shrink-0 px-5 text-sm">

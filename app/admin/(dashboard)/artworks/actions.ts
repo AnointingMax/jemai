@@ -13,6 +13,7 @@ import {
   updateArtwork,
   type ArtworkInput,
 } from "@/lib/admin/artworks";
+import { imageAssetSchema } from "@/lib/cloudinary";
 
 
 const requireArtworkAccess = async (): Promise<ActionResult<string>> => {
@@ -23,12 +24,8 @@ const requireArtworkAccess = async (): Promise<ActionResult<string>> => {
   return ok(session.sub);
 };
 
-const artworkPayload = () => {
-  const asset = Yup.object({
-    src: Yup.string().trim().required("Every uploaded image needs a source."),
-  });
-
-  return Yup.object({
+const artworkPayload = () =>
+  Yup.object({
     title: Yup.string().trim().required("An artwork title is required."),
     slug: Yup.string().trim().default(""),
     artist: Yup.string().trim().required("An artist is required."),
@@ -46,10 +43,9 @@ const artworkPayload = () => {
     summary: Yup.string().trim().required("A short summary is required."),
     story: Yup.string().default(""),
     curatorsPick: Yup.boolean().default(false),
-    thumbnail: Yup.array(asset).max(1, "An artwork has one thumbnail.").default([]),
-    media: Yup.array(asset).default([]),
+    thumbnail: Yup.array(imageAssetSchema).max(1, "An artwork has one thumbnail.").default([]),
+    media: Yup.array(imageAssetSchema).default([]),
   });
-};
 
 type ArtworkPayload = Yup.InferType<ReturnType<typeof artworkPayload>>;
 

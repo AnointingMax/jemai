@@ -19,14 +19,18 @@ export const WorksRail = ({ works }: { works: ExhibitionWork[]; }) => (
     <ul className="mx-auto grid w-full max-w-318 grid-cols-2 items-start gap-x-6 gap-y-10 lg:grid-cols-4">
       {works.map((work) => (
         <li key={work.src}>
-          <Image
-            src={work.src}
-            alt={work.alt}
-            width={work.width}
-            height={work.height}
-            sizes="(min-width: 1024px) 300px, 50vw"
-            className="h-auto w-full"
-          />
+          {/* The frame runs each work at its own natural height. Catalogue
+              photography arrives at any size, so the columns share one 3:4 box
+              and the row stays top-aligned. */}
+          <div className="relative aspect-3/4 w-full">
+            <Image
+              src={work.src}
+              alt={work.alt}
+              fill
+              sizes="(min-width: 1024px) 300px, 50vw"
+              className="object-cover"
+            />
+          </div>
           <p className="text-body-sm text-text-primary mt-2.75">
             {work.title}, {work.year}
           </p>
