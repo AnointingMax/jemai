@@ -31,10 +31,18 @@ import { cn } from "@/lib/utils";
  * controls hand back. `toInput` on the server side of the action is the only
  * place numbers and booleans are parsed.
  */
+/** One artist on the form. The name is what resolves them to a record. */
+export type ExhibitionArtistValues = {
+  name: string;
+  bio: string;
+  portrait: ContentAsset[];
+};
+
 export type ExhibitionFormValues = {
   name: string;
   slug: string;
-  artist: string;
+  /** A solo show has one, a group show several, an unsettled one none. */
+  artists: ExhibitionArtistValues[];
   startDate: string;
   endDate: string;
   venue: string;
@@ -43,9 +51,7 @@ export type ExhibitionFormValues = {
   price: string;
   summary: string;
   content: string;
-  artistBio: string;
   thumbnail: ContentAsset[];
-  artistProfile: ContentAsset[];
   media: ContentAsset[];
   featured: string[];
 };
@@ -53,7 +59,7 @@ export type ExhibitionFormValues = {
 export const emptyExhibitionForm: ExhibitionFormValues = {
   name: "",
   slug: "",
-  artist: "",
+  artists: [],
   startDate: "",
   endDate: "",
   venue: "",
@@ -61,9 +67,7 @@ export const emptyExhibitionForm: ExhibitionFormValues = {
   price: "",
   summary: "",
   content: "",
-  artistBio: "",
   thumbnail: [],
-  artistProfile: [],
   media: [],
   featured: [],
 };
@@ -123,7 +127,7 @@ export const ExhibitionForm = ({
 
   const admission = useWatch({ control, name: "admission" });
   const thumbnail = useWatch({ control, name: "thumbnail" });
-  const artistProfile = useWatch({ control, name: "artistProfile" });
+  const artists = useWatch({ control, name: "artists" });
   const media = useWatch({ control, name: "media" });
   const featured = useWatch({ control, name: "featured" });
   const startDate = useWatch({ control, name: "startDate" });
@@ -236,14 +240,6 @@ export const ExhibitionForm = ({
               </div>
 
               <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-2">
-                <div className="flex flex-col gap-1.5">
-                  <FieldLabel htmlFor="artist">Artist</FieldLabel>
-                  <Input
-                    id="artist"
-                    className={cn(fieldChrome, "h-11 text-sm md:text-sm")}
-                    {...register("artist")}
-                  />
-                </div>
                 <div className="flex flex-col gap-1.5 sm:col-span-2">
                   <p className="text-text-secondary text-xs">
                     The run decides where the show appears: it is listed as upcoming
@@ -408,26 +404,91 @@ export const ExhibitionForm = ({
 
             <FormSection
               value="artist"
-              title="Artist(s) Profile"
-              description="Provide details of the artist"
+              title="Artist(s)"
+              description="Everyone showing. Add one for a solo exhibition, or several for a group show."
             >
               <div className="flex flex-col gap-6">
-                <FileDrop
-                  label="Artist portrait"
-                  assets={artistProfile}
-                  onChange={(assets) =>
-                    setValue("artistProfile", assets, { shouldValidate: true })
+                {artists.length === 0 ? (
+                  <p className="text-text-secondary text-sm">
+                    No artists yet. An exhibition with none simply draws no artist
+                    section on the site.
+                  </p>
+                ) : null}
+
+                {artists.map((artist, index) => (
+                  <div
+                    key={index}
+                    className="border-border-default flex flex-col gap-4 rounded-lg border p-4"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex w-full flex-col gap-1.5">
+                        <FieldLabel htmlFor={`artist-name-${index}`} required>
+                          Name
+                        </FieldLabel>
+                        <Input
+                          id={`artist-name-${index}`}
+                          className={cn(fieldChrome, "h-11 text-sm md:text-sm")}
+                          {...register(`artists.${index}.name`, {
+                            ...required("An artist needs a name."),
+                          })}
+                        />
+                        <FieldHint error={errors.artists?.[index]?.name?.message}>
+                          {"An artist already in the catalogue is matched by name, and their biography here replaces the one held against them."}
+                        </FieldHint>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        aria-label={`Remove ${artist.name || "this artist"}`}
+                        onClick={() =>
+                          setValue(
+                            "artists",
+                            artists.filter((_, at) => at !== index),
+                            { shouldValidate: true },
+                          )
+                        }
+                        className="border-border-default text-text-secondary hover:text-[#e11d48] mt-7 size-9 shrink-0"
+                      >
+                        <X className="size-4" />
+                      </Button>
+                    </div>
+
+                    <FileDrop
+                      label={`Portrait of ${artist.name || "the artist"}`}
+                      assets={artist.portrait}
+                      onChange={(assets) =>
+                        setValue(`artists.${index}.portrait`, assets, {
+                          shouldValidate: true,
+                        })
+                      }
+                    />
+
+                    <div className="flex flex-col gap-1.5">
+                      <FieldLabel htmlFor={`artist-bio-${index}`}>Biography</FieldLabel>
+                      <Textarea
+                        id={`artist-bio-${index}`}
+                        rows={8}
+                        className={cn(fieldChrome, "min-h-48 text-sm md:text-sm")}
+                        {...register(`artists.${index}.bio`)}
+                      />
+                    </div>
+                  </div>
+                ))}
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="lg"
+                  onClick={() =>
+                    setValue("artists", [...artists, { name: "", bio: "", portrait: [] }], {
+                      shouldValidate: true,
+                    })
                   }
-                />
-                <div className="flex flex-col gap-1.5">
-                  <FieldLabel htmlFor="artistBio">Biography</FieldLabel>
-                  <Textarea
-                    id="artistBio"
-                    rows={10}
-                    className={cn(fieldChrome, "min-h-60 text-sm md:text-sm")}
-                    {...register("artistBio")}
-                  />
-                </div>
+                  className="border-border-default h-10 self-start px-4 text-sm"
+                >
+                  Add artist
+                </Button>
               </div>
             </FormSection>
           </Accordion>

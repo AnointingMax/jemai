@@ -12,6 +12,13 @@ import { Button } from "@/components/ui/button";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Table,
   TableBody,
   TableCell,
@@ -35,6 +42,9 @@ export type ExhibitionRow = {
 
 type RowKey = "name" | "startDate" | "status";
 
+/** The status filter's "everything" value — a Select item cannot carry "". */
+export const ALL_STATUSES = "all";
+
 const PAGE_SIZE = 8;
 
 /**
@@ -48,19 +58,28 @@ const PAGE_SIZE = 8;
  */
 export const ExhibitionTable = ({
   rows,
+  statuses,
   search,
+  status,
 }: {
   rows: ExhibitionRow[];
+  /** The three states a run can be in, as the filter lists them. */
+  statuses: readonly ExhibitionStatus[];
   /** The search the page queried with, as it stands in the URL. */
   search: string;
+  /** Likewise the status filter, or "all". */
+  status: string;
 }) => {
   const [sort, setSort] = useState<SortState<RowKey>>({ key: "startDate", direction: "desc" });
   const [page, setPage] = useState(1);
 
-  // The search narrows the query the page ran; only the ordering is left to do
-  // here, over the rows that came back.
-  const { term, setTerm, navigating } = useTableQuery({
+  // Search and status narrow the query the page ran; only the ordering is left
+  // to do here, over the rows that came back.
+  const { term, setTerm, onFilter, navigating } = useTableQuery({
     search,
+    filter: status,
+    filterKey: "status",
+    filterAll: ALL_STATUSES,
     onNarrow: () => setPage(1),
   });
 
@@ -85,7 +104,7 @@ export const ExhibitionTable = ({
   return (
     <div className="flex flex-col gap-4">
       {/* The frame gives search its own card, above and separate from the table. */}
-      <div className="border-border-default rounded-xl border p-4">
+      <div className="border-border-default flex flex-col gap-3 rounded-xl border p-4 sm:flex-row sm:items-center">
         <div className="relative w-full">
           <Search
             aria-hidden
@@ -96,9 +115,26 @@ export const ExhibitionTable = ({
             onChange={(event) => setTerm(event.target.value)}
             placeholder="Search exhibition name"
             aria-label="Search exhibition name"
-            className="border-border-default bg-background h-11 pl-9 text-sm md:text-sm"
+            className="border-border-default bg-background h-10 pl-9 text-sm md:text-sm"
           />
         </div>
+        <Select value={status} onValueChange={onFilter}>
+          <SelectTrigger
+            aria-label="Filter by status"
+            disabled={navigating}
+            className="border-border-default bg-background w-full text-sm data-[size=default]:h-10 sm:w-40"
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL_STATUSES}>All statuses</SelectItem>
+            {statuses.map((value) => (
+              <SelectItem key={value} value={value}>
+                {value}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div
@@ -110,7 +146,9 @@ export const ExhibitionTable = ({
           <Empty className="py-16">
             <EmptyHeader>
               <EmptyTitle>No exhibitions match</EmptyTitle>
-              <EmptyDescription>Try a different name, or clear the search.</EmptyDescription>
+              <EmptyDescription>
+                Try a different name, or clear the search and the status filter.
+              </EmptyDescription>
             </EmptyHeader>
           </Empty>
         ) : (

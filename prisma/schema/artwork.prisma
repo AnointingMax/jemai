@@ -2,7 +2,6 @@ model Artwork {
   id         String @id @default(uuid(7))
   slug       String @unique
   title      String
-  artist     String
   medium     String
   year       String
   /// Free text, e.g. "180 × 240 cm".
@@ -15,12 +14,16 @@ model Artwork {
   thumbnail String?
   gallery   String[] @default([])
 
+  artist   Artist? @relation(fields: [artistId], references: [id], onDelete: SetNull)
+  artistId String?
+
   enquiries Enquiry[]
   featured  ExhibitionArtwork[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([artistId])
   @@index([medium])
   @@index([curatorsPick])
   @@index([updatedAt])

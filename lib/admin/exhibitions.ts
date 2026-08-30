@@ -5,7 +5,7 @@ import {
   slugify,
   uniqueSlug,
 } from "@/lib/admin/content";
-import { searchAcross } from "@/lib/admin/table-query";
+import { upsertArtistByName, type ArtistInput } from "@/lib/admin/artists";
 import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@/lib/generated/prisma/client";
 
@@ -15,7 +15,9 @@ import type { Prisma } from "@/lib/generated/prisma/client";
  * whether or not anybody opened the console, which is the one thing a status
  * field can never promise.
  */
-export type ExhibitionStatus = "Upcoming" | "Open now" | "Archived";
+export const exhibitionStatuses = ["Upcoming", "Open now", "Archived"] as const;
+
+export type ExhibitionStatus = (typeof exhibitionStatuses)[number];
 
 /**
  * Today as the date columns hold it — UTC midnight — so a comparison is a
@@ -37,6 +39,23 @@ export const exhibitionStatus = (start: Date, end: Date): ExhibitionStatus => {
   return "Open now";
 };
 
+/**
+ * The same three states asked in SQL, for the index's status filter. The status
+ * is a reading of the run rather than a column, so a filter is a comparison of
+ * the dates against today — which keeps the narrowing in the query instead of
+ * over rows already fetched, and keeps it agreeing with `exhibitionStatus`.
+ */
+export const statusWhere = (
+  status?: ExhibitionStatus,
+): Prisma.ExhibitionWhereInput => {
+  const today = startOfToday();
+  if (status === "Archived") return { endDate: { lt: today } };
+  if (status === "Upcoming") return { startDate: { gt: today } };
+  if (status === "Open now")
+    return { startDate: { lte: today }, endDate: { gte: today } };
+  return {};
+};
+
 /** Only archived shows sit in the storefront's past record; the rest are live. */
 export const isArchived = (status: ExhibitionStatus) => status === "Archived";
 
@@ -51,7 +70,12 @@ export type Exhibition = {
   id: string;
   slug: string;
   name: string;
-  artist: string;
+  /**
+   * The artists showing, in the order the console arranged them. A group show
+   * has several and a show whose line-up is not settled has none — which is
+   * what draws no artist block at all rather than an empty one.
+   */
+  artists: ArtistInput[];
   /** `yyyy-mm-dd`, the value a native date field hands back. */
   startDate: string;
   endDate: string;
@@ -61,14 +85,10 @@ export type Exhibition = {
   summary: string;
   /** The exhibition's own detail-page copy. */
   content: string;
-  /** The "About the Artist" panel. */
-  artistBio: string;
   /** Derived from the run — see `exhibitionStatus`. Never written. */
   status: ExhibitionStatus;
   /** Source of the thumbnail shot, or null before one is uploaded. */
   thumbnail: string | null;
-  /** The artist's portrait — its own single slot, beside the thumbnail. */
-  artistProfile: string | null;
   /** Installation sources, in the order the detail rail draws them. */
   media: string[];
   /** Slugs out of the artwork catalogue, linked onto the exhibition page. */
@@ -100,41 +120,65 @@ export const toDateField = (value: Date) => value.toISOString().slice(0, 10);
 const toDateColumn = (value: string) => new Date(`${value}T00:00:00.000Z`);
 
 /** Every read below pulls its linked works in the author's order. */
-const withFeatured = {
+const withArtists = {
+  artists: {
+    orderBy: { position: "asc" },
+    select: { artist: { select: { name: true, bio: true, portrait: true } } },
+  },
   featured: {
     orderBy: { position: "asc" },
     select: { artwork: { select: { slug: true } } },
   },
 } satisfies Prisma.ExhibitionInclude;
 
-type ExhibitionRecord = Prisma.ExhibitionGetPayload<{ include: typeof withFeatured; }>;
+type ExhibitionRecord = Prisma.ExhibitionGetPayload<{ include: typeof withArtists; }>;
 
 const toExhibition = (record: ExhibitionRecord): Exhibition => ({
   id: record.id,
   slug: record.slug,
   name: record.name,
-  artist: record.artist,
+  artists: record.artists.map(({ artist }) => ({
+    name: artist.name,
+    bio: artist.bio,
+    portrait: artist.portrait,
+  })),
   startDate: toDateField(record.startDate),
   endDate: toDateField(record.endDate),
   venue: record.venue,
   admission: { paid: record.paid, price: record.price },
   summary: record.summary,
   content: record.content,
-  artistBio: record.artistBio,
   status: exhibitionStatus(record.startDate, record.endDate),
   thumbnail: record.thumbnail,
-  artistProfile: record.artistProfile,
   media: record.gallery,
   featured: record.featured.map((link) => link.artwork.slug),
   updatedAt: record.updatedAt.toISOString(),
 });
 
-/** Newest first — the order the index draws — narrowed by the index's search. */
-export const listExhibitions = async (search?: string) => {
+export type ExhibitionQuery = { search?: string; status?: ExhibitionStatus; };
+
+/**
+ * Newest first — the order the index draws — narrowed by the index's search and
+ * status filter.
+ */
+export const listExhibitions = async ({ search, status }: ExhibitionQuery = {}) => {
   const records = await prisma.exhibition.findMany({
-    where: searchAcross(["name", "artist", "venue"], search),
+    where: {
+      ...statusWhere(status),
+      ...(search
+        ? {
+            OR: [
+              { name: { contains: search, mode: "insensitive" as const } },
+              { venue: { contains: search, mode: "insensitive" as const } },
+              // The artists are records now, so a search for one goes through
+              // the link rather than a column on the show.
+              { artists: { some: { artist: { name: { contains: search, mode: "insensitive" as const } } } } },
+            ],
+          }
+        : {}),
+    },
     orderBy: { updatedAt: "desc" },
-    include: withFeatured,
+    include: withArtists,
   });
   return records.map(toExhibition);
 };
@@ -150,7 +194,7 @@ export const countUpcomingExhibitions = () =>
 export const getExhibition = async (slug: string) => {
   const record = await prisma.exhibition.findUnique({
     where: { slug },
-    include: withFeatured,
+    include: withArtists,
   });
   return record ? toExhibition(record) : null;
 };
@@ -183,7 +227,6 @@ const availableSlug = async (candidate: string, name: string, ignore?: string) =
 /** The columns both writes set — everything except the slug and the links. */
 const columns = (input: ExhibitionInput) => ({
   name: input.name,
-  artist: input.artist,
   startDate: toDateColumn(input.startDate),
   endDate: toDateColumn(input.endDate),
   venue: input.venue,
@@ -191,9 +234,7 @@ const columns = (input: ExhibitionInput) => ({
   price: input.admission.price,
   summary: input.summary,
   content: input.content,
-  artistBio: input.artistBio,
   thumbnail: input.thumbnail,
-  artistProfile: input.artistProfile,
   gallery: input.media,
 });
 
@@ -203,6 +244,30 @@ const columns = (input: ExhibitionInput) => ({
  * work it named was deleted while the form was open, which is not the author's
  * problem to fix mid-save.
  */
+/**
+ * The artists a form sent, as links in the order they were arranged. Each is
+ * resolved by name — created the first time it is used, and updated with the
+ * biography and portrait this form carries, since the exhibition form is where
+ * that copy is authored.
+ *
+ * An artist dropped from the form is unlinked, never deleted: their other shows
+ * and their works still point at them.
+ */
+const artistLinks = async (artists: ArtistInput[]) => {
+  const links: { artistId: string; position: number; }[] = [];
+
+  for (const [position, input] of artists.entries()) {
+    const artist = await upsertArtistByName(input);
+    if (artist) links.push({ artistId: artist.id, position });
+  }
+
+  // Two rows for one artist would break the link's own primary key, and the
+  // form has no way of knowing a name was typed twice.
+  return links.filter(
+    (link, index) => links.findIndex((other) => other.artistId === link.artistId) === index,
+  );
+};
+
 const featuredLinks = async (slugs: string[]) => {
   if (!slugs.length) return [];
   const artworks = await prisma.artwork.findMany({
@@ -223,9 +288,10 @@ export const createExhibition = async (input: ExhibitionInput) => {
     data: {
       slug: await availableSlug(input.slug, input.name),
       ...columns(input),
+      artists: { create: await artistLinks(input.artists) },
       featured: { create: await featuredLinks(input.featured) },
     },
-    include: withFeatured,
+    include: withArtists,
   });
   return toExhibition(record);
 };
@@ -242,11 +308,12 @@ export const updateExhibition = async (slug: string, input: ExhibitionInput) => 
     data: {
       slug: await availableSlug(input.slug, input.name, slug),
       ...columns(input),
-      // The links carry no state of their own, so the picker's list replaces
-      // them outright rather than being diffed row by row.
+      // The links carry no state of their own, so each list replaces its own
+      // outright rather than being diffed row by row.
+      artists: { deleteMany: {}, create: await artistLinks(input.artists) },
       featured: { deleteMany: {}, create: await featuredLinks(input.featured) },
     },
-    include: withFeatured,
+    include: withArtists,
   });
   return toExhibition(record);
 };

@@ -127,7 +127,7 @@ export const ArtworkTable = ({
       }`}
     >
       <div className="border-border-default bg-admin-muted flex flex-col gap-3 border-b p-4 sm:flex-row sm:items-center">
-        <div className="relative w-full sm:max-w-[680px]">
+        <div className="relative w-full">
           <Search
             aria-hidden
             className="text-text-secondary pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2"
@@ -144,7 +144,7 @@ export const ArtworkTable = ({
           <SelectTrigger
             aria-label="Filter by medium"
             disabled={navigating}
-            className="border-border-default bg-background h-10 w-full text-sm sm:w-24"
+            className="border-border-default bg-background w-full text-sm data-[size=default]:h-10 sm:w-fit"
           >
             <SelectValue />
           </SelectTrigger>

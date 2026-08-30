@@ -1,12 +1,17 @@
 import { prisma } from "@/lib/prisma";
 import type { Artwork, ArtworkDetail, CuratedArtwork } from "@/lib/gallery";
-import type { Artwork as ArtworkRecord } from "@/lib/generated/prisma/client";
+import type { Prisma } from "@/lib/generated/prisma/client";
 
 /**
  * The storefront's read side of the gallery catalogue. Everything here runs on
  * the server — `lib/gallery` keeps the types and the page size, so the client
  * components that share them never pull the database in behind them.
  */
+
+/** Every read pulls the artist the work is attributed to. */
+const withArtist = { artist: { select: { name: true } } } satisfies Prisma.ArtworkInclude;
+
+type ArtworkRecord = Prisma.ArtworkGetPayload<{ include: typeof withArtist; }>;
 
 /** Stands in for a work whose photography has not been uploaded yet. */
 const PLACEHOLDER_IMAGE = "/figma/artworks/work-01.jpg";
@@ -32,7 +37,10 @@ const toArtwork = (record: ArtworkRecord): Artwork => ({
 
 /** The whole catalogue, newest first — what the grid pages through. */
 export const listArtworks = async (): Promise<Artwork[]> => {
-  const records = await prisma.artwork.findMany({ orderBy: { createdAt: "desc" } });
+  const records = await prisma.artwork.findMany({
+    include: withArtist,
+    orderBy: { createdAt: "desc" },
+  });
   return records.map(toArtwork);
 };
 
@@ -43,6 +51,7 @@ export const listArtworks = async (): Promise<Artwork[]> => {
  */
 export const curatedArtworks = async (limit = 3): Promise<CuratedArtwork[]> => {
   const records = await prisma.artwork.findMany({
+    include: withArtist,
     orderBy: [{ curatorsPick: "desc" }, { createdAt: "desc" }],
     take: limit,
   });
@@ -50,7 +59,7 @@ export const curatedArtworks = async (limit = 3): Promise<CuratedArtwork[]> => {
   return records.map((record) => ({
     slug: record.slug,
     title: record.title,
-    artist: record.artist,
+    artist: record.artist?.name ?? "",
     summary: record.summary,
     medium: record.medium,
     dimensions: record.dimensions,
@@ -59,7 +68,7 @@ export const curatedArtworks = async (limit = 3): Promise<CuratedArtwork[]> => {
 };
 
 export const getArtworkDetail = async (slug: string): Promise<ArtworkDetail | null> => {
-  const record = await prisma.artwork.findUnique({ where: { slug } });
+  const record = await prisma.artwork.findUnique({ where: { slug }, include: withArtist });
   if (!record) return null;
 
   const [hero, ...rest] = images(record);
@@ -69,7 +78,7 @@ export const getArtworkDetail = async (slug: string): Promise<ArtworkDetail | nu
     title: record.title,
     medium: caption(record),
     src: hero,
-    artist: record.artist,
+    artist: record.artist?.name ?? "",
     lead: record.summary,
     story: record.story,
     hero,

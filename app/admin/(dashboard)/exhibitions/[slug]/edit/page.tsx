@@ -21,7 +21,11 @@ const AdminExhibitionEditPage = async ({
   const values: ExhibitionFormValues = {
     name: exhibition.name,
     slug: exhibition.slug,
-    artist: exhibition.artist,
+    artists: exhibition.artists.map((artist) => ({
+      name: artist.name,
+      bio: artist.bio,
+      portrait: artist.portrait ? [toContentAsset(artist.portrait)] : [],
+    })),
     startDate: exhibition.startDate,
     endDate: exhibition.endDate,
     venue: exhibition.venue,
@@ -29,11 +33,7 @@ const AdminExhibitionEditPage = async ({
     price: exhibition.admission.price ? String(exhibition.admission.price) : "",
     summary: exhibition.summary,
     content: exhibition.content,
-    artistBio: exhibition.artistBio,
     thumbnail: exhibition.thumbnail ? [toContentAsset(exhibition.thumbnail)] : [],
-    artistProfile: exhibition.artistProfile
-      ? [toContentAsset(exhibition.artistProfile)]
-      : [],
     media: exhibition.media.map(toContentAsset),
     featured: exhibition.featured,
   };

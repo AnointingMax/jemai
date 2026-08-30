@@ -1,4 +1,5 @@
 import { prisma } from "../../lib/prisma";
+import { artistIds } from "./artists";
 
 /**
  * The gallery catalogue the artwork frames were drawn against. Written only
@@ -11,7 +12,7 @@ const artworkSeed = [
   {
     slug: "threads-of-becoming",
     title: "Threads of Becoming",
-    artist: "Amina Bako",
+    artist: "amina-bako",
     medium: "Textile installation",
     year: "2026",
     dimensions: "180 × 240 cm",
@@ -23,7 +24,7 @@ const artworkSeed = [
   {
     slug: "drops-of-effervescence",
     title: "Drops of effervescence",
-    artist: "Mobi Aderemi",
+    artist: "mobi-aderemi",
     medium: "Bronze sculpture",
     year: "2025",
     dimensions: "60 × 40 × 40 cm",
@@ -34,7 +35,7 @@ const artworkSeed = [
   {
     slug: "contour-of-class",
     title: "Contour of Class",
-    artist: "Marcellina Akpojotor",
+    artist: "marcellina-akpojotor",
     medium: "Mixed media",
     year: "2024",
     dimensions: "2 ft × 3 ft",
@@ -45,7 +46,7 @@ const artworkSeed = [
   {
     slug: "golden-thread",
     title: "Golden Thread",
-    artist: "Amina Bako",
+    artist: "amina-bako",
     medium: "Textile",
     year: "2024",
     dimensions: "120 × 150 cm",
@@ -56,7 +57,7 @@ const artworkSeed = [
   {
     slug: "golden-thread-oil",
     title: "Golden Thread",
-    artist: "Mobi Aderemi",
+    artist: "mobi-aderemi",
     medium: "Oil Painting",
     year: "2023",
     dimensions: "90 × 120 cm",
@@ -67,7 +68,7 @@ const artworkSeed = [
   {
     slug: "golden-thread-bronze",
     title: "Golden Thread",
-    artist: "Amina Bako",
+    artist: "amina-bako",
     medium: "Bronze sculpture",
     year: "2023",
     dimensions: "45 × 30 × 30 cm",
@@ -78,7 +79,7 @@ const artworkSeed = [
   {
     slug: "golden-thread-mixed",
     title: "Golden Thread",
-    artist: "Marcellina Akpojotor",
+    artist: "marcellina-akpojotor",
     medium: "Mixed media",
     year: "2022",
     dimensions: "2 ft × 3 ft",
@@ -89,7 +90,7 @@ const artworkSeed = [
   {
     slug: "golden-thread-study",
     title: "Golden Thread",
-    artist: "Mobi Aderemi",
+    artist: "mobi-aderemi",
     medium: "Mixed media",
     year: "2022",
     dimensions: "50 × 70 cm",
@@ -102,12 +103,21 @@ const artworkSeed = [
 export const seedArtworks = async () => {
   if (await prisma.artwork.count()) return 0;
 
+  // The artist is a record now, so each row names one by slug and is linked to
+  // whatever the artist seed wrote.
+  const artists = await artistIds();
+
   // The six documentation shots the detail frame draws, which every seeded work
   // shares until real photography is uploaded against each one.
   const gallery = [1, 2, 3, 4, 5, 6].map((n) => `/figma/artworks/detail/gallery-${n}.jpg`);
 
   await prisma.artwork.createMany({
-    data: artworkSeed.map((item) => ({ ...item, story: artworkStory, gallery })),
+    data: artworkSeed.map(({ artist, ...item }) => ({
+      ...item,
+      artistId: artists.get(artist) ?? null,
+      story: artworkStory,
+      gallery,
+    })),
   });
 
   return artworkSeed.length;

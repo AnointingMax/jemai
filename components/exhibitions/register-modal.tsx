@@ -111,7 +111,8 @@ export const RegisterModal = ({
     }),
   );
 
-  const caption = `${exhibition.title} · ${exhibition.artist}`;
+  // A show with no artists named yet is captioned by its title alone.
+  const caption = [exhibition.title, exhibition.artist].filter(Boolean).join(" · ");
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

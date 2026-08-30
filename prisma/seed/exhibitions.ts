@@ -1,13 +1,11 @@
 import { prisma } from "../../lib/prisma";
+import { artistIds } from "./artists";
 
 const summary =
   "The exhibition asks how land remembers the people who pass through it, and how the places that shape us continue to live within us, even after we have moved on.";
 
 const content =
   "In Bako's paintings, the landscape is never empty. It bears the imprint of those who cultivate it, cross it, gather beneath it and carry its memory elsewhere. Trees appear as quiet custodians—rooted in place while witnessing generations of movement and change.\n\nHer surfaces are built through thick pigment, broken colour and repeated gestures. Greens arrive with the force of the rainy season; pale blues recall the clarity of morning after harmattan; ochres and deep browns carry the warmth of laterite earth.\n\nAcross the series, branches reach towards one another like bodies gathering under a shared canopy. What begins as a study of landscape becomes a meditation on belonging: the homes we inherit, the places we leave and the ground that continues to recognize us.";
-
-const artistBio =
-  "Amina Bako is a Nigerian painter whose practice explores the relationship between land, memory and belonging. Drawing from the Guinea savannah and her memories of family compounds in Kaduna, she approaches landscape not simply as scenery, but as a living record of the people, rituals and histories held within it.\n\nWorking through layered colour, textured surfaces and recurring images of trees, pathways and gathering places, Bako creates paintings that move between observation and remembrance. Woven cloth, weathered walls, red earth and shifting light reappear throughout her work, allowing familiar environments to carry both personal and collective meaning.";
 
 type Seed = {
   slug: string;
@@ -101,6 +99,9 @@ export const seedExhibitions = async () => {
 
   // The links point at real rows, so the works are looked up rather than named
   // by slug. Whatever the artwork seed wrote is what the frames' rails draw.
+  // Every seeded show is hers, as the frames draw it.
+  const bako = (await artistIds()).get("amina-bako");
+
   const artworks = await prisma.artwork.findMany({
     orderBy: { createdAt: "asc" },
     take: 4,
@@ -111,16 +112,14 @@ export const seedExhibitions = async () => {
     await prisma.exhibition.create({
       data: {
         ...item,
-        artist: "Amina Bako",
         startDate: new Date(`${startDate}T00:00:00.000Z`),
         endDate: new Date(`${endDate}T00:00:00.000Z`),
         paid: paid ?? false,
         price: price ?? 0,
         summary,
         content,
-        artistBio,
-        artistProfile: "/figma/exhibitions/artist-portrait.jpg",
         gallery,
+        ...(bako ? { artists: { create: [{ artistId: bako, position: 0 }] } } : {}),
         featured: {
           create: artworks.map((artwork, position) => ({
             artworkId: artwork.id,

@@ -71,7 +71,11 @@ export const ExhibitionIntro = ({
     </div>
 
     <header className="mt-15.5 w-full px-4 text-center sm:px-6 lg:px-page-gutter">
-      <p className="text-h4 text-text-primary uppercase">{exhibition.artist}</p>
+      {/* A show whose artists are not settled yet draws no credit line rather
+          than an empty one holding the title down the page. */}
+      {exhibition.artist ? (
+        <p className="text-h4 text-text-primary uppercase">{exhibition.artist}</p>
+      ) : null}
       <h1 className="font-heading text-text-primary mt-3 text-3xl sm:text-4xl lg:text-[50px] lg:leading-14 lg:font-bold">
         {exhibition.title}
       </h1>

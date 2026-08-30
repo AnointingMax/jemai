@@ -1,7 +1,7 @@
+import { upsertArtistByName } from "@/lib/admin/artists";
 import { sanitizeRichText, slugify, uniqueSlug } from "@/lib/admin/content";
-import { searchAcross } from "@/lib/admin/table-query";
 import { prisma } from "@/lib/prisma";
-import type { Artwork as ArtworkRecord } from "@/lib/generated/prisma/client";
+import type { Prisma } from "@/lib/generated/prisma/client";
 
 /**
  * A gallery record. Deliberately without a price or any purchase field: the
@@ -47,12 +47,17 @@ export const artworkYears = Array.from({ length: 30 }, (_, i) =>
   String(new Date().getUTCFullYear() - i)
 );
 
+/** Every read pulls the artist the work is attributed to. */
+const withArtist = { artist: { select: { name: true } } } satisfies Prisma.ArtworkInclude;
+
+type ArtworkRecord = Prisma.ArtworkGetPayload<{ include: typeof withArtist; }>;
+
 /** The row as the console's one artwork shape. */
 const toArtwork = (record: ArtworkRecord): Artwork => ({
   id: record.id,
   slug: record.slug,
   title: record.title,
-  artist: record.artist,
+  artist: record.artist?.name ?? "",
   medium: record.medium,
   year: record.year,
   dimensions: record.dimensions,
@@ -76,8 +81,18 @@ export const listArtworks = async ({ search, medium }: ArtworkQuery = {}) => {
   const records = await prisma.artwork.findMany({
     where: {
       ...(medium ? { medium } : {}),
-      ...searchAcross(["title", "artist"], search),
+      // The artist is a record now, so searching for one searches their name
+      // through the relation rather than a column on the work.
+      ...(search
+        ? {
+            OR: [
+              { title: { contains: search, mode: "insensitive" as const } },
+              { artist: { name: { contains: search, mode: "insensitive" as const } } },
+            ],
+          }
+        : {}),
     },
+    include: withArtist,
     orderBy: { updatedAt: "desc" },
   });
   return records.map(toArtwork);
@@ -87,7 +102,10 @@ export const listArtworks = async ({ search, medium }: ArtworkQuery = {}) => {
 export const countArtworks = () => prisma.artwork.count();
 
 export const getArtwork = async (slug: string) => {
-  const record = await prisma.artwork.findUnique({ where: { slug } });
+  const record = await prisma.artwork.findUnique({
+    where: { slug },
+    include: withArtist,
+  });
   return record ? toArtwork(record) : null;
 };
 
@@ -116,12 +134,22 @@ const availableSlug = async (candidate: string, title: string, ignore?: string) 
 };
 
 /**
+ * The artist a work is attributed to, created the first time the name is used.
+ * The form asks for a name, not a record, so this is where the two meet — and
+ * it never touches an existing artist's biography, which is written on the
+ * artist's own screen and not on every work they made.
+ */
+const artistLink = async (name: string) => {
+  const artist = await upsertArtistByName({ name, bio: "", portrait: null });
+  return artist ? { connect: { id: artist.id } } : { disconnect: true };
+};
+
+/**
  * The columns both writes set. The story is sanitised here rather than in the
  * action, so every write goes through the same filter whatever calls it.
  */
 const columns = (input: ArtworkInput) => ({
   title: input.title,
-  artist: input.artist,
   medium: input.medium,
   year: input.year,
   dimensions: input.dimensions,
@@ -134,7 +162,12 @@ const columns = (input: ArtworkInput) => ({
 
 export const createArtwork = async (input: ArtworkInput) => {
   const record = await prisma.artwork.create({
-    data: { slug: await availableSlug(input.slug, input.title), ...columns(input) },
+    data: {
+      slug: await availableSlug(input.slug, input.title),
+      ...columns(input),
+      artist: await artistLink(input.artist),
+    },
+    include: withArtist,
   });
   return toArtwork(record);
 };
@@ -148,7 +181,9 @@ export const updateArtwork = async (slug: string, input: ArtworkInput) => {
     data: {
       slug: await availableSlug(input.slug, input.title, slug),
       ...columns(input),
+      artist: await artistLink(input.artist),
     },
+    include: withArtist,
   });
   return toArtwork(record);
 };

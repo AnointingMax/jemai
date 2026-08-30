@@ -30,7 +30,18 @@ const exhibitionPayload = () => {
   return Yup.object({
     name: Yup.string().trim().required("An exhibition name is required."),
     slug: Yup.string().trim().default(""),
-    artist: Yup.string().trim().default(""),
+    // A show can open with its line-up unsettled, so the list may be empty —
+    // but an entry without a name is not an artist, and would resolve to
+    // nothing on the way in.
+    artists: Yup
+      .array(
+        Yup.object({
+          name: Yup.string().trim().required("Every artist needs a name."),
+          bio: Yup.string().trim().default(""),
+          portrait: Yup.array(imageAssetSchema).max(1, "An artist has one portrait.").default([]),
+        }),
+      )
+      .default([]),
     startDate: date("A start date is required."),
     endDate: date("An end date is required.").test(
       "after-start",
@@ -55,9 +66,7 @@ const exhibitionPayload = () => {
     ),
     summary: Yup.string().trim().required("A short summary is required."),
     content: Yup.string().trim().default(""),
-    artistBio: Yup.string().trim().default(""),
     thumbnail: Yup.array(imageAssetSchema).max(1, "An exhibition has one thumbnail.").default([]),
-    artistProfile: Yup.array(imageAssetSchema).max(1, "An artist has one portrait.").default([]),
     media: Yup.array(imageAssetSchema).default([]),
     featured: Yup.array(Yup.string().trim().required()).default([]),
   });
@@ -69,7 +78,11 @@ type ExhibitionPayload = Yup.InferType<ReturnType<typeof exhibitionPayload>>;
 const toInput = (values: ExhibitionPayload): ExhibitionInput => ({
   slug: values.slug,
   name: values.name,
-  artist: values.artist,
+  artists: values.artists.map((artist) => ({
+    name: artist.name,
+    bio: artist.bio,
+    portrait: artist.portrait[0]?.src ?? null,
+  })),
   startDate: values.startDate,
   endDate: values.endDate,
   venue: values.venue,
@@ -79,9 +92,7 @@ const toInput = (values: ExhibitionPayload): ExhibitionInput => ({
   },
   summary: values.summary,
   content: values.content,
-  artistBio: values.artistBio,
   thumbnail: values.thumbnail[0]?.src ?? null,
-  artistProfile: values.artistProfile[0]?.src ?? null,
   media: values.media.map((asset) => asset.src),
   featured: values.featured,
 });
@@ -89,6 +100,8 @@ const toInput = (values: ExhibitionPayload): ExhibitionInput => ({
 const revalidateExhibition = (slug?: string) => {
   revalidatePath("/admin/exhibitions");
   revalidatePath("/admin");
+  // An artist's biography is authored here, and the catalogue draws it too.
+  revalidatePath("/artworks");
   revalidatePath("/exhibitions");
   revalidatePath("/exhibitions/past");
   revalidatePath("/");
@@ -143,13 +156,13 @@ export const updateExhibitionAction = async (
 };
 
 /**
- * The trash button beside a single-image card on the detail screen. Clearing a
- * slot is a one-field edit, so it goes through the store directly rather than
- * round-tripping the whole form.
+ * The trash button beside the thumbnail on the detail screen. Clearing it is a
+ * one-field edit, so it goes through the store directly rather than
+ * round-tripping the whole form. An artist's portrait is cleared on the artist,
+ * in the form, since it belongs to them rather than to the show.
  */
 export const clearExhibitionImageAction = async (
   slug: string,
-  slot: "thumbnail" | "artistProfile",
 ): Promise<ActionResult<string>> => {
   const access = await requireExhibitionAccess();
   if (access.error) return access;
@@ -158,7 +171,7 @@ export const clearExhibitionImageAction = async (
     const exhibition = await getExhibition(slug);
     if (!exhibition) return fail("That exhibition no longer exists.");
 
-    await updateExhibition(slug, { ...exhibition, [slot]: null });
+    await updateExhibition(slug, { ...exhibition, thumbnail: null });
     revalidateExhibition(slug);
     return ok("Image removed");
   } catch (error) {

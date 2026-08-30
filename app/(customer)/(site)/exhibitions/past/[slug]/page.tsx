@@ -91,13 +91,19 @@ const PastExhibitionPage = async ({
         </div>
       ) : null}
 
-      <div className="mt-20.75 w-full px-4 sm:px-6 lg:px-page-gutter">
-        <hr className="border-border-default mx-auto w-full max-w-432 border-t-2" />
-      </div>
+      {/* The rule belongs to the artist block, so a show with nothing written
+          about its artists closes on the works rather than on a stray line. */}
+      {exhibition.artistNotes.length ? (
+        <>
+          <div className="mt-20.75 w-full px-4 sm:px-6 lg:px-page-gutter">
+            <hr className="border-border-default mx-auto w-full max-w-432 border-t-2" />
+          </div>
 
-      <div className="mt-10">
-        <ArtistNote note={exhibition.artistNote} />
-      </div>
+          <div className="mt-10">
+            <ArtistNote notes={exhibition.artistNotes} />
+          </div>
+        </>
+      ) : null}
     </div>
   );
 };

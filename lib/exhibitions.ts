@@ -12,16 +12,6 @@ import {
 import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@/lib/generated/prisma/client";
 
-/**
- * The storefront's read side of the exhibition programme. Everything here runs
- * on the server; the shapes below are what the exhibition components read, and
- * the client ones import them as types only.
- *
- * Which record a page draws is decided by its run, not by a stored status: a
- * show is live on `/exhibitions` until the day after it ends, and in the
- * archive from then on. Nothing has to be updated for a run to end.
- */
-
 export type ExhibitionStatus = "upcoming" | "past";
 
 /** A photograph and the line a screen reader gets for it. */
@@ -45,25 +35,16 @@ export type Exhibition = {
   title: string;
   artist: string;
   status: ExhibitionStatus;
-  /** "12 September–4 October 2026" — the detail page's date line. */
   dates: string;
-  /** The detail page's full-bleed hero. */
   hero: string;
-  /** Lead paragraph, set in `text-h4` on the 800px measure. */
   lead: string;
-  /** Supporting paragraphs below the lead. */
   body: string[];
-  /**
-   * Paid exhibitions carry a ticket; free ones omit it and the register modal
-   * drops its ticket summary. The frame draws both states.
-   */
   ticket?: { label: string; price: string; };
 };
 
-/** The artist block both detail frames close on. */
 export type ArtistNote = {
-  heading: string;
-  portrait: Shot;
+  name: string;
+  portrait: Shot | null;
   paragraphs: string[];
 };
 
@@ -74,7 +55,8 @@ export type ExhibitionDetail = Exhibition & {
   installShots: Shot[];
   /** The linked catalogue works, in the order the console arranged them. */
   works: ExhibitionWork[];
-  artistNote: ArtistNote;
+  /** Only the artists with something to say; empty draws no block at all. */
+  artistNotes: ArtistNote[];
 };
 
 /** The featured "UP NEXT" block on the upcoming index. */
@@ -88,7 +70,6 @@ export type UpNext = Pick<Exhibition, "slug" | "title" | "artist" | "ticket"> & 
 
 /** Stands in for a show whose photography has not been uploaded yet. */
 const PLACEHOLDER_HERO = "/figma/exhibitions/detail-hero.jpg";
-const PLACEHOLDER_PORTRAIT = "/figma/exhibitions/artist-portrait.jpg";
 
 /**
  * Three slides run behind both index heroes. These are the frames' own
@@ -135,6 +116,10 @@ export const exhibitionHref = (slug: string, state: ExhibitionStatus) =>
   state === "past" ? `/exhibitions/past/${slug}` : `/exhibitions/${slug}`;
 
 const withDetail = {
+  artists: {
+    orderBy: { position: "asc" },
+    select: { artist: { select: { name: true, bio: true, portrait: true } } },
+  },
   featured: {
     orderBy: { position: "asc" },
     select: {
@@ -148,8 +133,14 @@ const withDetail = {
 type DetailRecord = Prisma.ExhibitionGetPayload<{ include: typeof withDetail; }>;
 type CardRecord = Pick<
   DetailRecord,
-  "slug" | "name" | "artist" | "startDate" | "endDate" | "thumbnail"
+  "slug" | "name" | "artists" | "startDate" | "endDate" | "thumbnail"
 >;
+
+const credit = (artists: { artist: { name: string; }; }[]) => {
+  const names = artists.map(({ artist }) => artist.name).filter(Boolean);
+  if (names.length < 2) return names[0] ?? "";
+  return `${names.slice(0, -1).join(", ")} & ${names[names.length - 1]}`;
+};
 
 const ticketFor = (record: Pick<DetailRecord, "paid" | "price">) =>
   record.paid
@@ -163,8 +154,7 @@ const toCard = (record: CardRecord): ExhibitionSummary => {
   return {
     slug: record.slug,
     title: record.name,
-    // Upcoming cards name the artist, past ones the run — as both frames draw.
-    cardMeta: state === "past" ? run : record.artist,
+    cardMeta: state === "past" ? run : credit(record.artists) || run,
     card: { src: record.thumbnail ?? PLACEHOLDER_HERO, alt: record.name },
     href: exhibitionHref(record.slug, state),
   };
@@ -173,7 +163,7 @@ const toCard = (record: CardRecord): ExhibitionSummary => {
 const cardColumns = {
   slug: true,
   name: true,
-  artist: true,
+  artists: withDetail.artists,
   startDate: true,
   endDate: true,
   thumbnail: true,
@@ -210,7 +200,7 @@ const toDetail = (record: DetailRecord): ExhibitionDetail => {
   return {
     slug: record.slug,
     title: record.name,
-    artist: record.artist,
+    artist: credit(record.artists),
     status: status(record.startDate, record.endDate),
     dates: formatDateSpan(startDate, toDateField(record.endDate)),
     hero: record.thumbnail ?? PLACEHOLDER_HERO,
@@ -231,16 +221,20 @@ const toDetail = (record: DetailRecord): ExhibitionDetail => {
       year: artwork.year,
       href: `/artworks/${artwork.slug}`,
     })),
-    artistNote: {
-      heading: "About the Artist",
-      portrait: {
-        src: record.artistProfile ?? PLACEHOLDER_PORTRAIT,
-        alt: record.artist
-          ? `${record.artist} photographed in their studio`
-          : "The artist photographed in their studio",
-      },
-      paragraphs: paragraphs(record.artistBio),
-    },
+    // Only the artists somebody has actually written about. An artist with no
+    // biography and no portrait contributes nothing, and an exhibition whose
+    // artists are all like that draws no "About the Artist" section at all —
+    // which is the whole point of the list being filtered here rather than in
+    // the component.
+    artistNotes: record.artists
+      .map(({ artist }) => ({
+        name: artist.name,
+        portrait: artist.portrait
+          ? { src: artist.portrait, alt: `${artist.name} photographed in their studio` }
+          : null,
+        paragraphs: paragraphs(artist.bio),
+      }))
+      .filter((note) => note.portrait || note.paragraphs.length),
   };
 };
 

@@ -97,6 +97,7 @@ const AdminExhibitionDetailPage = async ({ params }: PageProps<"/admin/exhibitio
   if (!exhibition) notFound();
 
   const editHref = `/admin/exhibitions/${exhibition.slug}/edit`;
+  const portraits = exhibition.artists.filter((artist) => artist.portrait);
   const artworks = await listArtworks();
   const featured = exhibition.featured
     .map((held) => artworks.find((artwork) => artwork.slug === held))
@@ -141,20 +142,34 @@ const AdminExhibitionDetailPage = async ({ params }: PageProps<"/admin/exhibitio
             <h2 className="text-text-primary mb-1 text-sm font-semibold">Details</h2>
             <dl className="divide-border-default/60 flex flex-col divide-y">
               <DetailRow label="slug" value={exhibition.slug} />
-              <DetailRow label="Artist" value={exhibition.artist || "—"} />
+              <DetailRow
+                label={exhibition.artists.length > 1 ? "Artists" : "Artist"}
+                value={exhibition.artists.map((artist) => artist.name).join(", ") || "—"}
+              />
               <DetailRow label="Date" value={exhibitionSpan(exhibition)} />
               <DetailRow label="Venue" value={exhibition.venue || "—"} />
               <DetailRow label="Admission" value={describeAdmission(exhibition.admission)} />
             </dl>
           </section>
 
-          <Accordion type="multiple" defaultValue={["content", "artist"]} className="gap-3">
+          <Accordion type="multiple" defaultValue={["content", "artist-0"]} className="gap-3">
             <CopyPanel
               value="content"
               label="Exhibition detail page content"
               body={exhibition.content}
             />
-            <CopyPanel value="artist" label="About the Artist" body={exhibition.artistBio} />
+            {/* One panel per artist, and none for an artist nobody has written
+                about yet — the storefront draws exactly the same nothing. */}
+            {exhibition.artists.map((artist, index) =>
+              artist.bio ? (
+                <CopyPanel
+                  key={artist.name}
+                  value={`artist-${index}`}
+                  label={`About ${artist.name}`}
+                  body={artist.bio}
+                />
+              ) : null,
+            )}
           </Accordion>
         </CardContent>
       </Card>
@@ -164,14 +179,29 @@ const AdminExhibitionDetailPage = async ({ params }: PageProps<"/admin/exhibitio
           title="Thumbnail"
           src={exhibition.thumbnail}
           editHref={editHref}
-          onClear={clearExhibitionImageAction.bind(null, exhibition.slug, "thumbnail")}
+          onClear={clearExhibitionImageAction.bind(null, exhibition.slug)}
         />
-        <ImageCard
-          title="Artist profile"
-          src={exhibition.artistProfile}
-          editHref={editHref}
-          onClear={clearExhibitionImageAction.bind(null, exhibition.slug, "artistProfile")}
-        />
+        {/* One card per artist with a portrait; the form is where they are
+            added, cleared and reordered. */}
+        <GalleryCard title="Artist portraits" editHref={editHref} columns="grid-cols-2">
+          {portraits.length ? (
+            portraits.map((artist) => (
+              <li key={artist.name} className="flex flex-col gap-1.5">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={artist.portrait!}
+                  alt={artist.name}
+                  className="bg-surface-subtle aspect-3/4 w-full rounded-md object-cover"
+                />
+                <span className="text-text-secondary text-xs">{artist.name}</span>
+              </li>
+            ))
+          ) : (
+            <li className="text-text-secondary col-span-2 text-sm">
+              No artist portraits yet.
+            </li>
+          )}
+        </GalleryCard>
 
         <GalleryCard title="Media" editHref={editHref} columns="grid-cols-3">
           {exhibition.media.length ? (
