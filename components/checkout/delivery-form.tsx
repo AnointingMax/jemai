@@ -22,6 +22,13 @@ import {
 
 export type CheckoutFormValues = {
   fullName: string;
+  /**
+   * The frame's Contact group draws a name and a phone number only. An email
+   * address is added because the payment cannot open without one and there is
+   * nowhere else to send a receipt — a data requirement the frame did not have
+   * to answer, not a layout departure.
+   */
+  email: string;
   phone: string;
   /** ISO 3166-1 alpha-2, e.g. "NG" — `country-state-city` keys off it. */
   country: string;
@@ -35,6 +42,7 @@ export type CheckoutFormValues = {
 
 export const emptyCheckout: CheckoutFormValues = {
   fullName: "",
+  email: "",
   phone: "",
   country: "NG",
   address: "",
@@ -168,6 +176,7 @@ export const DeliveryForm = () => {
         <Label>Contact</Label>
         <div className="mt-2 space-y-2">
           <TextField label="Full Name" name="fullName" autoComplete="name" />
+          <TextField label="Email" name="email" type="email" autoComplete="email" />
           <TextField label="Phone" name="phone" type="tel" autoComplete="tel" />
         </div>
       </div>

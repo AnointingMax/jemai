@@ -25,10 +25,11 @@ import {
 import {
   describeItem,
   fulfillmentStatuses,
+  naira,
   orderTimeline,
   type AdminOrder,
   type FulfillmentStatus,
-} from "@/lib/admin/orders";
+} from "@/lib/admin/order-record";
 import { cn } from "@/lib/utils";
 
 /**
@@ -125,7 +126,9 @@ const OrderSheetBody = ({
           <div className="flex items-center gap-3">
             {/* Sampled off the frame; the style guide publishes no accent
                 orange, so it stays literal hex here. */}
-            <span className="text-eyebrow-lg text-[#c2410c] whitespace-nowrap uppercase">Order {order.id}</span>
+            <span className="text-eyebrow-lg text-[#c2410c] whitespace-nowrap uppercase">
+              Order {order.number}
+            </span>
             <StatusBadge status={order.status} />
             <SheetClose asChild>
               <Button variant="ghost" size="icon-sm" className="ml-auto">
@@ -135,11 +138,11 @@ const OrderSheetBody = ({
             </SheetClose>
           </div>
           <SheetTitle className="text-text-primary font-sans text-xl font-semibold">
-            {order.items[0].name}
+            {order.items[0]?.name ?? "Order"}
             {order.items.length > 1 ? ` + ${order.items.length - 1} more` : ""}
           </SheetTitle>
           <SheetDescription className="sr-only">
-            Customer, items, delivery address and fulfillment history for order {order.id}.
+            Customer, items, delivery address and fulfillment history for order {order.number}.
           </SheetDescription>
         </div>
 
@@ -164,11 +167,42 @@ const OrderSheetBody = ({
           ))}
         </SheetPanel>
 
+        {/* Payment is a separate axis from fulfillment and is never edited here:
+            it moves on what Paystack says about the reference below it. */}
+        <SheetPanel label="Payment">
+          <div className="flex items-center gap-3">
+            <StatusBadge status={order.payment} />
+            <span className="text-text-primary text-base">{naira(order.total)}</span>
+          </div>
+          <dl className="text-text-secondary flex flex-col gap-1 text-sm">
+            <div className="flex justify-between gap-4">
+              <dt>Subtotal</dt>
+              <dd className="text-text-primary">{naira(order.subtotal)}</dd>
+            </div>
+            <div className="flex justify-between gap-4">
+              <dt>Shipping</dt>
+              <dd className="text-text-primary">{naira(order.shipping)}</dd>
+            </div>
+            {order.amountPaid === null ? null : (
+              <div className="flex justify-between gap-4">
+                <dt>Settled</dt>
+                <dd className="text-text-primary">{naira(order.amountPaid)}</dd>
+              </div>
+            )}
+          </dl>
+          {/* The reference is what a buyer quotes when they write in about a
+              payment, and what Paystack is searched by at the other end. */}
+          <p className="text-text-secondary text-xs break-all">Reference {order.reference}</p>
+        </SheetPanel>
+
         <SheetPanel label="Delivery">
           <p className="text-text-primary flex items-start gap-2 text-base">
             <LocateFixed aria-hidden className="mt-0.5 size-5 shrink-0 text-[#16a34a]" />
             {order.address}
           </p>
+          {order.notes ? (
+            <p className="text-text-secondary text-sm">{order.notes}</p>
+          ) : null}
         </SheetPanel>
 
         <div className="flex flex-col gap-1.5">

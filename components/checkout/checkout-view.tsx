@@ -1,9 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { toast } from "sonner";
+
+import {
+  confirmOrderAction,
+  placeOrderAction,
+} from "@/app/(customer)/(checkout)/checkout/actions";
 import { Button } from "@/components/ui/button";
 import {
   CheckoutModal,
@@ -16,36 +22,21 @@ import {
 } from "@/components/checkout/delivery-form";
 import { OrderSummary } from "@/components/checkout/order-summary";
 import { useCart } from "@/lib/cart";
+import { bagTotals } from "@/lib/orders";
 
-/** Flat national rate until a shipping service exists. */
-const SHIPPING = 25000;
-/** How long Pay Now holds its loader before the "provider" sends us back. */
-const HANDOFF_MS = 1200;
-/** How long the verification takes to answer. */
-const VERIFY_MS = 2200;
-
-const orderReference = () => {
-  const now = new Date();
-  const stamp = [now.getFullYear() % 100, now.getMonth() + 1, now.getDate()]
-    .map((part) => part.toString().padStart(2, "0"))
-    .join("");
-  return `JEM-${stamp}-${Math.floor(1000 + Math.random() * 9000)}`;
-};
-
-const verifyPayment = (reference: string, declined: boolean) =>
-  new Promise<{ reference: string; }>((resolve, reject) => {
-    setTimeout(() => {
-      if (declined) reject(new Error("Payment declined"));
-      else resolve({ reference });
-    }, VERIFY_MS);
-  });
-
+/**
+ * The checkout, either side of Paystack.
+ *
+ * Pay Now places the order and hands the browser to the provider; Paystack
+ * returns the buyer here with `?reference=`, which is verified server-side
+ * before anything is claimed about it. The webhook settles the same order
+ * whether or not anyone comes back, so this screen reports the outcome rather
+ * than being the thing that decides it.
+ */
 export const CheckoutView = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const reference = searchParams.get("reference");
-  /** Append `?outcome=failed` before paying to walk the declined path. */
-  const declined = searchParams.get("outcome") === "failed";
   const { lines, count, subtotal, setOpen, clear } = useCart();
 
   const form = useForm<CheckoutFormValues>({
@@ -53,7 +44,7 @@ export const CheckoutView = () => {
     mode: "onChange",
   });
 
-  const [paying, setPaying] = useState(false);
+  const [paying, startPaying] = useTransition();
   /**
    * What was sent to the provider. The bag is emptied once the payment is
    * confirmed, so the outcome modal reads its piece and its count from here
@@ -61,74 +52,105 @@ export const CheckoutView = () => {
    */
   const [placed, setPlaced] = useState<{
     pieceCount: number;
-    item: { name: string; image: string };
+    item: { name: string; image: string; };
   } | null>(null);
   /**
    * What the verification answered, tagged with the reference it belongs to. A
    * reference in the URL with no answer yet *is* the pending state, so the
    * modal's status is derived rather than switched on by an effect.
    */
-  const [outcome, setOutcome] = useState<{ reference: string; status: Exclude<CheckoutStatus, "pending">; } | null>(null);
+  const [outcome, setOutcome] = useState<{
+    reference: string;
+    status: Exclude<CheckoutStatus, "pending">;
+    /** The house number, once the order behind the reference has been read. */
+    number: string;
+  } | null>(null);
 
-  const status: CheckoutStatus | null = reference
-    ? outcome?.reference === reference
-      ? outcome.status
-      : "pending"
-    : null;
+  const settled = outcome?.reference === reference ? outcome : null;
+  const status: CheckoutStatus | null = reference ? (settled?.status ?? "pending") : null;
 
   /**
    * The buyer is back from the payment page with a reference, so the payment is
    * verified. The modal sits on `pending` for as long as this runs and settles
    * on whichever way it answers.
+   *
+   * The bag is still whole at this point — nothing was cleared on the way out,
+   * because a payment that never completes has to leave the buyer their cart —
+   * so the piece the modal features is taken from it before it is emptied.
    */
   useEffect(() => {
     if (!reference) return;
 
+    // The bag as it stands on the way back in, held before anything empties it
+    // so the outcome modal keeps the piece it is about. It is read once, on the
+    // render the buyer returned on, which is why `lines` is not a dependency —
+    // re-running this on a cart change would re-verify the same payment.
+    const featured = lines[0]
+      ? { pieceCount: count, item: { name: lines[0].name, image: lines[0].image } }
+      : null;
+
     let cancelled = false;
-    verifyPayment(reference, declined)
-      .then(() => {
-        if (cancelled) return;
-        setOutcome({ reference, status: "success" });
-        // The order is paid for, so the bag it came from is spent.
-        clear();
-      })
-      .catch(() => {
-        if (!cancelled) setOutcome({ reference, status: "failed" });
+    confirmOrderAction(reference).then((result) => {
+      if (cancelled) return;
+
+      if (result.error) {
+        setOutcome({ reference, status: "failed", number: reference });
+        return;
+      }
+
+      setOutcome({
+        reference,
+        status: result.data.paid ? "success" : "failed",
+        number: result.data.number,
       });
+
+      // The order is paid for, so the bag it came from is spent.
+      if (result.data.paid) {
+        if (featured) setPlaced(featured);
+        clear();
+      }
+    });
 
     return () => {
       cancelled = true;
     };
-  }, [reference, declined, clear]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reference, clear]);
 
   /** Drops `?reference=…` so the outcome modal doesn't re-open on a reload. */
   const dismiss = useCallback(() => {
     setOutcome(null);
-    router.replace(declined ? "/checkout?outcome=failed" : "/checkout");
-  }, [declined, router]);
+    router.replace("/checkout");
+  }, [router]);
 
-  const shipping = lines.length > 0 ? SHIPPING : 0;
-  const totals = {
-    subtotal,
-    shipping,
-    total: subtotal + shipping,
-  };
+  const totals = bagTotals(subtotal, lines.length === 0);
 
   const canPay = form.formState.isValid && lines.length > 0 && !paying;
 
-  const submit = () => {
+  const submit = (values: CheckoutFormValues) => {
     if (lines.length === 0 || paying) return;
-    setPaying(true);
-    setPlaced({
-      pieceCount: count,
-      item: { name: lines[0].name, image: lines[0].image },
+
+    startPaying(async () => {
+      const result = await placeOrderAction({
+        ...values,
+        items: lines.map((line) => ({
+          slug: line.slug,
+          colour: line.colour,
+          size: line.size ?? "",
+          quantity: line.quantity,
+        })),
+      });
+
+      if (result.error) {
+        toast.error(result.message);
+        return;
+      }
+
+      // The order is not an order until Paystack says so, so the page hands the
+      // browser over rather than congratulating anyone. Paystack returns the
+      // buyer to this screen, where the effect above picks the reference up.
+      window.location.href = result.data.authorizationUrl;
     });
-    const query = new URLSearchParams({ reference: orderReference() });
-    if (declined) query.set("outcome", "failed");
-    setTimeout(() => {
-      setPaying(false);
-      router.replace(`/checkout?${query}`);
-    }, HANDOFF_MS);
   };
 
   if (lines.length === 0 && !reference)
@@ -174,10 +196,10 @@ export const CheckoutView = () => {
         status={status}
         onOpenChange={(open) => !open && dismiss()}
         feature={{
-          name: feature?.name ?? "Palma Side Chair",
+          name: feature?.name ?? "Your order",
           image: feature?.image ?? "/figma/home/p-mila.png",
         }}
-        orderReference={reference ?? ""}
+        orderReference={settled?.number ?? reference ?? ""}
         pieceCount={placed?.pieceCount ?? count}
         onContinueShopping={() => router.push("/furniture")}
         onReturnToPayment={dismiss}

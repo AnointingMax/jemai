@@ -38,17 +38,21 @@ export const paramOneOf = <T extends string>(
 };
 
 /**
+ * One `contains` clause per field — the `OR` arm a search box means, on its own
+ * so an index with something else to match on (a number a buyer quotes, say)
+ * can add to it rather than wrap another `OR` around it.
+ */
+export const searchClauses = (fields: string[], search: string) =>
+  fields.map((field) => ({
+    [field]: { contains: search, mode: "insensitive" as const },
+  }));
+
+/**
  * The `contains` clause a search box means, spread into a Prisma `where`. Empty
  * searches spread to nothing, so the caller needs no branch of its own.
  */
-export const searchAcross = (fields: string[], search?: string) => {
-  if (!search) return {};
-  return {
-    OR: fields.map((field) => ({
-      [field]: { contains: search, mode: "insensitive" as const },
-    })),
-  };
-};
+export const searchAcross = (fields: string[], search?: string) =>
+  search ? { OR: searchClauses(fields, search) } : {};
 
 /** The same narrowing for the stores still backed by fixtures rather than rows. */
 export const matchesSearch = (values: (string | null | undefined)[], search?: string) => {

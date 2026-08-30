@@ -17,6 +17,7 @@ model Furniture {
   gallery   String[] @default([])
 
   variants FurnitureVariant[]
+  orders   OrderItem[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -38,6 +39,8 @@ model FurnitureVariant {
   quantity  Int     @default(0)
 
   position Int @default(0)
+
+  orders OrderItem[]
 
   @@index([furnitureId])
   @@map("furniture_variants")

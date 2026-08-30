@@ -12,6 +12,7 @@ import { needsAttention, overviewStats, recentOrders } from "@/lib/admin/dashboa
 const AdminOverviewPage = async () => {
   const stats = await overviewStats();
   const attention = await needsAttention();
+  const orders = await recentOrders();
 
   return (
   <div className="flex flex-col gap-6">
@@ -47,7 +48,7 @@ const AdminOverviewPage = async () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="border-border-default overflow-hidden rounded-lg border">
-          <OrderTable orders={recentOrders()} />
+          <OrderTable orders={orders} />
         </CardContent>
       </Card>
 

@@ -10,6 +10,7 @@ import { seedEnquiries } from "./enquiries";
 import { seedExhibitions } from "./exhibitions";
 import { seedFurniture } from "./furniture";
 import { seedSubscribers } from "./newsletter";
+import { seedOrders } from "./orders";
 
 const main = async () => {
   const admin = await seedAdmin();
@@ -23,6 +24,8 @@ const main = async () => {
     { run: seedEnquiries, one: "artwork enquiry", many: "artwork enquiries", subject: "Enquiries" },
     { run: seedExhibitions, one: "exhibition", many: "exhibitions", subject: "Exhibitions" },
     { run: seedConsultations, one: "consultation request", many: "consultation requests", subject: "Consultation requests" },
+    // After furniture: every line is priced off the catalogue it points at.
+    { run: seedOrders, one: "furniture order", many: "furniture orders", subject: "Orders" },
   ];
 
   for (const seed of seeds) {

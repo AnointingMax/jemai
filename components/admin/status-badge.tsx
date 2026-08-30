@@ -1,13 +1,14 @@
 import type { ConsultationStatus } from "@/lib/admin/consultation-record";
 import type { EnquiryStatus } from "@/lib/admin/enquiry-record";
 import type { ExhibitionStatus } from "@/lib/admin/exhibitions";
-import type { FulfillmentStatus } from "@/lib/admin/orders";
+import type { FulfillmentStatus, PaymentStatus } from "@/lib/admin/order-record";
 import type { RegistrationStatus } from "@/lib/admin/registration-record";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 type AdminStatus =
   | FulfillmentStatus
+  | PaymentStatus
   | ExhibitionStatus
   | EnquiryStatus
   | ConsultationStatus
@@ -33,9 +34,10 @@ const dot: Record<AdminStatus, string> = {
   Reviewing: "bg-[#ff8d28]",
   Scheduled: "bg-[#ffcc00]",
   Closed: "bg-[#34c759]",
-  // Registrations borrow the same palette: settled green, in-flight amber, and
-  // the one state on the console that is genuinely bad in red.
+  // Registrations and orders borrow the same palette: settled green, in-flight
+  // amber, and the one state on the console that is genuinely bad in red.
   Confirmed: "bg-[#34c759]",
+  Paid: "bg-[#34c759]",
   "Pending payment": "bg-[#ff8d28]",
   Failed: "bg-[#e11d48]",
 };

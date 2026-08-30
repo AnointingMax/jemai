@@ -1029,3 +1029,55 @@ Shared reference frames (not pages): `246:18783` intro, `247:18801` semantic col
   cannot give without a negative margin, so they are left 19px loose. Every other
   landmark on those pages is within 1px, so this is the only place either detail
   page departs from its frame by more than 3px.
+
+## Furniture orders API
+
+The checkout was a simulation and the console's order book was a fixture array.
+Both now run on one `Order` / `OrderItem` pair
+(`prisma/schema/order.prisma`, migration `20260830160000_furniture_orders`).
+
+- **Two status axes, and only one of them is editable.** `payment` (Pending
+  payment / Paid / Failed) moves on what Paystack says about the order's
+  reference and nowhere else — there is no console action that can set it.
+  `status` (the fulfillment four) is the studio's, and is the only thing
+  `updateOrderStatusAction` writes. The sheet draws both; the index has a column
+  for each.
+- **The line points at the variant, not just the piece.** `OrderItem.variantId`
+  is the exact colour × size row that was bought, which is where the stock it
+  spends is counted, and `furnitureId` is the piece behind it. Both are
+  `SetNull`, so the name, image, colour, size and unit price are *copied* onto
+  the line: the catalogue gets re-priced and delisted, and an order has to keep
+  saying what was sold and for how much.
+- **The cart never prices anything.** It lives in `localStorage`, so
+  `placeOrderAction` takes only the slug, the variant and the quantity from it
+  and reads the price, the name and the stock back out of the furniture tables.
+  The shipping rate is `lib/orders.ts`, shared with the summary so the figure
+  the buyer reads and the figure they are charged are the same arithmetic.
+- **Stock is drawn down on settlement, not on placement.** A payment that never
+  completes must not take anything off the shelf. `settleOrder` claims the row
+  with a conditional `updateMany` before spending anything, because the webhook
+  and the buyer's return can arrive on the same reference at once — only the
+  call that actually moves the order off "Pending payment" draws stock, and the
+  draw-down shares its transaction. Counts never go below zero: overselling is a
+  thing that happened, and hiding it helps nobody.
+- **The webhook now routes on the reference prefix.** `JEM-EXH-` settles a
+  registration, `JEM-ORD-` an order; anything else is acknowledged and dropped,
+  since asking Paystack to redeliver it forever would not make it ours.
+- **The checkout frame has no email field, and the flow cannot work without
+  one.** Paystack will not open a transaction without an email address and a
+  receipt has nowhere to go, so one is added to the Contact group between the
+  name and the phone. It is a data requirement the frame did not have to answer
+  rather than a layout departure — worth a designer check.
+- **Order numbers continue the frames' own numbering.** The migration restarts
+  the sequence at 2038, and the seed writes the frames' twelve orders as rows
+  (priced off the seeded catalogue, since the frame's figures predate it) before
+  walking the sequence past them. Two of the twelve are deliberately unhappy —
+  one abandoned at "Pending payment", one "Failed" — because those are states
+  the console has to be able to read and there is no other way to see them.
+- **Fulfillment stamps a column per stage.** Reaching a stage stamps any earlier
+  one still blank, so an order sent straight to Delivered does not draw a
+  timeline with a hole in it; moving back clears what is now ahead of it.
+- **Still a stand-in:** nothing emails the buyer. There is no mail provider in
+  the project (`lib/admin/auth/mailer.ts` is the same seam), so an order
+  confirmation, a dispatch note and a failed-payment nudge all have nowhere to
+  go yet.

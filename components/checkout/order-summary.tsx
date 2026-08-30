@@ -9,13 +9,8 @@ import {
   linkBlue,
 } from "@/components/checkout/tokens";
 import { useCart, type CartLine } from "@/lib/cart";
+import type { OrderTotals } from "@/lib/orders";
 import { nairaExact } from "@/lib/products";
-
-export type OrderTotals = {
-  subtotal: number;
-  shipping: number;
-  total: number;
-};
 
 type OrderSummaryProps = {
   lines: CartLine[];

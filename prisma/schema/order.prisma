@@ -1,0 +1,66 @@
+model Order {
+  id String @id @default(uuid(7))
+
+  reference String @unique
+  number    Int    @unique @default(autoincrement())
+
+  name  String
+  email String
+  phone String
+
+  address    String
+  city       String
+  state      String @default("")
+  postalCode String @default("")
+  country    String
+  notes      String @default("") @db.Text
+
+  subtotal   Int
+  shipping   Int  @default(0)
+  total      Int
+  amountPaid Int?
+
+  payment String @default("Pending payment")
+  status  String @default("New")
+
+  items OrderItem[]
+
+  placedAt     DateTime  @default(now())
+  paidAt       DateTime?
+  processingAt DateTime?
+  dispatchedAt DateTime?
+  deliveredAt  DateTime?
+  updatedAt    DateTime  @updatedAt
+
+  @@index([payment])
+  @@index([status])
+  @@index([placedAt])
+  @@map("furniture_orders")
+}
+
+model OrderItem {
+  id      String @id @default(uuid(7))
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  furniture   Furniture? @relation(fields: [furnitureId], references: [id], onDelete: SetNull)
+  furnitureId String?
+
+  variant   FurnitureVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+  variantId String?
+
+  name   String
+  slug   String
+  image  String @default("")
+  colour String @default("")
+  size   String @default("")
+
+  unitPrice Int
+  quantity  Int @default(1)
+  position  Int @default(0)
+
+  @@index([orderId])
+  @@index([furnitureId])
+  @@index([variantId])
+  @@map("furniture_order_items")
+}

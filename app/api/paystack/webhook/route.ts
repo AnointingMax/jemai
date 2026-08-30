@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
 
+import { settleOrder } from "@/lib/admin/orders";
 import { settleRegistration } from "@/lib/admin/registrations";
 import { isPaystackSignature } from "@/lib/paystack";
+
+const settlers = [
+  { prefix: "JEM-EXH-", settle: settleRegistration },
+  { prefix: "JEM-ORD-", settle: settleOrder },
+];
 
 export const POST = async (request: Request) => {
   const raw = await request.text();
@@ -17,17 +23,16 @@ export const POST = async (request: Request) => {
   }
 
   const reference = event.data?.reference;
-  // Anything else on the account — transfers, disputes, subscriptions — is not
-  // this route's business, and is acknowledged rather than retried at us.
   if (event.event !== "charge.success" || !reference)
     return NextResponse.json({ received: true });
 
+  const settler = settlers.find((entry) => reference.startsWith(entry.prefix));
+  if (!settler) return NextResponse.json({ received: true });
+
   try {
-    await settleRegistration(reference);
+    await settler.settle(reference);
   } catch (error) {
-    // A 500 is what asks Paystack to deliver this again, which is the right
-    // answer when our own side failed rather than the payment.
-    console.error("Could not settle the registration this webhook named", error);
+    console.error("Could not settle the payment this webhook named", error);
     return NextResponse.json({ error: "Could not settle" }, { status: 500 });
   }
 

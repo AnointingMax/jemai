@@ -1,288 +1,333 @@
-import { naira } from "@/lib/admin/content";
+import {
+  fulfillmentStatuses,
+  isFulfillmentStatus,
+  isPaymentStatus,
+  orderNumber,
+  type AdminOrder,
+  type FulfillmentStatus,
+  type HistoryStep,
+  type PaymentStatus,
+} from "@/lib/admin/order-record";
+import { searchClauses } from "@/lib/admin/table-query";
+import { Prisma } from "@/lib/generated/prisma/client";
+import { verifyPayment } from "@/lib/paystack";
+import { prisma } from "@/lib/prisma";
 
 /**
- * The fulfillment lifecycle, in order. Both the table pill and the sheet's
- * timeline read this array, so a stage is named once and the two stay in step.
+ * Furniture orders: the checkout writes them, the payment pipeline settles
+ * them, and the console reads and fulfills them. The record's own shape, its
+ * two status vocabularies and its formatters live in `lib/admin/order-record`,
+ * which the table and the sheet import without pulling this file's Prisma and
+ * Paystack behind them.
  */
-export const fulfillmentStatuses = [
-  "New",
-  "Processing",
-  "Ready for dispatch",
-  "Delivered",
-] as const;
+export * from "@/lib/admin/order-record";
 
-export type FulfillmentStatus = (typeof fulfillmentStatuses)[number];
+const withItems = {
+  items: { orderBy: { position: "asc" } },
+} satisfies Prisma.OrderInclude;
+
+type OrderRecord = Prisma.OrderGetPayload<{ include: typeof withItems; }>;
+
+/** The delivery address as one line, which is the only way the console draws it. */
+const addressLine = (record: OrderRecord) =>
+  [record.address, record.city, record.state, record.postalCode, record.country]
+    .filter(Boolean)
+    .join(", ");
 
 /**
- * The timeline the sheet draws. It is the lifecycle with "New" spelled the way
- * an event reads rather than the way a state does — the order was placed, and
- * from then on the label and the status are the same word.
+ * The four stamp columns as the map the sheet's timeline reads. A stage the
+ * order has not reached is absent rather than null, which is what makes it draw
+ * as still ahead.
  */
-export const historySteps = [
-  "Order placed",
-  "Processing",
-  "Ready for dispatch",
-  "Delivered",
-] as const;
+const timeline = (record: OrderRecord) => {
+  const stamps: [HistoryStep, Date | null][] = [
+    ["Order placed", record.placedAt],
+    ["Processing", record.processingAt],
+    ["Ready for dispatch", record.dispatchedAt],
+    ["Delivered", record.deliveredAt],
+  ];
 
-export type HistoryStep = (typeof historySteps)[number];
-
-/** One line on the order — a product, a quantity and the variant that was bought. */
-export type OrderItem = {
-  name: string;
-  quantity: number;
-  colour: string;
-  size: string;
+  return Object.fromEntries(
+    stamps
+      .filter(([, at]) => at)
+      .map(([step, at]) => [step, at!.toISOString()]),
+  ) as Partial<Record<HistoryStep, string>>;
 };
 
-export type AdminOrder = {
-  id: string;
-  customer: string;
-  email: string;
-  phone: string;
-  /** Whole naira. Formatting happens at the edge so sorting stays numeric. */
-  total: number;
-  /** ISO. The table prints `formatOrderDate`, sorting compares this. */
-  placedAt: string;
-  status: FulfillmentStatus;
-  items: OrderItem[];
-  address: string;
-  /**
-   * ISO stamps for the steps this order has actually reached, keyed by step.
-   * Anything absent is still ahead of the order and draws as pending.
-   */
-  timeline: Partial<Record<HistoryStep, string>>;
-};
-
-const item = (name: string, colour: string, size: string, quantity = 1): OrderItem => ({
-  name,
-  colour,
-  size,
-  quantity,
+const toOrder = (record: OrderRecord): AdminOrder => ({
+  id: record.id,
+  number: orderNumber(record.number),
+  reference: record.reference,
+  customer: record.name,
+  email: record.email,
+  phone: record.phone,
+  subtotal: record.subtotal,
+  shipping: record.shipping,
+  total: record.total,
+  amountPaid: record.amountPaid,
+  payment: isPaymentStatus(record.payment) ? record.payment : "Pending payment",
+  status: isFulfillmentStatus(record.status) ? record.status : "New",
+  placedAt: record.placedAt.toISOString(),
+  items: record.items.map((item) => ({
+    name: item.name,
+    slug: item.slug,
+    image: item.image,
+    quantity: item.quantity,
+    colour: item.colour,
+    size: item.size,
+    unitPrice: item.unitPrice,
+  })),
+  address: addressLine(record),
+  notes: record.notes,
+  timeline: timeline(record),
 });
 
+export type OrderQuery = {
+  /** Matched against the customer, their email and the order's own number. */
+  search?: string;
+  status?: FulfillmentStatus;
+  payment?: PaymentStatus;
+};
+
 /**
- * Fixtures until the Paystack feed lands. Names, totals and statuses are the
- * ones the frame prints; the dates are pulled into a single coherent week so
- * the table and the sheet's timeline agree with each other.
+ * Newest first — the order the index and the overview both want them in.
+ *
+ * Both narrowings run in the database rather than over rows already sent, which
+ * is also what makes the export honest: it carries this query's orders, not the
+ * subset a page happened to have fetched.
+ *
+ * Unpaid and failed attempts sit beside the settled ones. An abandoned checkout
+ * is what the buyer writing in to ask where their chair is turns out to be, and
+ * hiding it would leave the console with no answer for them.
  */
-const store: AdminOrder[] = [
-  {
-    id: "#JM-2048",
-    customer: "Ada Okafor",
-    email: "ada.okafor@example.com",
-    phone: "+234 701 660 1430",
-    total: 1600,
-    placedAt: "2026-08-18T09:42:00+01:00",
-    status: "Processing",
-    items: [item("Alma Accent Chair", "Olive", "Standard")],
-    address: "12 Bourdillon Road, Ikoyi, Lagos",
-    timeline: {
-      "Order placed": "2026-08-18T09:42:00+01:00",
-      Processing: "2026-08-18T10:03:00+01:00",
-    },
-  },
-  {
-    id: "#JM-2047",
-    customer: "Teni Alade",
-    email: "teni.alade@example.com",
-    phone: "+234 704 667 6343",
-    total: 2600,
-    placedAt: "2026-08-18T08:15:00+01:00",
-    status: "New",
-    items: [item("Mila Velvet Chair", "Green", "Standard", 2)],
-    address: "4 Glover Road, Ikoyi, Lagos",
-    timeline: { "Order placed": "2026-08-18T08:15:00+01:00" },
-  },
-  {
-    id: "#JM-2046",
-    customer: "Kelechi Nwosu",
-    email: "kelechi.nwosu@example.com",
-    phone: "+234 703 118 9022",
-    total: 5600,
-    placedAt: "2026-08-17T16:48:00+01:00",
-    status: "New",
-    items: [item("Nara Bouclé Chair", "Sand", "Large")],
-    address: "27 Admiralty Way, Lekki Phase 1, Lagos",
-    timeline: { "Order placed": "2026-08-17T16:48:00+01:00" },
-  },
-  {
-    id: "#JM-2045",
-    customer: "Mathilde Lewis",
-    email: "mathilde.lewis@example.com",
-    phone: "+234 806 442 7781",
-    total: 6300,
-    placedAt: "2026-08-17T14:02:00+01:00",
-    status: "New",
-    items: [item("Stone Armchair", "Charcoal", "Organic")],
-    address: "9 Kingsway Road, Ikoyi, Lagos",
-    timeline: { "Order placed": "2026-08-17T14:02:00+01:00" },
-  },
-  {
-    id: "#JM-2044",
-    customer: "Olly Schroeder",
-    email: "olly.schroeder@example.com",
-    phone: "+234 802 337 5510",
-    total: 2100,
-    placedAt: "2026-08-17T11:26:00+01:00",
-    status: "New",
-    items: [item("Ayo Side Table", "Walnut", "Standard")],
-    address: "31 Ozumba Mbadiwe Avenue, Victoria Island, Lagos",
-    timeline: { "Order placed": "2026-08-17T11:26:00+01:00" },
-  },
-  {
-    id: "#JM-2043",
-    customer: "Julius Vaughan",
-    email: "julius.vaughan@example.com",
-    phone: "+234 805 220 4419",
-    total: 1070,
-    placedAt: "2026-08-16T17:34:00+01:00",
-    status: "Processing",
-    items: [item("Alma Accent Chair", "Oak", "Standard")],
-    address: "18 Milverton Road, Ikoyi, Lagos",
-    timeline: {
-      "Order placed": "2026-08-16T17:34:00+01:00",
-      Processing: "2026-08-16T18:10:00+01:00",
-    },
-  },
-  {
-    id: "#JM-2042",
-    customer: "Zaid Schwartz",
-    email: "zaid.schwartz@example.com",
-    phone: "+234 809 771 2264",
-    total: 8100,
-    placedAt: "2026-08-16T13:09:00+01:00",
-    status: "Ready for dispatch",
-    items: [item("Mila Velvet Chair", "Green", "Three-seater")],
-    address: "6 Alexander Avenue, Ikoyi, Lagos",
-    timeline: {
-      "Order placed": "2026-08-16T13:09:00+01:00",
-      Processing: "2026-08-16T14:41:00+01:00",
-      "Ready for dispatch": "2026-08-17T09:20:00+01:00",
-    },
-  },
-  {
-    id: "#JM-2041",
-    customer: "Ngozi Eze",
-    email: "ngozi.eze@example.com",
-    phone: "+234 703 909 6612",
-    total: 3450,
-    placedAt: "2026-08-15T10:55:00+01:00",
-    status: "Delivered",
-    items: [item("Ayo Side Table", "Ash", "Small", 2)],
-    address: "22 Norman Williams Street, Ikoyi, Lagos",
-    timeline: {
-      "Order placed": "2026-08-15T10:55:00+01:00",
-      Processing: "2026-08-15T12:12:00+01:00",
-      "Ready for dispatch": "2026-08-16T08:40:00+01:00",
-      Delivered: "2026-08-17T15:05:00+01:00",
-    },
-  },
-  {
-    id: "#JM-2040",
-    customer: "Bisi Adeyemi",
-    email: "bisi.adeyemi@example.com",
-    phone: "+234 807 554 3390",
-    total: 12400,
-    placedAt: "2026-08-14T18:21:00+01:00",
-    status: "Delivered",
-    items: [
-      item("Stone Armchair", "Charcoal", "Organic"),
-      item("Ayo Side Table", "Walnut", "Standard"),
-    ],
-    address: "14 Karimu Kotun Street, Victoria Island, Lagos",
-    timeline: {
-      "Order placed": "2026-08-14T18:21:00+01:00",
-      Processing: "2026-08-15T09:03:00+01:00",
-      "Ready for dispatch": "2026-08-15T16:30:00+01:00",
-      Delivered: "2026-08-16T11:48:00+01:00",
-    },
-  },
-  {
-    id: "#JM-2039",
-    customer: "Femi Bankole",
-    email: "femi.bankole@example.com",
-    phone: "+234 810 226 8874",
-    total: 4750,
-    placedAt: "2026-08-14T09:38:00+01:00",
-    status: "Ready for dispatch",
-    items: [item("Nara Bouclé Chair", "Ivory", "Standard")],
-    address: "3 Oyinkan Abayomi Drive, Ikoyi, Lagos",
-    timeline: {
-      "Order placed": "2026-08-14T09:38:00+01:00",
-      Processing: "2026-08-14T11:15:00+01:00",
-      "Ready for dispatch": "2026-08-15T10:02:00+01:00",
-    },
-  },
-  {
-    id: "#JM-2038",
-    customer: "Amara Chukwu",
-    email: "amara.chukwu@example.com",
-    phone: "+234 806 118 4407",
-    total: 2280,
-    placedAt: "2026-08-13T15:44:00+01:00",
-    status: "Delivered",
-    items: [item("Mila Velvet Chair", "Blush", "Standard")],
-    address: "45 Awolowo Road, Ikoyi, Lagos",
-    timeline: {
-      "Order placed": "2026-08-13T15:44:00+01:00",
-      Processing: "2026-08-13T17:02:00+01:00",
-      "Ready for dispatch": "2026-08-14T09:51:00+01:00",
-      Delivered: "2026-08-15T13:27:00+01:00",
-    },
-  },
-  {
-    id: "#JM-2037",
-    customer: "Tunde Bakare",
-    email: "tunde.bakare@example.com",
-    phone: "+234 802 663 1195",
-    total: 9900,
-    placedAt: "2026-08-12T12:07:00+01:00",
-    status: "Delivered",
-    items: [item("Alma Accent Chair", "Olive", "Standard", 3)],
-    address: "8 Musa Yar'Adua Street, Victoria Island, Lagos",
-    timeline: {
-      "Order placed": "2026-08-12T12:07:00+01:00",
-      Processing: "2026-08-12T14:33:00+01:00",
-      "Ready for dispatch": "2026-08-13T08:19:00+01:00",
-      Delivered: "2026-08-14T16:40:00+01:00",
-    },
-  },
-];
+export const listOrders = async ({ search, status, payment }: OrderQuery = {}) => {
+  const needle = search?.trim();
+  // The number is what a buyer quotes, and they quote it as "#JM-2048" or as
+  // "2048" — so the "#JM-" the display carries is stripped before it is matched
+  // against the column that does not.
+  const digits = needle?.replace(/\D/g, "");
 
-/** Newest first, the way the index and the overview both want them. */
-export const listOrders = () => [...store].sort((a, b) => b.placedAt.localeCompare(a.placedAt));
-
-export const getOrder = (id: string) => store.find((order) => order.id === id);
-
-/** "Jan 16, 2025" — the table column. */
-export const formatOrderDate = (iso: string) =>
-  new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-
-/** "18 Aug 2026 · 09:42" — the timeline stamps in the sheet. */
-export const formatOrderStamp = (iso: string) => {
-  const date = new Date(iso);
-  const day = date.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-  const time = date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
-  return `${day} · ${time}`;
-};
-
-/** "Olive · Standard", dropping whichever half a variant does not carry. */
-export const describeItem = (line: OrderItem) =>
-  [line.colour, line.size].filter(Boolean).join(" · ");
-
-export type TimelineEntry = {
-  label: HistoryStep;
-  /** Pre-formatted, or null while the step is still ahead of the order. */
-  stamp: string | null;
-  done: boolean;
-};
-
-/** Every step, in lifecycle order, with the ones this order has reached stamped. */
-export const orderTimeline = (order: AdminOrder): TimelineEntry[] =>
-  historySteps.map((label) => {
-    const at = order.timeline[label];
-    return { label, stamp: at ? formatOrderStamp(at) : null, done: Boolean(at) };
+  const records = await prisma.order.findMany({
+    where: {
+      ...(status ? { status } : {}),
+      ...(payment ? { payment } : {}),
+      ...(needle
+        ? {
+            OR: [
+              ...searchClauses(["name", "email", "phone", "reference"], needle),
+              ...(digits ? [{ number: Number(digits) }] : []),
+            ],
+          }
+        : {}),
+    },
+    include: withItems,
+    orderBy: { placedAt: "desc" },
   });
 
-export { naira };
+  return records.map(toOrder);
+};
+
+export const getOrder = async (id: string) => {
+  const record = await prisma.order.findUnique({ where: { id }, include: withItems });
+  return record ? toOrder(record) : null;
+};
+
+export const getOrderByReference = async (reference: string) => {
+  const record = await prisma.order.findUnique({ where: { reference }, include: withItems });
+  return record ? toOrder(record) : null;
+};
+
+/** The overview's recent-order table: the newest handful, in frame order. */
+export const recentOrders = async (limit = 7) => {
+  const records = await prisma.order.findMany({
+    include: withItems,
+    orderBy: { placedAt: "desc" },
+    take: limit,
+  });
+  return records.map(toOrder);
+};
+
+/** The overview's "Awaiting fulfillment" count — paid for and not yet moved. */
+export const countNewOrders = () =>
+  prisma.order.count({ where: { payment: "Paid", status: "New" } });
+
+export type OrderItemInput = {
+  furnitureId: string | null;
+  variantId: string | null;
+  name: string;
+  slug: string;
+  image: string;
+  colour: string;
+  size: string;
+  unitPrice: number;
+  quantity: number;
+};
+
+export type OrderInput = {
+  reference: string;
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+  notes: string;
+  subtotal: number;
+  shipping: number;
+  total: number;
+  items: OrderItemInput[];
+};
+
+/**
+ * Records an order off the checkout. It always opens "Pending payment": nothing
+ * is an order until Paystack says the money arrived, and this row is what the
+ * reference will be settled against when it does.
+ */
+export const createOrder = async ({ items, ...order }: OrderInput) => {
+  const record = await prisma.order.create({
+    data: {
+      ...order,
+      items: {
+        create: items.map((item, position) => ({ ...item, position })),
+      },
+    },
+    include: withItems,
+  });
+  return toOrder(record);
+};
+
+/**
+ * Takes a paid order's pieces out of stock.
+ *
+ * Every line carries the id of the colour × size row it bought, so the
+ * draw-down is that row and no searching is involved: the variant the buyer
+ * picked is the variant that is spent. A line whose piece runs no variants at
+ * all carries its count on the product itself, and one whose variant has since
+ * been deleted has nothing left to charge — its colour and size survive on the
+ * order so the console can still say what was sold.
+ *
+ * A count is never pushed below zero. Overselling is a thing that happened, and
+ * a negative number would only hide it from whoever has to sort it out.
+ */
+const drawDownStock = async (
+  tx: Prisma.TransactionClient,
+  items: OrderRecord["items"],
+) => {
+  for (const item of items) {
+    if (item.variantId) {
+      const variant = await tx.furnitureVariant.findUnique({
+        where: { id: item.variantId },
+        select: { quantity: true },
+      });
+      if (!variant) continue;
+
+      await tx.furnitureVariant.update({
+        where: { id: item.variantId },
+        data: { quantity: Math.max(0, variant.quantity - item.quantity) },
+      });
+      continue;
+    }
+
+    if (!item.furnitureId) continue;
+
+    const piece = await tx.furniture.findUnique({
+      where: { id: item.furnitureId },
+      select: { stock: true },
+    });
+    if (!piece) continue;
+
+    await tx.furniture.update({
+      where: { id: item.furnitureId },
+      data: { stock: Math.max(0, piece.stock - item.quantity) },
+    });
+  }
+};
+
+/**
+ * Settles an order against Paystack, and is the only place `payment` moves.
+ *
+ * Both the webhook and the buyer coming back from the payment page land here,
+ * so it has to be safe to run twice: an order already paid is answered from the
+ * row rather than re-verified, which is also what keeps stock from being drawn
+ * down a second time.
+ *
+ * The stock draw-down shares the transaction that marks the order paid. Either
+ * the catalogue and the order agree, or neither moved.
+ */
+export const settleOrder = async (reference: string) => {
+  const existing = await prisma.order.findUnique({ where: { reference }, include: withItems });
+  if (!existing) return null;
+  if (existing.payment === "Paid") return toOrder(existing);
+
+  const payment = await verifyPayment(reference);
+  // A short payment is not a settled order. Paystack quotes in kobo and we
+  // compare in naira, so this is an equality in practice — but a part-payment
+  // has to fail rather than round its way into fulfillment.
+  const settled = payment.paid && payment.amount >= existing.total;
+
+  const record = await prisma.$transaction(async (tx) => {
+    // The webhook and the buyer's own return can arrive at the same reference
+    // at the same time. Both verify it, and both would draw the same stock down
+    // twice — so the write is conditional on the order not already being paid,
+    // and only the call that actually moved it goes on to spend anything. The
+    // second one finds nothing to update and settles for reading the row.
+    const { count } = await tx.order.updateMany({
+      where: { id: existing.id, payment: { not: "Paid" } },
+      data: {
+        payment: settled ? "Paid" : "Failed",
+        amountPaid: payment.paid ? payment.amount : null,
+        paidAt: settled ? (payment.paidAt ?? new Date()) : null,
+      },
+    });
+
+    const updated = await tx.order.findUniqueOrThrow({
+      where: { id: existing.id },
+      include: withItems,
+    });
+
+    if (settled && count === 1) await drawDownStock(tx, updated.items);
+
+    return updated;
+  });
+
+  return toOrder(record);
+};
+
+/** Which stamp column each stage of the lifecycle writes. "New" writes none — that is `placedAt`. */
+const stampColumn: Record<FulfillmentStatus, "processingAt" | "dispatchedAt" | "deliveredAt" | null> = {
+  New: null,
+  Processing: "processingAt",
+  "Ready for dispatch": "dispatchedAt",
+  Delivered: "deliveredAt",
+};
+
+/**
+ * Moves an order through fulfillment, stamping the timeline to match.
+ *
+ * Reaching a stage means having passed through the ones before it, so any
+ * earlier stage still unstamped is stamped with the same moment — otherwise an
+ * order sent straight to Delivered would draw a timeline with a hole in it.
+ * Moving back the other way clears what is now ahead of the order, so the rail
+ * never claims something that has been undone.
+ */
+export const setFulfillmentStatus = async (id: string, status: FulfillmentStatus) => {
+  const existing = await prisma.order.findUnique({ where: { id } });
+  if (!existing) return null;
+
+  const reached = fulfillmentStatuses.indexOf(status);
+  const now = new Date();
+
+  const data: Prisma.OrderUpdateInput = { status };
+  for (const stage of fulfillmentStatuses) {
+    const column = stampColumn[stage];
+    if (!column) continue;
+
+    if (fulfillmentStatuses.indexOf(stage) <= reached) data[column] = existing[column] ?? now;
+    else data[column] = null;
+  }
+
+  const record = await prisma.order.update({ where: { id }, data, include: withItems });
+  return toOrder(record);
+};
