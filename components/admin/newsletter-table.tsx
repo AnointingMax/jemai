@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
 
 import { SortableHead, nextSort, type SortState } from "@/components/admin/sortable-head";
+import { useTableQuery } from "@/components/admin/use-table-query";
 import { TablePager } from "@/components/admin/table-pager";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
@@ -38,26 +39,35 @@ const COLUMN_WIDTHS = ["27.1%", "24.9%", "25%", "23%"];
 
 /**
  * Newsletter subscribers: a search box over a sortable table, paged ten rows at
- * a time. Filtering and sorting run client-side over the whole list, the same
- * arrangement the exhibitions index uses — the page stays a server component
- * and no keystroke costs a round trip.
+ * a time.
+ *
+ * Search and filter live in the URL and run in the database, so the view
+ * survives a reload, walks back through history and can be sent as a link —
+ * and an export takes what the query returned rather than what happened to be
+ * fetched. Sorting and paging are done here, over the rows that came back.
  */
-export const NewsletterTable = ({ rows }: { rows: SubscriberRow[] }) => {
-  const [query, setQuery] = useState("");
+export const NewsletterTable = ({
+  rows,
+  search,
+}: {
+  rows: SubscriberRow[];
+  /** The search the page queried with, as it stands in the URL. */
+  search: string;
+}) => {
   const [sort, setSort] = useState<SortState<RowKey>>({ key: "subscribedAt", direction: "desc" });
   const [page, setPage] = useState(1);
 
+  // The search narrows the query the page ran; only the ordering is left to do
+  // here, over the rows that came back.
+  const { term, setTerm, navigating } = useTableQuery({
+    search,
+    onNarrow: () => setPage(1),
+  });
+
   const filtered = useMemo(() => {
-    const needle = query.trim().toLowerCase();
-    const matches = rows.filter(
-      (row) =>
-        !needle ||
-        row.email.toLowerCase().includes(needle) ||
-        row.name.toLowerCase().includes(needle)
-    );
-    const sorted = matches.sort((a, b) => a[sort.key].localeCompare(b[sort.key]));
+    const sorted = [...rows].sort((a, b) => a[sort.key].localeCompare(b[sort.key]));
     return sort.direction === "asc" ? sorted : sorted.reverse();
-  }, [rows, query, sort]);
+  }, [rows, sort]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   // A search can strand the reader past the last page; clamp on render rather
@@ -82,11 +92,8 @@ export const NewsletterTable = ({ rows }: { rows: SubscriberRow[] }) => {
             className="text-text-secondary pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2"
           />
           <Input
-            value={query}
-            onChange={(event) => {
-              setQuery(event.target.value);
-              setPage(1);
-            }}
+            value={term}
+            onChange={(event) => setTerm(event.target.value)}
             placeholder="Search name or email"
             aria-label="Search name or email"
             className="border-border-default bg-background h-10 pl-9 text-sm md:text-sm"
@@ -94,7 +101,11 @@ export const NewsletterTable = ({ rows }: { rows: SubscriberRow[] }) => {
         </div>
       </div>
 
-      <div className="border-border-default overflow-hidden rounded-xl border">
+      <div
+        className={`border-border-default overflow-hidden rounded-xl border transition-opacity ${
+          navigating ? "opacity-60" : ""
+        }`}
+      >
         {visible.length === 0 ? (
           <Empty className="py-16">
             <EmptyHeader>

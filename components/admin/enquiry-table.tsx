@@ -9,6 +9,7 @@ import { updateEnquiryStatusAction } from "@/app/admin/(dashboard)/artwork-enqui
 
 import { EnquirySheet } from "@/components/admin/enquiry-sheet";
 import { SortableHead, nextSort, type SortState } from "@/components/admin/sortable-head";
+import { useTableQuery } from "@/components/admin/use-table-query";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { TablePager } from "@/components/admin/table-pager";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
@@ -40,7 +41,7 @@ type RowKey = "reference" | "name" | "artworkTitle" | "receivedAt" | "status";
 const PAGE_SIZE = 10;
 
 /** The filter's "everything" option — a Select item cannot carry an empty value. */
-const ALL = "All statuses";
+export const ALL_ENQUIRY_STATUSES = "All statuses";
 
 /** Untouched first when the reader sorts on Status: it is the queue's whole point. */
 const compare = (a: AdminEnquiry, b: AdminEnquiry, key: RowKey) =>
@@ -50,16 +51,27 @@ const compare = (a: AdminEnquiry, b: AdminEnquiry, key: RowKey) =>
 
 /**
  * Artwork enquiries: a search box and a status filter over a sortable table,
- * paged ten rows at a time. Filtering and sorting run client-side over the whole
- * queue, the same arrangement the newsletter and exhibition indexes use — the
- * page stays a server component and no keystroke costs a round trip.
+ * paged ten rows at a time.
+ *
+ * Search and filter live in the URL and run in the database, so the view
+ * survives a reload, walks back through history and can be sent as a link —
+ * and an export takes what the query returned rather than what happened to be
+ * fetched. Sorting and paging are done here, over the rows that came back.
  *
  * A row opens the enquiry in a side sheet; the enquiry number is a real button
  * so the same affordance is reachable from the keyboard.
  */
-export const EnquiryTable = ({ enquiries }: { enquiries: AdminEnquiry[] }) => {
-  const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState<string>(ALL);
+export const EnquiryTable = ({
+  enquiries,
+  search,
+  status,
+}: {
+  enquiries: AdminEnquiry[];
+  /** The search the page queried with, as it stands in the URL. */
+  search: string;
+  /** Likewise the status filter, or its "everything" label. */
+  status: string;
+}) => {
   const [sort, setSort] = useState<SortState<RowKey>>({ key: "receivedAt", direction: "desc" });
   const [page, setPage] = useState(1);
   const [openId, setOpenId] = useState<string | null>(null);
@@ -90,19 +102,20 @@ export const EnquiryTable = ({ enquiries }: { enquiries: AdminEnquiry[] }) => {
       router.refresh();
     });
 
+  // Search and status narrow the query the page ran; only the ordering is left
+  // to do here, over the rows that came back.
+  const { term, setTerm, onFilter, navigating } = useTableQuery({
+    search,
+    filter: status,
+    filterKey: "status",
+    filterAll: ALL_ENQUIRY_STATUSES,
+    onNarrow: () => setPage(1),
+  });
+
   const filtered = useMemo(() => {
-    const needle = query.trim().toLowerCase();
-    const matches = rows.filter(
-      (row) =>
-        (filter === ALL || row.status === filter) &&
-        (!needle ||
-          row.name.toLowerCase().includes(needle) ||
-          row.email.toLowerCase().includes(needle) ||
-          row.artworkTitle.toLowerCase().includes(needle))
-    );
-    const sorted = matches.sort((a, b) => compare(a, b, sort.key));
+    const sorted = [...rows].sort((a, b) => compare(a, b, sort.key));
     return sort.direction === "asc" ? sorted : sorted.reverse();
-  }, [rows, query, filter, sort]);
+  }, [rows, sort]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   // A search can strand the reader past the last page; clamp on render rather
@@ -128,31 +141,23 @@ export const EnquiryTable = ({ enquiries }: { enquiries: AdminEnquiry[] }) => {
             className="text-text-secondary pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2"
           />
           <Input
-            value={query}
-            onChange={(event) => {
-              setQuery(event.target.value);
-              setPage(1);
-            }}
+            value={term}
+            onChange={(event) => setTerm(event.target.value)}
             placeholder="Search name, email or artwork"
             aria-label="Search name, email or artwork"
             className="border-border-default bg-background h-10 pl-9 text-sm md:text-sm"
           />
         </div>
-        <Select
-          value={filter}
-          onValueChange={(value) => {
-            setFilter(value);
-            setPage(1);
-          }}
-        >
+        <Select value={status} onValueChange={onFilter}>
           <SelectTrigger
             aria-label="Filter by status"
+            disabled={navigating}
             className="border-border-default bg-background text-text-primary w-full text-sm data-[size=default]:h-10 sm:w-48"
           >
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {[ALL, ...enquiryStatuses].map((value) => (
+            {[ALL_ENQUIRY_STATUSES, ...enquiryStatuses].map((value) => (
               <SelectItem key={value} value={value}>
                 {value}
               </SelectItem>

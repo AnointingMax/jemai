@@ -7,14 +7,19 @@ import {
   exhibitionDates,
   listExhibitions,
 } from "@/lib/admin/exhibitions";
+import { param } from "@/lib/admin/table-query";
 
 /**
  * Exhibitions — the programme index. The store is read here and flattened to
  * the columns the table draws, so the media and long copy never cross to the
  * client.
  */
-const AdminExhibitionsPage = async () => {
-  const exhibitions = await listExhibitions();
+const AdminExhibitionsPage = async ({ searchParams }: PageProps<"/admin/exhibitions">) => {
+  // The search lives in the URL, so the view survives a reload and can be sent
+  // as a link; the narrowing runs in the query rather than over rows already
+  // sent.
+  const search = param(await searchParams, "q") ?? "";
+  const exhibitions = await listExhibitions(search);
   const rows: ExhibitionRow[] = exhibitions.map((exhibition) => ({
     slug: exhibition.slug,
     name: exhibition.name,
@@ -41,7 +46,7 @@ const AdminExhibitionsPage = async () => {
         </Button>
       </header>
 
-      <ExhibitionTable rows={rows} />
+      <ExhibitionTable rows={rows} search={search} />
     </div>
   );
 };

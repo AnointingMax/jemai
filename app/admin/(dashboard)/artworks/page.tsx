@@ -1,17 +1,25 @@
 import Link from "next/link";
 
-import { ArtworkTable, type ArtworkRow } from "@/components/admin/artwork-table";
+import { ALL_MEDIUMS, ArtworkTable, type ArtworkRow } from "@/components/admin/artwork-table";
 import { Button } from "@/components/ui/button";
 import { artworkMediums, listArtworks } from "@/lib/admin/artworks";
 import { formatUpdatedAt } from "@/lib/admin/content";
+import { param, paramOneOf } from "@/lib/admin/table-query";
 
 /**
  * Artworks — the gallery index. The store is read here and flattened to the
  * columns the table draws, so the media and the story HTML never cross to the
  * client.
  */
-const AdminArtworksPage = async () => {
-  const artworks = await listArtworks();
+const AdminArtworksPage = async ({ searchParams }: PageProps<"/admin/artworks">) => {
+  // The search box and the medium filter live in the URL, so the view survives
+  // a reload and can be sent to somebody as a link; the narrowing itself runs
+  // in the query below rather than over rows already sent.
+  const query = await searchParams;
+  const search = param(query, "q") ?? "";
+  const medium = paramOneOf(query, "medium", artworkMediums);
+
+  const artworks = await listArtworks({ search, medium });
   const rows: ArtworkRow[] = artworks.map((item) => ({
     slug: item.slug,
     title: item.title,
@@ -38,7 +46,12 @@ const AdminArtworksPage = async () => {
         </Button>
       </header>
 
-      <ArtworkTable rows={rows} mediums={artworkMediums} />
+      <ArtworkTable
+        rows={rows}
+        mediums={artworkMediums}
+        search={search}
+        medium={medium ?? ALL_MEDIUMS}
+      />
     </div>
   );
 };

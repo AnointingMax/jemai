@@ -1,4 +1,5 @@
 import { sanitizeRichText, slugify, uniqueSlug } from "@/lib/admin/content";
+import { searchAcross } from "@/lib/admin/table-query";
 import { prisma } from "@/lib/prisma";
 import type { Artwork as ArtworkRecord } from "@/lib/generated/prisma/client";
 
@@ -63,9 +64,22 @@ const toArtwork = (record: ArtworkRecord): Artwork => ({
   updatedAt: record.updatedAt.toISOString(),
 });
 
-/** Newest first — the order the index draws. */
-export const listArtworks = async () => {
-  const records = await prisma.artwork.findMany({ orderBy: { updatedAt: "desc" } });
+export type ArtworkQuery = { search?: string; medium?: string; };
+
+/**
+ * Newest first — the order the index draws — narrowed by whatever the index's
+ * search box and medium filter are set to. The narrowing runs here rather than
+ * over rows already sent, so the catalogue does not have to arrive in full for
+ * the reader to look at one artist.
+ */
+export const listArtworks = async ({ search, medium }: ArtworkQuery = {}) => {
+  const records = await prisma.artwork.findMany({
+    where: {
+      ...(medium ? { medium } : {}),
+      ...searchAcross(["title", "artist"], search),
+    },
+    orderBy: { updatedAt: "desc" },
+  });
   return records.map(toArtwork);
 };
 

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
+import { exportAttendeesAction } from "@/app/admin/(dashboard)/exhibitions/[slug]/attendees/actions";
 import {
   AttendeeTable,
   ALL_PAYMENTS,
@@ -81,16 +82,6 @@ const AdminExhibitionAttendeesPage = async ({
     registeredAt: registration.registeredAt,
   }));
 
-  /**
-   * A narrowed export says so in its name, so two of them do not collide in a
-   * downloads folder. The search term is not in the name — it can be anything a
-   * reader typed — but a search does narrow the file, which the count beside
-   * the button says out loud.
-   */
-  const filename = payment
-    ? `jemai-${exhibition.slug}-attendees-${payment.toLowerCase().replace(/\s+/g, "-")}.csv`
-    : `jemai-${exhibition.slug}-attendees.csv`;
-
   /** What the export is about to hand over, said in words beside the button. */
   const counted = `${rows.length} ${rows.length === 1 ? "attendee" : "attendees"}`;
   const exported =
@@ -120,21 +111,15 @@ const AdminExhibitionAttendeesPage = async ({
               : `Everyone registered for ${exhibition.name}, ${exhibitionSpan(exhibition)}.`}
           </p>
         </div>
-        {/* The rows the database returned for the filter and search in the URL,
-            all of them — not the ten on the page in front of the reader. */}
+        {/* Built by the action from a fresh query under these filters, so the
+            file is every matching registration rather than the rows on screen. */}
         <div className="flex flex-col items-start gap-1.5 sm:items-end">
           <ExportCsvButton
-            filename={filename}
-            headers={["Reference", "Name", "Email", "Phone", "Paid", "Status", "Registered"]}
-            rows={rows.map((row) => [
-              row.reference,
-              row.name,
-              row.email,
-              row.phone,
-              row.amount,
-              row.status,
-              row.registered,
-            ])}
+            onExport={exportAttendeesAction.bind(null, {
+              slug: exhibition.slug,
+              search,
+              payment: payment ?? "",
+            })}
           />
           <p className="text-text-secondary text-xs">{exported}</p>
         </div>

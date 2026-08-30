@@ -1,4 +1,5 @@
 import { formatDateTimeShort } from "@/lib/admin/content";
+import { searchAcross } from "@/lib/admin/table-query";
 import { prisma } from "@/lib/prisma";
 import type { Subscriber as SubscriberRecord } from "@/lib/generated/prisma/client";
 
@@ -38,8 +39,12 @@ const toSubscriber = (record: SubscriberRecord): Subscriber => ({
 });
 
 /** Newest first — the order the index draws before the reader sorts it. */
-export const listSubscribers = async () => {
-  const records = await prisma.subscriber.findMany({ orderBy: { subscribedAt: "desc" } });
+/** Newest first, narrowed by the index's search box — name or address. */
+export const listSubscribers = async (search?: string) => {
+  const records = await prisma.subscriber.findMany({
+    where: searchAcross(["email", "name"], search),
+    orderBy: { subscribedAt: "desc" },
+  });
   return records.map(toSubscriber);
 };
 

@@ -1,14 +1,20 @@
+import { exportSubscribersAction } from "@/app/admin/(dashboard)/newsletter/actions";
 import { ExportCsvButton } from "@/components/admin/export-csv-button";
 import { NewsletterTable, type SubscriberRow } from "@/components/admin/newsletter-table";
 import { listSubscribers, subscribedAt } from "@/lib/admin/newsletter";
+import { param } from "@/lib/admin/table-query";
 
 /**
  * Newsletter subscribers — a read-only list. Nothing here is editable: the
  * console's job is to let someone find an address and hand the whole list to
  * whatever sends the mail.
  */
-const AdminNewsletterPage = async () => {
-  const subscribers = await listSubscribers();
+const AdminNewsletterPage = async ({ searchParams }: PageProps<"/admin/newsletter">) => {
+  // The search lives in the URL, so the view survives a reload and can be sent
+  // as a link; the narrowing runs in the query rather than over rows already
+  // sent — which is also what the export below carries.
+  const search = param(await searchParams, "q") ?? "";
+  const subscribers = await listSubscribers(search);
   const rows: SubscriberRow[] = subscribers.map((subscriber) => ({
     email: subscriber.email,
     name: subscriber.name,
@@ -27,21 +33,12 @@ const AdminNewsletterPage = async () => {
             tools.
           </p>
         </div>
-        {/* The export is the whole list, not the current search — it feeds a
-            mailing tool, which wants everyone who opted in. */}
-        <ExportCsvButton
-          filename="jemai-newsletter-subscribers.csv"
-          headers={["Email address", "Name", "Source", "Subscribed"]}
-          rows={subscribers.map((subscriber) => [
-            subscriber.email,
-            subscriber.name,
-            subscriber.source,
-            subscriber.subscribedAt,
-          ])}
-        />
+        {/* Built by the action from a fresh query under this search, so the file
+            is every matching subscriber rather than the rows on screen. */}
+        <ExportCsvButton onExport={exportSubscribersAction.bind(null, { search })} />
       </header>
 
-      <NewsletterTable rows={rows} />
+      <NewsletterTable rows={rows} search={search} />
     </div>
   );
 };

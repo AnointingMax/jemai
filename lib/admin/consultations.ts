@@ -1,4 +1,5 @@
 import { formatDateRange, formatDateTimeShort, formatUpdatedAt } from "@/lib/admin/content";
+import { matchesSearch } from "@/lib/admin/table-query";
 
 /**
  * Where a request sits with the studio. A brief is triaged, then a first
@@ -206,8 +207,22 @@ const store: AdminConsultation[] = [
 ];
 
 /** Newest first, the way the index draws them before the reader sorts. */
-export const listConsultations = () =>
-  [...store].sort((a, b) => b.receivedAt.localeCompare(a.receivedAt));
+export type ConsultationQuery = { search?: string; status?: ConsultationStatus; };
+
+/**
+ * Newest first, narrowed by the queue's search box and status filter. This
+ * store is still fixtures rather than rows, so the narrowing is a pass over the
+ * array — but it happens here, on the server, so the page and its export see
+ * the same records the reader does.
+ */
+export const listConsultations = ({ search, status }: ConsultationQuery = {}) =>
+  [...store]
+    .filter(
+      (request) =>
+        (!status || request.status === status) &&
+        matchesSearch([request.name, request.email, request.projectType], search),
+    )
+    .sort((a, b) => b.receivedAt.localeCompare(a.receivedAt));
 
 /** "18 Aug · 08:47" — the index's Received column. */
 export const requestedAt = (request: Pick<AdminConsultation, "receivedAt">) =>

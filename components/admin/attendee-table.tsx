@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
 
 import { SortableHead, nextSort, type SortState } from "@/components/admin/sortable-head";
+import { useTableQuery } from "@/components/admin/use-table-query";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { TablePager } from "@/components/admin/table-pager";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
@@ -50,18 +50,6 @@ const PAGE_SIZE = 10;
 /** The filter's "everything" option — a Select item cannot carry an empty value. */
 export const ALL_PAYMENTS = "All payments";
 
-/** The URL a filter and a search term make together. */
-const hrefFor = (pathname: string, payment: string, search: string) => {
-  const params = new URLSearchParams();
-  if (payment !== ALL_PAYMENTS) params.set("payment", payment);
-  if (search.trim()) params.set("q", search.trim());
-  const query = params.toString();
-  return query ? `${pathname}?${query}` : pathname;
-};
-
-/** How long the reader stops typing before the search becomes a query. */
-const TYPING_PAUSE = 300;
-
 /**
  * Sorting on Status follows the payment's own order — confirmed, still owed,
  * failed — rather than the alphabet, which would put Failed in the middle.
@@ -95,45 +83,21 @@ export const AttendeeTable = ({
   /** The search term the page queried with, likewise. */
   search: string;
 }) => {
-  const router = useRouter();
-  const pathname = usePathname();
-  const [navigating, startNavigating] = useTransition();
-
-  const [term, setTerm] = useState(search);
   const [sort, setSort] = useState<SortState<RowKey>>({
     key: "registeredAt",
     direction: "desc",
   });
   const [page, setPage] = useState(1);
 
-  /**
-   * The typed term becomes a query once the reader pauses. `replace` rather
-   * than `push`, so back does not walk through every prefix of what was typed —
-   * but a filter change below is a `replace` for the same reason and both still
-   * restore on reload, which is the point.
-   */
-  useEffect(() => {
-    if (term.trim() === search) return;
-
-    const timer = setTimeout(
-      () =>
-        startNavigating(() => {
-          setPage(1);
-          router.replace(hrefFor(pathname, payment, term), { scroll: false });
-        }),
-      TYPING_PAUSE,
-    );
-
-    return () => clearTimeout(timer);
-  }, [term, search, payment, pathname, router]);
-
-  /** A filter change is immediate — there is nothing to wait for. */
-  const onFilter = (value: string) => {
-    setPage(1);
-    startNavigating(() => {
-      router.replace(hrefFor(pathname, value, term), { scroll: false });
-    });
-  };
+  // Search and payment narrow the query the page ran; only the ordering is left
+  // to do here, over the rows that came back.
+  const { term, setTerm, onFilter, navigating } = useTableQuery({
+    search,
+    filter: payment,
+    filterKey: "payment",
+    filterAll: ALL_PAYMENTS,
+    onNarrow: () => setPage(1),
+  });
 
   const found = useMemo(() => {
     const sorted = [...rows].sort((a, b) => compare(a, b, sort.key));

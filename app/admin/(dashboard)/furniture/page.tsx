@@ -1,8 +1,13 @@
 import Link from "next/link";
 
-import { FurnitureTable, type FurnitureRow } from "@/components/admin/furniture-table";
+import {
+  ALL_CATEGORIES,
+  FurnitureTable,
+  type FurnitureRow,
+} from "@/components/admin/furniture-table";
 import { Button } from "@/components/ui/button";
 import { formatUpdatedAt } from "@/lib/admin/content";
+import { param, paramOneOf } from "@/lib/admin/table-query";
 import {
   describeVariants,
   furnitureCategories,
@@ -14,8 +19,15 @@ import {
  * Furniture — the catalogue index. The store is read here and flattened to the
  * columns the table draws, so the media and long copy never cross to the client.
  */
-const AdminFurniturePage = async () => {
-  const furniture = await listFurniture();
+const AdminFurniturePage = async ({ searchParams }: PageProps<"/admin/furniture">) => {
+  // The search box and the category filter live in the URL, so the view
+  // survives a reload and can be sent as a link; the narrowing runs in the
+  // query below rather than over rows already sent.
+  const query = await searchParams;
+  const search = param(query, "q") ?? "";
+  const category = paramOneOf(query, "category", furnitureCategories);
+
+  const furniture = await listFurniture({ search, category });
   const rows: FurnitureRow[] = furniture.map((item) => ({
     slug: item.slug,
     name: item.name,
@@ -43,7 +55,12 @@ const AdminFurniturePage = async () => {
         </Button>
       </header>
 
-      <FurnitureTable rows={rows} categories={furnitureCategories} />
+      <FurnitureTable
+        rows={rows}
+        categories={furnitureCategories}
+        search={search}
+        category={category ?? ALL_CATEGORIES}
+      />
     </div>
   );
 };

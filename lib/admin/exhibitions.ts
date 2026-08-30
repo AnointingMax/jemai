@@ -5,6 +5,7 @@ import {
   slugify,
   uniqueSlug,
 } from "@/lib/admin/content";
+import { searchAcross } from "@/lib/admin/table-query";
 import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@/lib/generated/prisma/client";
 
@@ -128,9 +129,10 @@ const toExhibition = (record: ExhibitionRecord): Exhibition => ({
   updatedAt: record.updatedAt.toISOString(),
 });
 
-/** Newest first — the order the index draws. */
-export const listExhibitions = async () => {
+/** Newest first — the order the index draws — narrowed by the index's search. */
+export const listExhibitions = async (search?: string) => {
   const records = await prisma.exhibition.findMany({
+    where: searchAcross(["name", "artist", "venue"], search),
     orderBy: { updatedAt: "desc" },
     include: withFeatured,
   });

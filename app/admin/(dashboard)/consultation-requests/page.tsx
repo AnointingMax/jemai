@@ -1,18 +1,28 @@
-import { ConsultationTable } from "@/components/admin/consultation-table";
-import { ExportCsvButton } from "@/components/admin/export-csv-button";
+import { exportConsultationsAction } from "@/app/admin/(dashboard)/consultation-requests/actions";
 import {
-  consultationWindow,
-  listConsultations,
-  requestedOn,
-} from "@/lib/admin/consultations";
+  ALL_CONSULTATION_STATUSES,
+  ConsultationTable,
+} from "@/components/admin/consultation-table";
+import { ExportCsvButton } from "@/components/admin/export-csv-button";
+import { consultationStatuses, listConsultations } from "@/lib/admin/consultations";
+import { param, paramOneOf } from "@/lib/admin/table-query";
 
 /**
  * Consultation requests — the studio's brief queue. Every request is read here
  * and handed to the table whole, because the side sheet draws the same record
  * and a second fetch per row would buy nothing at this size.
  */
-const AdminConsultationRequestsPage = () => {
-  const requests = listConsultations();
+const AdminConsultationRequestsPage = async ({
+  searchParams,
+}: PageProps<"/admin/consultation-requests">) => {
+  // The search box and the status filter live in the URL, so the view survives
+  // a reload and can be sent as a link; the narrowing runs on the server rather
+  // than over records already sent — which is also what the export carries.
+  const query = await searchParams;
+  const search = param(query, "q") ?? "";
+  const status = paramOneOf(query, "status", consultationStatuses);
+
+  const requests = listConsultations({ search, status });
 
   return (
     <div className="flex flex-col gap-6">
@@ -24,38 +34,18 @@ const AdminConsultationRequestsPage = () => {
             it through triage.
           </p>
         </div>
-        {/* The export is the whole queue, not the current search — briefs are
-            taken away to be read and costed, so it wants every one of them. */}
+        {/* Built by the action from a fresh read under these filters, so the
+            file is every matching brief rather than the rows on screen. */}
         <ExportCsvButton
-          filename="jemai-consultation-requests.csv"
-          headers={[
-            "Request",
-            "Name",
-            "Email",
-            "Phone",
-            "Project type",
-            "Timeline",
-            "Budget",
-            "Received",
-            "Status",
-            "Summary",
-          ]}
-          rows={requests.map((request) => [
-            request.id,
-            request.name,
-            request.email,
-            request.phone,
-            request.projectType,
-            consultationWindow(request),
-            request.budget,
-            requestedOn(request),
-            request.status,
-            request.summary,
-          ])}
+          onExport={exportConsultationsAction.bind(null, { search, status: status ?? "" })}
         />
       </header>
 
-      <ConsultationTable requests={requests} />
+      <ConsultationTable
+        requests={requests}
+        search={search}
+        status={status ?? ALL_CONSULTATION_STATUSES}
+      />
     </div>
   );
 };

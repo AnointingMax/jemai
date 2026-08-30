@@ -1,5 +1,6 @@
 import { Prisma } from "@/lib/generated/prisma/client";
 import { naira, slugify, uniqueSlug } from "@/lib/admin/content";
+import { searchAcross } from "@/lib/admin/table-query";
 import { prisma } from "@/lib/prisma";
 
 // Prices are formatted the same way in every catalogue, so `naira` lives in the
@@ -93,8 +94,18 @@ const toFurniture = (record: FurnitureRecord): Furniture => ({
 });
 
 /** Newest first — the order the index draws. */
-export const listFurniture = async () => {
+export type FurnitureQuery = { search?: string; category?: string; };
+
+/**
+ * Newest first — the order the index draws — narrowed by the index's search box
+ * and category filter, in the query rather than over rows already sent.
+ */
+export const listFurniture = async ({ search, category }: FurnitureQuery = {}) => {
   const records = await prisma.furniture.findMany({
+    where: {
+      ...(category ? { category } : {}),
+      ...searchAcross(["name"], search),
+    },
     include: withRelations,
     orderBy: { updatedAt: "desc" },
   });

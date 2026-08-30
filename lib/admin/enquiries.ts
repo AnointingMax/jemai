@@ -1,4 +1,5 @@
 import { isEnquiryStatus, type AdminEnquiry, type EnquiryStatus } from "@/lib/admin/enquiry-record";
+import { searchAcross } from "@/lib/admin/table-query";
 import { prisma } from "@/lib/prisma";
 import type { Enquiry as EnquiryRecord } from "@/lib/generated/prisma/client";
 
@@ -31,8 +32,19 @@ const toEnquiry = (record: EnquiryRow): AdminEnquiry => ({
 });
 
 /** Newest first, the way the index draws them before the reader sorts. */
-export const listEnquiries = async () => {
+export type EnquiryQuery = { search?: string; status?: EnquiryStatus; };
+
+/**
+ * Newest first, narrowed by the queue's search box and status filter. The
+ * artwork title is searched on the enquiry's own copy of it, which is the one
+ * that survives the piece being deleted.
+ */
+export const listEnquiries = async ({ search, status }: EnquiryQuery = {}) => {
   const records = await prisma.enquiry.findMany({
+    where: {
+      ...(status ? { status } : {}),
+      ...searchAcross(["name", "email", "artworkTitle"], search),
+    },
     orderBy: { receivedAt: "desc" },
     include: withArtwork,
   });

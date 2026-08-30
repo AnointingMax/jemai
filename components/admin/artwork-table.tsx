@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
 
 import { SortableHead, nextSort, type SortState } from "@/components/admin/sortable-head";
+import { useTableQuery } from "@/components/admin/use-table-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
@@ -48,6 +49,9 @@ export type ArtworkRow = {
 
 type RowKey = "title" | "artist" | "medium" | "updatedAt";
 
+/** The medium filter's "everything" value — a Select item cannot carry "". */
+export const ALL_MEDIUMS = "all";
+
 const PAGE_SIZE = 8;
 
 const compare = (a: ArtworkRow, b: ArtworkRow, key: RowKey) =>
@@ -67,36 +71,41 @@ const pageWindow = (total: number, current: number): (number | "ellipsis")[] => 
 };
 
 /**
- * The artwork index. Same shape as the furniture one — search, filter, sortable
- * columns, eight rows a page, all client-side over the full list — but the
- * columns are the gallery's: artist and medium in place of price and stock, and
- * no money anywhere on the screen.
+ * The artwork index. Same shape as the furniture one — a URL-held search and
+ * medium filter narrowing the query, sortable columns, eight rows a page — but
+ * the columns are the gallery's: artist and medium in place of price and stock,
+ * and no money anywhere on the screen.
  */
 export const ArtworkTable = ({
   rows,
   mediums,
+  search,
+  medium,
 }: {
   rows: ArtworkRow[];
   mediums: string[];
+  /** The search the page queried with, as it stands in the URL. */
+  search: string;
+  /** Likewise the medium filter, or "all". */
+  medium: string;
 }) => {
-  const [query, setQuery] = useState("");
-  const [medium, setMedium] = useState("all");
   const [sort, setSort] = useState<SortState<RowKey>>({ key: "updatedAt", direction: "desc" });
   const [page, setPage] = useState(1);
 
+  // Search and medium narrow the query the page ran; only the ordering is left
+  // to do here, over the rows that came back.
+  const { term, setTerm, onFilter, navigating } = useTableQuery({
+    search,
+    filter: medium,
+    filterKey: "medium",
+    filterAll: ALL_MEDIUMS,
+    onNarrow: () => setPage(1),
+  });
+
   const filtered = useMemo(() => {
-    const needle = query.trim().toLowerCase();
-    const matches = rows.filter(
-      (row) =>
-        (medium === "all" || row.medium === medium) &&
-        // The frame's placeholder says "Search by title or artist", so it does.
-        (!needle ||
-          row.title.toLowerCase().includes(needle) ||
-          row.artist.toLowerCase().includes(needle))
-    );
-    const sorted = matches.sort((a, b) => compare(a, b, sort.key));
+    const sorted = [...rows].sort((a, b) => compare(a, b, sort.key));
     return sort.direction === "asc" ? sorted : sorted.reverse();
-  }, [rows, query, medium, sort]);
+  }, [rows, sort]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   // A filter change can strand the reader past the last page; clamp on render
@@ -112,7 +121,11 @@ export const ArtworkTable = ({
   };
 
   return (
-    <div className="border-border-default overflow-hidden rounded-xl border">
+    <div
+      className={`border-border-default overflow-hidden rounded-xl border transition-opacity ${
+        navigating ? "opacity-60" : ""
+      }`}
+    >
       <div className="border-border-default bg-admin-muted flex flex-col gap-3 border-b p-4 sm:flex-row sm:items-center">
         <div className="relative w-full sm:max-w-[680px]">
           <Search
@@ -120,31 +133,23 @@ export const ArtworkTable = ({
             className="text-text-secondary pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2"
           />
           <Input
-            value={query}
-            onChange={(event) => {
-              setQuery(event.target.value);
-              setPage(1);
-            }}
+            value={term}
+            onChange={(event) => setTerm(event.target.value)}
             placeholder="Search by title or artist"
             aria-label="Search by title or artist"
             className="border-border-default bg-background h-10 pl-9 text-sm md:text-sm"
           />
         </div>
-        <Select
-          value={medium}
-          onValueChange={(value) => {
-            setMedium(value);
-            setPage(1);
-          }}
-        >
+        <Select value={medium} onValueChange={onFilter}>
           <SelectTrigger
             aria-label="Filter by medium"
+            disabled={navigating}
             className="border-border-default bg-background h-10 w-full text-sm sm:w-24"
           >
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All</SelectItem>
+            <SelectItem value={ALL_MEDIUMS}>All</SelectItem>
             {mediums.map((value) => (
               <SelectItem key={value} value={value}>
                 {value}
