@@ -1,0 +1,24 @@
+model Consultation {
+  id        String @id @default(uuid(7))
+  reference Int    @unique @default(autoincrement())
+
+  name  String
+  email String
+  phone String
+
+  projectType String
+
+  startDate DateTime? @db.Date
+  endDate   DateTime? @db.Date
+
+  budget  String @default("")
+  summary String @db.Text
+
+  status String @default("New")
+
+  receivedAt DateTime @default(now())
+
+  @@index([status])
+  @@index([receivedAt])
+  @@map("consultation_requests")
+}

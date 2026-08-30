@@ -1,7 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useOptimistic, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
+import { toast } from "sonner";
+
+import { updateConsultationStatusAction } from "@/app/admin/(dashboard)/consultation-requests/actions";
 
 import { ConsultationSheet } from "@/components/admin/consultation-sheet";
 import { SortableHead, nextSort, type SortState } from "@/components/admin/sortable-head";
@@ -24,9 +28,9 @@ import {
   requestedAt,
   type AdminConsultation,
   type ConsultationStatus,
-} from "@/lib/admin/consultations";
+} from "@/lib/admin/consultation-record";
 
-type RowKey = "id" | "name" | "projectType" | "startDate" | "receivedAt" | "status";
+type RowKey = "reference" | "name" | "projectType" | "startDate" | "receivedAt" | "status";
 
 const PAGE_SIZE = 10;
 
@@ -65,17 +69,32 @@ export const ConsultationTable = ({
   const [sort, setSort] = useState<SortState<RowKey>>({ key: "receivedAt", direction: "desc" });
   const [page, setPage] = useState(1);
   const [openId, setOpenId] = useState<string | null>(null);
-  // Status edits live here until the consultation endpoint exists, so the
-  // sheet's select and the table's pill stay in agreement for the session.
-  const [overrides, setOverrides] = useState<Record<string, ConsultationStatus>>({});
-
-  const rows = useMemo(
-    () =>
-      requests.map((request) =>
-        overrides[request.id] ? { ...request, status: overrides[request.id] } : request
-      ),
-    [requests, overrides]
+  const router = useRouter();
+  const [, startTransition] = useTransition();
+  // The pill and the sheet's select move the moment the reader commits, then
+  // the refreshed server data replaces the guess. A failed write leaves the
+  // optimistic value behind with it, so the row snaps back to the truth.
+  const [rows, applyStatus] = useOptimistic(
+    requests,
+    (current, edit: { id: string; status: ConsultationStatus }) =>
+      current.map((request) =>
+        request.id === edit.id ? { ...request, status: edit.status } : request
+      )
   );
+
+  const onStatusChange = (id: string, status: ConsultationStatus) =>
+    startTransition(async () => {
+      applyStatus({ id, status });
+      const result = await updateConsultationStatusAction({ id, status });
+
+      if (result.error) {
+        toast.error(result.message);
+        return;
+      }
+
+      toast.success(result.data);
+      router.refresh();
+    });
 
   // Search and status narrow the list the page read; only the ordering is left
   // to do here, over the records that came back.
@@ -156,7 +175,7 @@ export const ConsultationTable = ({
             <Table className="min-w-[940px]">
               <TableHeader className="bg-admin-muted">
                 <TableRow className="border-border-default hover:bg-transparent">
-                  <SortableHead sortKey="id" sort={sort} onSort={onSort} className="h-11 px-6">
+                  <SortableHead sortKey="reference" sort={sort} onSort={onSort} className="h-11 px-6">
                     Request
                   </SortableHead>
                   <SortableHead sortKey="name" sort={sort} onSort={onSort} className="h-11">
@@ -192,7 +211,7 @@ export const ConsultationTable = ({
                         }}
                         className="text-text-primary focus-visible:ring-ring/50 cursor-pointer rounded-sm text-sm outline-none focus-visible:ring-3"
                       >
-                        {request.id}
+                        {request.reference}
                       </button>
                     </TableCell>
                     <TableCell className="py-5 pr-6 pl-0">
@@ -230,9 +249,7 @@ export const ConsultationTable = ({
       <ConsultationSheet
         request={open}
         onOpenChange={(next) => !next && setOpenId(null)}
-        onStatusChange={(status) =>
-          open && setOverrides((value) => ({ ...value, [open.id]: status }))
-        }
+        onStatusChange={(status) => open && onStatusChange(open.id, status)}
       />
     </div>
   );

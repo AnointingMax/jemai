@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ComponentProps } from "react";
+import { useState, useTransition, type ComponentProps } from "react";
 import {
   Controller,
   useForm,
@@ -9,6 +9,9 @@ import {
   type UseFormRegister,
 } from "react-hook-form";
 import { Calendar, Mail } from "lucide-react";
+import { toast } from "sonner";
+
+import { requestConsultationAction } from "@/app/(customer)/(site)/consultation/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -19,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { budgets, projectTypes } from "@/lib/admin/consultation-record";
 import { cn } from "@/lib/utils";
 
 type InquiryValues = {
@@ -31,25 +35,6 @@ type InquiryValues = {
   budget: string;
   summary: string;
 };
-
-/** The frame draws "Interior Decor" selected; the rest of the list is written. */
-const projectTypes = [
-  "Interior Decor",
-  "Architecture",
-  "Full Renovation",
-  "Furniture Selection",
-  "Art Curation",
-  "Other",
-];
-
-/** The frame draws only the "Select range" placeholder — all ranges written. */
-const budgets = [
-  "Under ₦5,000,000",
-  "₦5,000,000 – ₦15,000,000",
-  "₦15,000,000 – ₦50,000,000",
-  "₦50,000,000 – ₦150,000,000",
-  "Above ₦150,000,000",
-];
 
 /**
  * Same field recipe as the Contact form on a tighter lead: 26px, a 14px eyebrow
@@ -147,7 +132,7 @@ const Picker = ({
   label: string;
   name: Path<InquiryValues>;
   control: Control<InquiryValues>;
-  options: string[];
+  options: readonly string[];
   placeholder?: string;
 }) => (
   <div className={fieldClass}>
@@ -192,7 +177,7 @@ export const InquiryForm = ({
   copy,
   email,
 }: InquiryFormProps) => {
-  const { register, control, handleSubmit } = useForm<InquiryValues>({
+  const { register, control, handleSubmit, reset } = useForm<InquiryValues>({
     defaultValues: {
       name: "",
       email: "",
@@ -205,9 +190,24 @@ export const InquiryForm = ({
     },
   });
   const [sent, setSent] = useState(false);
+  const [pending, startTransition] = useTransition();
 
-  /** No endpoint yet and no frame draws a sent state — acknowledges in place. */
-  const onSubmit = () => setSent(true);
+  /* The brief is filed by the action; the form clears and acknowledges in place
+     — no frame draws a sent state, so the line below the button is it. */
+  const onSubmit = handleSubmit((values) =>
+    startTransition(async () => {
+      const result = await requestConsultationAction(values);
+
+      if (result.error) {
+        toast.error(result.message);
+        return;
+      }
+
+      toast.success(result.data);
+      reset();
+      setSent(true);
+    }),
+  );
 
   return (
     <section className="bg-surface-subtle w-full px-4 pt-20.75 pb-21.25 sm:px-6">
@@ -223,7 +223,7 @@ export const InquiryForm = ({
         </div>
 
         <form
-          onSubmit={handleSubmit(onSubmit)}
+          onSubmit={onSubmit}
           noValidate
           className="mt-5.25"
         >
@@ -289,9 +289,10 @@ export const InquiryForm = ({
           <Button
             type="submit"
             variant="jemai"
+            disabled={pending}
             className="text-label mt-10.5 h-12 w-full border-0"
           >
-            Request a consultation
+            {pending ? "Sending…" : "Request a consultation"}
           </Button>
 
           {sent && (

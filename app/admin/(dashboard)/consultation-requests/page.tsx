@@ -4,7 +4,8 @@ import {
   ConsultationTable,
 } from "@/components/admin/consultation-table";
 import { ExportCsvButton } from "@/components/admin/export-csv-button";
-import { consultationStatuses, listConsultations } from "@/lib/admin/consultations";
+import { consultationStatuses } from "@/lib/admin/consultation-record";
+import { listConsultations } from "@/lib/admin/consultations";
 import { param, paramOneOf } from "@/lib/admin/table-query";
 
 /**
@@ -22,7 +23,7 @@ const AdminConsultationRequestsPage = async ({
   const search = param(query, "q") ?? "";
   const status = paramOneOf(query, "status", consultationStatuses);
 
-  const requests = listConsultations({ search, status });
+  const requests = await listConsultations({ search, status });
 
   return (
     <div className="flex flex-col gap-6">

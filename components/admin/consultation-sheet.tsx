@@ -28,7 +28,7 @@ import {
   requestedOn,
   type AdminConsultation,
   type ConsultationStatus,
-} from "@/lib/admin/consultations";
+} from "@/lib/admin/consultation-record";
 
 type ConsultationSheetProps = {
   /** Null keeps the sheet closed; setting a request opens it on that record. */
@@ -91,7 +91,7 @@ const ConsultationSheetBody = ({
             {/* Same accent the order and enquiry sheets use for a record number;
                 the style guide publishes no accent orange, so it stays hex. */}
             <span className="text-eyebrow-lg text-[#c2410c] whitespace-nowrap uppercase">
-              Request {request.id}
+              Request {request.reference}
             </span>
             <StatusBadge status={request.status} />
             <SheetClose asChild>

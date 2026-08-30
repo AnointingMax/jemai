@@ -1,4 +1,5 @@
 import { countArtworks } from "@/lib/admin/artworks";
+import { countNewConsultations } from "@/lib/admin/consultations";
 import { countNewEnquiries } from "@/lib/admin/enquiries";
 import { countUpcomingExhibitions } from "@/lib/admin/exhibitions";
 import { countFurniture } from "@/lib/admin/furniture";
@@ -14,25 +15,14 @@ export type AttentionItem = {
   href: string;
 };
 
-/**
- * The right-hand rail: queues with something waiting in them. Enquiries and
- * exhibitions count their own tables, so an enquiry sent on the storefront or a
- * run that has ended moves the number; the rest are fixtures until
- * their own stores land.
- */
 export const needsAttention = async (): Promise<AttentionItem[]> => [
   { count: await countNewEnquiries(), title: "Artwork enquiries", detail: "Awaiting follow-up", href: "/admin/artwork-enquiries" },
-  { count: 3, title: "Consultation requests", detail: "Review project briefs", href: "/admin/consultation-requests" },
+  { count: await countNewConsultations(), title: "Consultation requests", detail: "Review project briefs", href: "/admin/consultation-requests" },
   { count: await countUpcomingExhibitions(), title: "Upcoming exhibitions", detail: "Registration open", href: "/admin/exhibitions" },
 ];
 
-export type OverviewStat = { label: string; value: number; href: string };
+export type OverviewStat = { label: string; value: number; href: string; };
 
-/**
- * The four counters across the top. Furniture, artworks and exhibitions count
- * their own tables, so a record created in the console moves the number; the
- * rest are fixtures until their own stores land.
- */
 export const overviewStats = async (): Promise<OverviewStat[]> => [
   { label: "Furniture products", value: await countFurniture(), href: "/admin/furniture" },
   { label: "Artworks", value: await countArtworks(), href: "/admin/artworks" },

@@ -1,4 +1,4 @@
-import type { ConsultationStatus } from "@/lib/admin/consultations";
+import type { ConsultationStatus } from "@/lib/admin/consultation-record";
 import type { EnquiryStatus } from "@/lib/admin/enquiry-record";
 import type { ExhibitionStatus } from "@/lib/admin/exhibitions";
 import type { FulfillmentStatus } from "@/lib/admin/orders";
