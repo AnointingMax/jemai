@@ -10,11 +10,13 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
+import { hasPermission, type AdminPermission } from "@/lib/admin/auth/permissions";
+
 export type AdminNavItem = {
   title: string;
   url: string;
-  /** Shown on its own when the rail is collapsed, so every row needs one. */
   icon: LucideIcon;
+  permission?: AdminPermission;
 };
 
 export type AdminNavGroup = {
@@ -22,39 +24,39 @@ export type AdminNavGroup = {
   items: AdminNavItem[];
 };
 
-/**
- * The console's navigation, in frame order. The breadcrumb and the collapsed
- * icon rail both read this list, so a route is only named once.
- */
 export const adminNav: AdminNavGroup[] = [
   {
     title: "Content",
     items: [
       { title: "Overview", url: "/admin", icon: LayoutDashboard },
-      { title: "Furniture", url: "/admin/furniture", icon: Armchair },
-      { title: "Artworks", url: "/admin/artworks", icon: Frame },
-      { title: "Exhibitions", url: "/admin/exhibitions", icon: CalendarDays },
+      { title: "Furniture", url: "/admin/furniture", icon: Armchair, permission: "furniture" },
+      { title: "Artworks", url: "/admin/artworks", icon: Frame, permission: "artworks" },
+      { title: "Exhibitions", url: "/admin/exhibitions", icon: CalendarDays, permission: "exhibitions" },
     ],
   },
   {
     title: "Operations",
     items: [
-      { title: "Furniture orders", url: "/admin/orders", icon: ShoppingBag },
+      { title: "Furniture orders", url: "/admin/orders", icon: ShoppingBag, permission: "orders" },
       {
         title: "Artwork enquiries",
         url: "/admin/artwork-enquiries",
         icon: MessageSquare,
+        permission: "artwork-enquiries",
       },
       {
         title: "Consultation requests",
         url: "/admin/consultation-requests",
         icon: ClipboardList,
+        permission: "consultation-requests",
       },
     ],
   },
   {
     title: "Audience",
-    items: [{ title: "Newsletter", url: "/admin/newsletter", icon: Mail }],
+    items: [
+      { title: "Newsletter", url: "/admin/newsletter", icon: Mail, permission: "newsletter" },
+    ],
   },
 ];
 
@@ -67,3 +69,13 @@ export const findAdminNavItem = (pathname: string) => {
     .filter((item) => item.url !== "/admin" && pathname.startsWith(`${item.url}/`))
     .sort((a, b) => b.url.length - a.url.length)[0];
 };
+
+export const visibleAdminNav = (permissions: readonly string[]): AdminNavGroup[] =>
+  adminNav
+    .map((group) => ({
+      ...group,
+      items: group.items.filter(
+        (item) => !item.permission || hasPermission(permissions, item.permission),
+      ),
+    }))
+    .filter((group) => group.items.length);

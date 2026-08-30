@@ -12,7 +12,7 @@ import {
   UserRoundCog,
 } from "lucide-react";
 
-import { adminNav } from "@/components/admin/nav";
+import { visibleAdminNav } from "@/components/admin/nav";
 import { SignOutItem } from "@/components/admin/sign-out-item";
 import {
   Collapsible,
@@ -43,23 +43,14 @@ import {
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
 
-/**
- * The console rail: wordmark, three collapsible sections and the account card.
- * The frame draws each section's rows as a sub-menu — hairline rail, 28px pills
- * — so the groups use `SidebarMenuSub` rather than a top-level menu.
- *
- * Collapsing keeps the rail on screen as a 48px icon strip. The sub-menu and the
- * group labels are both hidden in that state by the primitive, so the sections
- * render twice: the frame's grouped list at full width, and a flat icon list
- * with tooltips once collapsed. Both read the same `adminNav`.
- */
 type AdminSidebarProps = React.ComponentProps<typeof Sidebar> & {
-  /** The signed-in admin, read from the session by the layout above. */
-  account: { name: string; email: string };
+  account: { name: string; email: string; };
+  permissions: string[];
 };
 
-export const AdminSidebar = ({ account, ...props }: AdminSidebarProps) => {
+export const AdminSidebar = ({ account, permissions, ...props }: AdminSidebarProps) => {
   const pathname = usePathname();
+  const nav = visibleAdminNav(permissions);
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -78,9 +69,6 @@ export const AdminSidebar = ({ account, ...props }: AdminSidebarProps) => {
             unoptimized
             className="max-w-none group-data-[collapsible=icon]:hidden"
           />
-          {/* Collapsed, only the wordmark's leading mark fits. The badge logo
-              is a ring of fine lettering that turns to mush under 40px, so the
-              mark is clipped out of the wordmark itself — 17px of its 96. */}
           <span className="hidden w-4.25 overflow-hidden group-data-[collapsible=icon]:block">
             <Image
               src="/figma/brand/wordmark.svg"
@@ -95,7 +83,7 @@ export const AdminSidebar = ({ account, ...props }: AdminSidebarProps) => {
       </SidebarHeader>
 
       <SidebarContent>
-        {adminNav.map((group) => (
+        {nav.map((group) => (
           <Collapsible key={group.title} defaultOpen className="group/section">
             <SidebarGroup className="px-2 py-0 pb-3 group-data-[collapsible=icon]:hidden">
               <CollapsibleTrigger asChild>
@@ -127,12 +115,10 @@ export const AdminSidebar = ({ account, ...props }: AdminSidebarProps) => {
           </Collapsible>
         ))}
 
-        {/* The collapsed rail. Groups are flattened — there is no room for a
-            label at 48px — but the order still tracks the frame's sections. */}
         <SidebarGroup className="hidden px-2 py-0 group-data-[collapsible=icon]:block">
           <SidebarGroupContent>
             <SidebarMenu className="gap-2">
-              {adminNav.flatMap((group) =>
+              {nav.flatMap((group) =>
                 group.items.map((item) => (
                   <SidebarMenuItem key={item.url}>
                     <SidebarMenuButton

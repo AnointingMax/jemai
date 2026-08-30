@@ -27,7 +27,11 @@ One page per session. Work top-down unless told otherwise.
       **Not complete: roughly 1087px of the frame is missing.** The five exported
       nodes plus five 64px gaps total 5609 against the frame's 6696, so at least
       one block was never exported — see the notes. Do not check this off until
-      that block lands.
+      that block lands. **Blocked, not forgotten:** the Figma MCP quota is spent
+      and the page's own exports are gone from `design-reference/` (which is
+      gitignored, so they are not recoverable from history). One
+      `get_metadata` call on `166:10393`, or a fresh export of the frame,
+      answers it.
 - [x] Artwork Details — `164:8295`, variant `278:28837` (1440 × 3512) —
       `/artworks/[slug]`, plus the Enquire modal (`modal wrapper.png`). Built
       from two exports. **The content block renders at exactly its export's
@@ -114,9 +118,34 @@ Notes on the admin drops:
   recovery copy reads 18.4px against Assistant — 18px is the nearest token and
   lands every line within 3%, so the remaining ~2% width gap on those runs is
   expected, not drift. Worth a designer check.
-- **Section screens are placeholders.** Every route under the console renders a
-  title and a one-line blurb. The nav and the breadcrumb both read
-  `components/admin/nav.ts`, so a section is named once.
+- **The nav and the breadcrumb both read `components/admin/nav.ts`**, so a
+  section is named once — and since the permission a section sits behind is a
+  field on that same row, the rail and the gate can never disagree about which
+  screens an admin may reach.
+
+- **Permissions gate reads, not just writes.** Every write action already
+  checked `hasPermission` for itself; the screens did not, so an admin without
+  the `orders` permission could still open `/admin/orders` and read the whole
+  order book. Each section now carries a `layout.tsx` that runs
+  `requireAdminPermission`, which sits on the folder rather than the page so a
+  record sheet or an edit form added under it inherits the check. Missing it
+  raises `forbidden()` — a real 403, rendered by
+  `app/admin/(dashboard)/forbidden.tsx` inside the console shell — rather than a
+  redirect, since the rail never drew the row and bouncing to the overview would
+  read as a lost click. `forbidden()` is still behind
+  `experimental.authInterrupts`.
+  - **The rail filters itself.** `visibleAdminNav` runs in the client component,
+    not the layout: a nav row carries its Lucide icon and a component cannot
+    cross the server boundary as a prop, so the layout hands over the session's
+    permission *strings* and the rail reads `adminNav` on its own side. Passing
+    the filtered groups down typechecks and lints clean and fails only at
+    runtime — it was the dev server that caught it.
+  - **The overview is the one screen no permission gates**, so every card on it
+    is filtered instead and the query behind a dropped card never runs. "Open
+    requests" sums only the queues its reader may open — a total they cannot
+    break down would report work they are not allowed to see. An admin who holds
+    nothing but the newsletter gets their name, an empty deck and a line
+    pointing at the rail.
 - **`admin-surface` scopes the console's ground.** The storefront squares every
   corner (`--radius: 0px`) on the page ground; the console is white with an 8px
   radius. The class sits on the two admin layouts, so the shadcn primitives
@@ -740,6 +769,14 @@ Shared reference frames (not pages): `246:18783` intro, `247:18801` semantic col
   catalogue that was not exported at all. The build holds the carousel at the
   1440 × 500 the export does show. Re-export the hero node unclipped and check
   whether a block is missing between it and the catalogue.
+  - **Still blocked as of the permissions pass.** `get_metadata` on `166:10393`
+    would settle it in one call — the children come back with y and height, so
+    the gap either lands inside the hero or shows up as a node between it and
+    the catalogue — but the Starter tier's 20 calls a month are spent, and the
+    three exports this page was built from are no longer on disk
+    (`design-reference/` is gitignored, so they are not in history either).
+    Either a quota that has rolled over or a fresh PNG of the frame unblocks it;
+    nothing else on disk can.
 
 - **The photographs are recovered, not stood in.** All fifteen catalogue works
   sit unobstructed in the export at 383 × 339, and the curator's pick at

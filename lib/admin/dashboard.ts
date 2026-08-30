@@ -1,4 +1,5 @@
 import { countArtworks } from "@/lib/admin/artworks";
+import { hasPermission, type AdminPermission } from "@/lib/admin/auth/permissions";
 import { countNewConsultations } from "@/lib/admin/consultations";
 import { countNewEnquiries } from "@/lib/admin/enquiries";
 import { countUpcomingExhibitions } from "@/lib/admin/exhibitions";
@@ -15,11 +16,30 @@ export type AttentionItem = {
   href: string;
 };
 
+type Gated<T> = { permission: AdminPermission; load: () => Promise<T>; };
+
+const resolve = async <T,>(
+  gated: Gated<T>[],
+  permissions: readonly string[],
+): Promise<T[]> =>
+  Promise.all(
+    gated.filter((card) => hasPermission(permissions, card.permission)).map((card) => card.load()),
+  );
+
 /** The three queues somebody has to answer, and the counter that sums them. */
-const openRequests = async (): Promise<AttentionItem[]> => [
-  { count: await countNewEnquiries(), title: "Artwork enquiries", detail: "Awaiting follow-up", href: "/admin/artwork-enquiries" },
-  { count: await countNewConsultations(), title: "Consultation requests", detail: "Review project briefs", href: "/admin/consultation-requests" },
-  { count: await countUpcomingExhibitions(), title: "Upcoming exhibitions", detail: "Registration open", href: "/admin/exhibitions" },
+const openRequests = (): Gated<AttentionItem>[] => [
+  {
+    permission: "artwork-enquiries",
+    load: async () => ({ count: await countNewEnquiries(), title: "Artwork enquiries", detail: "Awaiting follow-up", href: "/admin/artwork-enquiries" }),
+  },
+  {
+    permission: "consultation-requests",
+    load: async () => ({ count: await countNewConsultations(), title: "Consultation requests", detail: "Review project briefs", href: "/admin/consultation-requests" }),
+  },
+  {
+    permission: "exhibitions",
+    load: async () => ({ count: await countUpcomingExhibitions(), title: "Upcoming exhibitions", detail: "Registration open", href: "/admin/exhibitions" }),
+  },
 ];
 
 /**
@@ -28,16 +48,40 @@ const openRequests = async (): Promise<AttentionItem[]> => [
  * already owed — but they stay out of the "Open requests" counter, which is
  * about correspondence rather than fulfillment.
  */
-export const needsAttention = async (): Promise<AttentionItem[]> => [
-  ...(await openRequests()),
-  { count: await countNewOrders(), title: "Furniture orders", detail: "Paid and awaiting fulfillment", href: "/admin/orders" },
-];
+export const needsAttention = async (permissions: readonly string[]): Promise<AttentionItem[]> =>
+  resolve(
+    [
+      ...openRequests(),
+      {
+        permission: "orders",
+        load: async () => ({ count: await countNewOrders(), title: "Furniture orders", detail: "Paid and awaiting fulfillment", href: "/admin/orders" }),
+      },
+    ],
+    permissions,
+  );
 
 export type OverviewStat = { label: string; value: number; href: string; };
 
-export const overviewStats = async (): Promise<OverviewStat[]> => [
-  { label: "Furniture products", value: await countFurniture(), href: "/admin/furniture" },
-  { label: "Artworks", value: await countArtworks(), href: "/admin/artworks" },
-  { label: "Upcoming exhibitions", value: await countUpcomingExhibitions(), href: "/admin/exhibitions" },
-  { label: "Open requests", value: (await openRequests()).reduce((sum, item) => sum + item.count, 0), href: "/admin/consultation-requests" },
-];
+/** The deck, filtered. "Open requests" sums only the queues this admin may open. */
+export const overviewStats = async (permissions: readonly string[]): Promise<OverviewStat[]> => {
+  const stats = await resolve<OverviewStat>(
+    [
+      { permission: "furniture", load: async () => ({ label: "Furniture products", value: await countFurniture(), href: "/admin/furniture" }) },
+      { permission: "artworks", load: async () => ({ label: "Artworks", value: await countArtworks(), href: "/admin/artworks" }) },
+      { permission: "exhibitions", load: async () => ({ label: "Upcoming exhibitions", value: await countUpcomingExhibitions(), href: "/admin/exhibitions" }) },
+    ],
+    permissions,
+  );
+
+  const requests = await resolve(openRequests(), permissions);
+  if (!requests.length) return stats;
+
+  return [
+    ...stats,
+    {
+      label: "Open requests",
+      value: requests.reduce((sum, item) => sum + item.count, 0),
+      href: requests[0].href,
+    },
+  ];
+};

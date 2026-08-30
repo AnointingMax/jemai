@@ -1,7 +1,8 @@
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+import { forbidden, redirect } from "next/navigation";
 
+import { hasPermission, type AdminPermission } from "@/lib/admin/auth/permissions";
 import env from "@/lib/env";
 
 export const ADMIN_SESSION_COOKIE = "jemai_admin_session";
@@ -53,12 +54,14 @@ export const destroyAdminSession = async () => {
   (await cookies()).delete(ADMIN_SESSION_COOKIE);
 };
 
-/**
- * The guard every screen under `(dashboard)` runs. A missing or expired cookie
- * lands the visitor on the sign-in frame instead of a half-rendered console.
- */
 export const requireAdminSession = async () => {
   const session = await readAdminSession();
   if (!session) redirect("/admin/login");
+  return session;
+};
+
+export const requireAdminPermission = async (permission: AdminPermission) => {
+  const session = await requireAdminSession();
+  if (!hasPermission(session.permissions, permission)) forbidden();
   return session;
 };

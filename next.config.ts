@@ -10,6 +10,9 @@ const nextConfig: NextConfig = {
   // in every screenshot taken while measuring a frame.
   devIndicators: false,
   experimental: {
+    // `forbidden()` is how a section layout turns a missing permission into a
+    // 403 screen; it is still behind this flag.
+    authInterrupts: true,
     serverActions: {
       bodySizeLimit: `${MAX_IMAGE_SIZE_MB + 1}mb`,
     },

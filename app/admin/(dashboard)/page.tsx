@@ -2,19 +2,27 @@ import Link from "next/link";
 
 import { OrderTable } from "@/components/admin/order-table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { hasPermission } from "@/lib/admin/auth/permissions";
+import { requireAdminSession } from "@/lib/admin/auth/session";
 import { needsAttention, overviewStats, recentOrders } from "@/lib/admin/dashboard";
 
 const AdminOverviewPage = async () => {
-  const stats = await overviewStats();
-  const attention = await needsAttention();
-  const orders = await recentOrders();
+  const session = await requireAdminSession();
+  const books = hasPermission(session.permissions, "orders");
+
+  const stats = await overviewStats(session.permissions);
+  const attention = await needsAttention(session.permissions);
+  const orders = books ? await recentOrders() : [];
+  const bare = !stats.length && !attention.length && !books;
 
   return (
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-1">
         <h1 className="text-text-primary text-2xl font-semibold">Welcome back, Admin</h1>
         <p className="text-text-secondary text-sm">
-          The current catalogue, enquiries, exhibitions and furniture orders at a glance.
+          {bare
+            ? "Your sections are in the rail on the left. Nothing on this screen is open to your account."
+            : "The current catalogue, enquiries, exhibitions and furniture orders at a glance."}
         </p>
       </header>
 
@@ -36,40 +44,44 @@ const AdminOverviewPage = async () => {
       </div>
 
       <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
-        <Card className="ring-border-default">
-          <CardHeader>
-            <CardTitle className="text-text-primary font-sans text-xl font-semibold">
-              Recent furniture orders
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="border-border-default overflow-hidden rounded-lg border">
-            <OrderTable orders={orders} />
-          </CardContent>
-        </Card>
+        {books ? (
+          <Card className="ring-border-default">
+            <CardHeader>
+              <CardTitle className="text-text-primary font-sans text-xl font-semibold">
+                Recent furniture orders
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="border-border-default overflow-hidden rounded-lg border">
+              <OrderTable orders={orders} />
+            </CardContent>
+          </Card>
+        ) : null}
 
-        <Card className="ring-border-default">
-          <CardHeader>
-            <CardTitle className="text-text-primary font-sans text-xl font-semibold">Needs attention</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col">
-            {attention.map((item) => (
-              <Link
-                key={item.title}
-                href={item.href}
-                className="focus-visible:ring-ring/50 -mx-2 flex items-center gap-3 rounded-lg px-2 py-3 outline-none hover:bg-admin-muted focus-visible:ring-3"
-              >
-                <span className="bg-surface-subtle text-text-primary flex size-9 shrink-0 items-center justify-center rounded-full text-sm font-medium">
-                  {item.count}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="text-text-primary block text-sm font-medium">{item.title}</span>
-                  <span className="text-text-secondary block text-xs">{item.detail}</span>
-                </span>
-                <span aria-hidden className="size-2 shrink-0 rounded-full bg-[#2f8f4e]" />
-              </Link>
-            ))}
-          </CardContent>
-        </Card>
+        {attention.length ? (
+          <Card className="ring-border-default">
+            <CardHeader>
+              <CardTitle className="text-text-primary font-sans text-xl font-semibold">Needs attention</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col">
+              {attention.map((item) => (
+                <Link
+                  key={item.title}
+                  href={item.href}
+                  className="focus-visible:ring-ring/50 -mx-2 flex items-center gap-3 rounded-lg px-2 py-3 outline-none hover:bg-admin-muted focus-visible:ring-3"
+                >
+                  <span className="bg-surface-subtle text-text-primary flex size-9 shrink-0 items-center justify-center rounded-full text-sm font-medium">
+                    {item.count}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="text-text-primary block text-sm font-medium">{item.title}</span>
+                    <span className="text-text-secondary block text-xs">{item.detail}</span>
+                  </span>
+                  <span aria-hidden className="size-2 shrink-0 rounded-full bg-[#2f8f4e]" />
+                </Link>
+              ))}
+            </CardContent>
+          </Card>
+        ) : null}
       </div>
     </div>
   );
