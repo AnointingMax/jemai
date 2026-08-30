@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { updateExhibitionAction } from "@/app/admin/(dashboard)/exhibitions/actions";
 import { ExhibitionForm, type ExhibitionFormValues } from "@/components/admin/exhibition-form";
 import { toContentAsset } from "@/lib/admin/content";
+import { listArtists } from "@/lib/admin/artists";
 import { getExhibition } from "@/lib/admin/exhibitions";
 import { listArtworks } from "@/lib/artworks";
 
@@ -41,6 +42,7 @@ const AdminExhibitionEditPage = async ({
   return (
     <ExhibitionForm
       exhibition={values}
+      artists={await listArtists()}
       artworks={await listArtworks()}
       action={updateExhibitionAction.bind(null, exhibition.slug)}
       cancelHref={`/admin/exhibitions/${exhibition.slug}`}

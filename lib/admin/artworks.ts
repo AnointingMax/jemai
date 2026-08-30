@@ -111,6 +111,13 @@ export const getArtwork = async (slug: string) => {
 
 export type ArtworkInput = Omit<Artwork, "id" | "slug" | "updatedAt"> & {
   slug: string;
+  /**
+   * The artist's own copy, authored on the work's form beside their name. It is
+   * written onto the artist rather than onto the work — the same biography the
+   * exhibition form edits.
+   */
+  artistBio: string;
+  artistPortrait: string | null;
 };
 
 /**
@@ -135,12 +142,17 @@ const availableSlug = async (candidate: string, title: string, ignore?: string) 
 
 /**
  * The artist a work is attributed to, created the first time the name is used.
- * The form asks for a name, not a record, so this is where the two meet — and
- * it never touches an existing artist's biography, which is written on the
- * artist's own screen and not on every work they made.
+ * The form asks for a name and, once one is settled, the biography and portrait
+ * held against them — so this is where the two meet. Blanks are left alone by
+ * the upsert, which is what stops a work saved without that copy from wiping
+ * what was written elsewhere.
  */
-const artistLink = async (name: string) => {
-  const artist = await upsertArtistByName({ name, bio: "", portrait: null });
+const artistLink = async (input: ArtworkInput) => {
+  const artist = await upsertArtistByName({
+    name: input.artist,
+    bio: input.artistBio,
+    portrait: input.artistPortrait,
+  });
   return artist ? { connect: { id: artist.id } } : { disconnect: true };
 };
 
@@ -165,7 +177,7 @@ export const createArtwork = async (input: ArtworkInput) => {
     data: {
       slug: await availableSlug(input.slug, input.title),
       ...columns(input),
-      artist: await artistLink(input.artist),
+      artist: await artistLink(input),
     },
     include: withArtist,
   });
@@ -181,7 +193,7 @@ export const updateArtwork = async (slug: string, input: ArtworkInput) => {
     data: {
       slug: await availableSlug(input.slug, input.title, slug),
       ...columns(input),
-      artist: await artistLink(input.artist),
+      artist: await artistLink(input),
     },
     include: withArtist,
   });

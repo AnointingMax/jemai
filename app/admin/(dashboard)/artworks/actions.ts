@@ -29,6 +29,13 @@ const artworkPayload = () =>
     title: Yup.string().trim().required("An artwork title is required."),
     slug: Yup.string().trim().default(""),
     artist: Yup.string().trim().required("An artist is required."),
+    // Saved onto the artist, not the work — the form carries it so a picked
+    // artist arrives with their copy in view.
+    artistBio: Yup.string().trim().default(""),
+    artistPortrait: Yup
+      .array(imageAssetSchema)
+      .max(1, "An artist has one portrait.")
+      .default([]),
     medium: Yup
       .string()
       .trim()
@@ -53,6 +60,8 @@ const toInput = (values: ArtworkPayload): ArtworkInput => ({
   slug: values.slug,
   title: values.title,
   artist: values.artist,
+  artistBio: values.artistBio,
+  artistPortrait: values.artistPortrait[0]?.src ?? null,
   medium: values.medium,
   year: values.year,
   dimensions: values.dimensions,

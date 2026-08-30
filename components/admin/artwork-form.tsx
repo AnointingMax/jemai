@@ -3,10 +3,16 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { useForm, useWatch } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { X } from "lucide-react";
 import { toast } from "sonner";
 
+import {
+  ArtistCombobox,
+  ArtistOrigin,
+  sameName,
+  type ArtistOption,
+} from "@/components/admin/artist-combobox";
 import {
   FieldHint,
   FieldLabel,
@@ -28,13 +34,15 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import type { ActionResult } from "@/lib/action-result";
-import { slugify, type ContentAsset } from "@/lib/admin/content";
+import { slugify, toContentAsset, type ContentAsset } from "@/lib/admin/content";
 import { cn } from "@/lib/utils";
 
 export type ArtworkFormValues = {
   title: string;
   slug: string;
   artist: string;
+  artistBio: string;
+  artistPortrait: ContentAsset[];
   medium: string;
   year: string;
   dimensions: string;
@@ -49,6 +57,8 @@ export const emptyArtworkForm: ArtworkFormValues = {
   title: "",
   slug: "",
   artist: "",
+  artistBio: "",
+  artistPortrait: [],
   medium: "",
   year: "",
   dimensions: "",
@@ -60,19 +70,10 @@ export const emptyArtworkForm: ArtworkFormValues = {
 };
 
 type ArtworkFormProps = {
-  /**
-   * Absent on the create screen. Supplied, the same form edits that artwork —
-   * fields, validation and submit path are identical; only the defaults, the
-   * heading and the action differ.
-   */
   artwork?: ArtworkFormValues;
+  artists: ArtistOption[];
   mediums: string[];
   years: string[];
-  /**
-   * Server action. Hands back the saved work's slug — which the create screen
-   * does not know in advance, and an edit can change — and this form does the
-   * navigating, so a rejected save can stay on the filled-in fields.
-   */
   action: (
     values: ArtworkFormValues,
   ) => Promise<ActionResult<{ slug: string; title: string; }>>;
@@ -88,6 +89,7 @@ const required = (message: string) => ({
 
 export const ArtworkForm = ({
   artwork,
+  artists,
   mediums,
   years,
   action,
@@ -111,8 +113,8 @@ export const ArtworkForm = ({
     defaultValues: artwork ?? emptyArtworkForm,
   });
 
-  // `useWatch` rather than `useForm`'s `watch`: that one returns a fresh
-  // function each render, which the React Compiler cannot memoize.
+  const artistName = useWatch({ control, name: "artist" });
+  const artistPortrait = useWatch({ control, name: "artistPortrait" });
   const medium = useWatch({ control, name: "medium" });
   const year = useWatch({ control, name: "year" });
   const story = useWatch({ control, name: "story" });
@@ -120,22 +122,35 @@ export const ArtworkForm = ({
   const thumbnail = useWatch({ control, name: "thumbnail" });
   const media = useWatch({ control, name: "media" });
 
+  const fillFromRoster = (picked: ArtistOption) => {
+    setValue("artistBio", picked.bio, { shouldValidate: true });
+    setValue(
+      "artistPortrait",
+      picked.portrait ? [toContentAsset(picked.portrait)] : [],
+      { shouldValidate: true },
+    );
+  };
+
+  const renameArtist = (next: string) => {
+    const loaded = artists.find((artist) => sameName(artist.name, artistName));
+    if (loaded && !sameName(loaded.name, next)) {
+      setValue("artistBio", "", { shouldValidate: true });
+      setValue("artistPortrait", [], { shouldValidate: true });
+    }
+  };
+
   const onSubmit = handleSubmit((values) => {
     setFailed(null);
     startTransition(async () => {
       const result = await action(values);
 
       if (result.error) {
-        // Twice over: the toast carries it past a long form's scroll position,
-        // the inline line keeps it in front of the reader while they fix it.
         setFailed(result.message);
         toast.error(result.message);
         return;
       }
 
       toast.success(`${result.data.title} saved`);
-      // The detail screen renders on the server from the row this just wrote,
-      // so the cached one it would otherwise land on has to go first.
       router.refresh();
       router.push(`/admin/artworks/${result.data.slug}`);
     });
@@ -227,16 +242,65 @@ export const ArtworkForm = ({
                 </div>
               </div>
 
-              <div className="mt-6 flex flex-col gap-1.5 sm:max-w-[calc(50%-0.75rem)]">
-                <FieldLabel htmlFor="artist" required>
-                  Artist
-                </FieldLabel>
-                <Input
-                  id="artist"
-                  className={cn(fieldChrome, "h-11 text-sm md:text-sm")}
-                  {...register("artist", required("An artist is required."))}
-                />
-                <FieldHint error={errors.artist?.message} />
+              <div className="mt-6 flex flex-col gap-4">
+                <div className="flex flex-col gap-1.5 sm:max-w-[calc(50%-0.75rem)]">
+                  <FieldLabel htmlFor="artist" required>
+                    Artist
+                  </FieldLabel>
+                  {/* An artist is a shared record, so the field offers the ones on
+                      file first and only falls back to typing a new name. */}
+                  <Controller
+                    control={control}
+                    name="artist"
+                    rules={required("An artist is required.")}
+                    render={({ field }) => (
+                      <ArtistCombobox
+                        id="artist"
+                        artists={artists}
+                        value={field.value}
+                        onChange={(next) => {
+                          renameArtist(next);
+                          field.onChange(next);
+                        }}
+                        onBlur={field.onBlur}
+                        onSelect={fillFromRoster}
+                        aria-invalid={Boolean(errors.artist)}
+                      />
+                    )}
+                  />
+                  {errors.artist ? (
+                    <FieldHint error={errors.artist.message} />
+                  ) : (
+                    <ArtistOrigin value={artistName} artists={artists} />
+                  )}
+                </div>
+
+                {/* The artist's own copy, once there is an artist to hold it.
+                    Picked off the list it arrives filled in and editable; typed
+                    fresh it starts blank and writes a new record. */}
+                {artistName.trim() ? (
+                  <div className="border-border-default flex flex-col gap-4 rounded-lg border p-4">
+                    <FileDrop
+                      label={`Portrait of ${artistName.trim()}`}
+                      assets={artistPortrait}
+                      onChange={(assets) =>
+                        setValue("artistPortrait", assets, { shouldValidate: true })
+                      }
+                    />
+                    <div className="flex flex-col gap-1.5">
+                      <FieldLabel htmlFor="artistBio">Artist biography</FieldLabel>
+                      <Textarea
+                        id="artistBio"
+                        rows={6}
+                        className={cn(fieldChrome, "min-h-32 text-sm md:text-sm")}
+                        {...register("artistBio")}
+                      />
+                      <FieldHint>
+                        {"Held against the artist, not this work — every artwork and exhibition of theirs reads the same biography."}
+                      </FieldHint>
+                    </div>
+                  </div>
+                ) : null}
               </div>
 
               <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-2">

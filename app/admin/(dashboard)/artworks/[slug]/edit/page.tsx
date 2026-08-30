@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 
 import { updateArtworkAction } from "@/app/admin/(dashboard)/artworks/actions";
 import { ArtworkForm, type ArtworkFormValues } from "@/components/admin/artwork-form";
+import { listArtists } from "@/lib/admin/artists";
 import { artworkMediums, artworkYears, getArtwork } from "@/lib/admin/artworks";
 import { toContentAsset } from "@/lib/admin/content";
 
@@ -14,10 +15,17 @@ const AdminArtworkEditPage = async ({ params }: PageProps<"/admin/artworks/[slug
   const artwork = await getArtwork(slug);
   if (!artwork) notFound();
 
+  const artists = await listArtists();
+  // The work holds a name; the copy beside it belongs to the artist record that
+  // name resolves to, so the form opens on what is actually held against them.
+  const attributed = artists.find((artist) => artist.name === artwork.artist);
+
   const values: ArtworkFormValues = {
     title: artwork.title,
     slug: artwork.slug,
     artist: artwork.artist,
+    artistBio: attributed?.bio ?? "",
+    artistPortrait: attributed?.portrait ? [toContentAsset(attributed.portrait)] : [],
     medium: artwork.medium,
     year: artwork.year,
     dimensions: artwork.dimensions,
@@ -31,6 +39,7 @@ const AdminArtworkEditPage = async ({ params }: PageProps<"/admin/artworks/[slug
   return (
     <ArtworkForm
       artwork={values}
+      artists={artists}
       mediums={artworkMediums}
       years={artworkYears}
       action={updateArtworkAction.bind(null, artwork.slug)}

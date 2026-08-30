@@ -3,10 +3,16 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { useForm, useWatch } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { X } from "lucide-react";
 import { toast } from "sonner";
 
+import {
+  ArtistCombobox,
+  ArtistOrigin,
+  sameName,
+  type ArtistOption,
+} from "@/components/admin/artist-combobox";
 import { ArtworkPicker } from "@/components/admin/artwork-picker";
 import { FileDrop } from "@/components/admin/file-drop";
 import {
@@ -22,16 +28,10 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import type { ActionResult } from "@/lib/action-result";
-import { slugify, type ContentAsset } from "@/lib/admin/content";
+import { slugify, toContentAsset, type ContentAsset } from "@/lib/admin/content";
 import type { Artwork } from "@/lib/gallery";
 import { cn } from "@/lib/utils";
 
-/**
- * The form's own shape: every scalar is a string, because that is what the
- * controls hand back. `toInput` on the server side of the action is the only
- * place numbers and booleans are parsed.
- */
-/** One artist on the form. The name is what resolves them to a record. */
 export type ExhibitionArtistValues = {
   name: string;
   bio: string;
@@ -41,12 +41,10 @@ export type ExhibitionArtistValues = {
 export type ExhibitionFormValues = {
   name: string;
   slug: string;
-  /** A solo show has one, a group show several, an unsettled one none. */
   artists: ExhibitionArtistValues[];
   startDate: string;
   endDate: string;
   venue: string;
-  /** "free" | "paid" — the radio pair's value. */
   admission: string;
   price: string;
   summary: string;
@@ -73,22 +71,12 @@ export const emptyExhibitionForm: ExhibitionFormValues = {
 };
 
 type ExhibitionFormProps = {
-  /**
-   * Absent on the create screen. Supplied, the same form edits that exhibition —
-   * the fields, the validation and the submit path are identical, only the
-   * defaults, the heading and the action differ.
-   */
   exhibition?: ExhibitionFormValues;
-  /** The catalogue the Featured Artworks grid draws. */
+  artists: ArtistOption[];
   artworks: Artwork[];
-  /**
-   * Server action. Hands back the saved show's slug — which the create screen
-   * has no way of knowing, and an edit can change — so the caller navigates.
-   */
   action: (
     values: ExhibitionFormValues,
   ) => Promise<ActionResult<{ slug: string; name: string; }>>;
-  /** Where the close button goes, and where a cancelled edit returns to. */
   cancelHref: string;
   submitLabel: string;
   heading: string;
@@ -101,6 +89,7 @@ const required = (message: string) => ({
 
 export const ExhibitionForm = ({
   exhibition,
+  artists: roster,
   artworks,
   action,
   cancelHref,
@@ -131,6 +120,34 @@ export const ExhibitionForm = ({
   const media = useWatch({ control, name: "media" });
   const featured = useWatch({ control, name: "featured" });
   const startDate = useWatch({ control, name: "startDate" });
+
+  /**
+   * A card filled in from the record the picker handed over. The biography and
+   * portrait come across as they stand, so the artist is edited from what is
+   * already written rather than from a blank field — and clearing either one
+   * here still edits the record, since this form authors that copy.
+   */
+  const fillFromRoster = (index: number, picked: ArtistOption) => {
+    setValue(`artists.${index}.name`, picked.name, { shouldValidate: true });
+    setValue(`artists.${index}.bio`, picked.bio, { shouldValidate: true });
+    setValue(
+      `artists.${index}.portrait`,
+      picked.portrait ? [toContentAsset(picked.portrait)] : [],
+      { shouldValidate: true },
+    );
+  };
+
+  /**
+   * The copy follows the name. Typing over a name that came off the list means
+   * this card is somebody else now, so what was loaded for the first artist is
+   * dropped rather than saved onto the second.
+   */
+  const renameArtist = (index: number, next: string) => {
+    const loaded = roster.find((artist) => sameName(artist.name, artists[index].name));
+    if (!loaded || sameName(loaded.name, next)) return;
+    setValue(`artists.${index}.bio`, "", { shouldValidate: true });
+    setValue(`artists.${index}.portrait`, [], { shouldValidate: true });
+  };
 
   const onSubmit = handleSubmit((values) => {
     setFailed(null);
@@ -425,16 +442,36 @@ export const ExhibitionForm = ({
                         <FieldLabel htmlFor={`artist-name-${index}`} required>
                           Name
                         </FieldLabel>
-                        <Input
-                          id={`artist-name-${index}`}
-                          className={cn(fieldChrome, "h-11 text-sm md:text-sm")}
-                          {...register(`artists.${index}.name`, {
-                            ...required("An artist needs a name."),
-                          })}
+                        {/* Picking somebody off the list fills the biography and
+                            portrait held against them, so a returning artist is
+                            chosen rather than written out a second time. */}
+                        <Controller
+                          control={control}
+                          name={`artists.${index}.name`}
+                          rules={required("An artist needs a name.")}
+                          render={({ field }) => (
+                            <ArtistCombobox
+                              id={`artist-name-${index}`}
+                              artists={roster}
+                              exclude={artists
+                                .filter((_, at) => at !== index)
+                                .map((other) => other.name)}
+                              value={field.value}
+                              onChange={(next) => {
+                                renameArtist(index, next);
+                                field.onChange(next);
+                              }}
+                              onBlur={field.onBlur}
+                              onSelect={(picked) => fillFromRoster(index, picked)}
+                              aria-invalid={Boolean(errors.artists?.[index]?.name)}
+                            />
+                          )}
                         />
-                        <FieldHint error={errors.artists?.[index]?.name?.message}>
-                          {"An artist already in the catalogue is matched by name, and their biography here replaces the one held against them."}
-                        </FieldHint>
+                        {errors.artists?.[index]?.name ? (
+                          <FieldHint error={errors.artists[index]?.name?.message} />
+                        ) : (
+                          <ArtistOrigin value={artist.name} artists={roster} />
+                        )}
                       </div>
                       <Button
                         type="button"
@@ -476,19 +513,26 @@ export const ExhibitionForm = ({
                   </div>
                 ))}
 
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="lg"
-                  onClick={() =>
-                    setValue("artists", [...artists, { name: "", bio: "", portrait: [] }], {
-                      shouldValidate: true,
-                    })
-                  }
-                  className="border-border-default h-10 self-start px-4 text-sm"
-                >
-                  Add artist
-                </Button>
+                <div className="flex flex-col gap-1.5 self-start">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="lg"
+                    onClick={() =>
+                      setValue("artists", [...artists, { name: "", bio: "", portrait: [] }], {
+                        shouldValidate: true,
+                      })
+                    }
+                    className="border-border-default h-10 self-start px-4 text-sm"
+                  >
+                    Add artist
+                  </Button>
+                  <FieldHint>
+                    {roster.length
+                      ? "The name field lists the artists already on file — pick one to reuse their biography and portrait."
+                      : "Nobody is on file yet. The first name you type starts an artist the catalogue can reuse."}
+                  </FieldHint>
+                </div>
               </div>
             </FormSection>
           </Accordion>
