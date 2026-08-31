@@ -29,11 +29,6 @@ import type { ActionResult } from "@/lib/action-result";
 import { slugify, type ContentAsset } from "@/lib/admin/content";
 import { cn } from "@/lib/utils";
 
-/**
- * The form's own shape: every scalar is a string, because that is what the
- * controls hand back. `toInput` on the server side of the action is the only
- * place numbers are parsed.
- */
 export type FurnitureFormValues = {
   name: string;
   slug: string;
@@ -144,8 +139,6 @@ export const FurnitureForm = ({
       });
 
       if (result.error) {
-        // Twice over: the toast carries it past a long form's scroll position,
-        // the inline line keeps it in front of the reader while they fix it.
         setFailed(result.message);
         toast.error(result.message);
         return;
@@ -162,9 +155,9 @@ export const FurnitureForm = ({
   return (
     <form
       onSubmit={onSubmit}
-      className="border-border-default overflow-hidden rounded-xl border bg-background"
+      className="border-border-default bg-background rounded-xl border"
     >
-      <div className="border-border-default flex items-center justify-between gap-4 border-b p-4">
+      <div className="border-border-default bg-background sticky top-16 z-10 flex items-center justify-between gap-4 border-b p-4">
         <Button
           type="button"
           variant="outline"

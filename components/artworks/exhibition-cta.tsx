@@ -1,45 +1,37 @@
 import Image from "next/image";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { RegisterButton } from "@/components/exhibitions/register-button";
+import type { UpNext } from "@/lib/exhibitions";
 
-type ExhibitionCtaProps = {
-  eyebrow: string;
-  heading: string[];
-  copy: string;
-  cta: { label: string; href: string; };
-  image: { src: string; alt: string; };
-};
-
-
-export const ExhibitionCta = ({
-  eyebrow,
-  heading,
-  copy,
-  cta,
-  image,
-}: ExhibitionCtaProps) => (
-  <section className="relative w-full overflow-hidden lg:h-125 flex items-center px-5 lg:px-20">
+export const ExhibitionCta = ({ exhibition }: { exhibition: UpNext; }) => (
+  <section className="relative flex w-full items-center overflow-hidden px-5 lg:h-125 lg:px-20">
     <Image
-      src={image.src}
-      alt={image.alt}
+      src={exhibition.image.src}
+      alt={exhibition.image.alt}
       fill
       sizes="100vw"
       className="object-cover"
     />
-    <div className="bg-surface-inverse/85 relative px-8 py-16 sm:px-6 w-fit">
+    <div className="bg-surface-inverse/85 relative w-fit px-8 py-16 sm:px-6">
       <div className="max-w-125">
-        <p className="text-eyebrow-lg text-text-inverse uppercase">{eyebrow}</p>
+        <p className="text-eyebrow-lg text-text-inverse uppercase">
+          Upcoming · {exhibition.dates}
+        </p>
         <h2 className="font-heading text-text-inverse mt-7.25 text-3xl font-bold sm:text-h2">
-          {heading.map((line) => (
-            <span key={line} className="block">
-              {line}
-            </span>
-          ))}
+          {exhibition.title} — {exhibition.venue}
         </h2>
-        <p className="text-body text-text-inverse/85 mt-3.75">{copy}</p>
-        <Button asChild size="cta" className="mt-7.5 h-12 w-37 border-0">
-          <Link href={cta.href}>{cta.label}</Link>
-        </Button>
+        <p className="text-body text-text-inverse/85 mt-3.75">{exhibition.copy}</p>
+        <RegisterButton
+          className="mt-7.5 h-12 w-37"
+          label="Register"
+          exhibition={{
+            slug: exhibition.slug,
+            title: exhibition.title,
+            artist: exhibition.artist,
+            when: exhibition.opensOn,
+            image: exhibition.image.src,
+            ticket: exhibition.ticket,
+          }}
+        />
       </div>
     </div>
   </section>

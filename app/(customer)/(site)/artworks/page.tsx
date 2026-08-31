@@ -4,6 +4,7 @@ import { ArtworkGrid } from "@/components/artworks/artwork-grid";
 import { CuratorPick } from "@/components/artworks/curator-pick";
 import { ExhibitionCta } from "@/components/artworks/exhibition-cta";
 import { curatedArtworks, listArtworks } from "@/lib/artworks";
+import { getUpNext } from "@/lib/exhibitions";
 
 export const metadata: Metadata = {
   title: "Artworks | JEMAI",
@@ -31,8 +32,15 @@ const heroSlides = [
   },
 ];
 
+/** The closing band features the next show, whose run turns the day over. */
+export const revalidate = 3600;
+
 const ArtworksPage = async () => {
-  const [artworks, [pick]] = await Promise.all([listArtworks(), curatedArtworks(1)]);
+  const [artworks, [pick], upNext] = await Promise.all([
+    listArtworks(),
+    curatedArtworks(1),
+    getUpNext(),
+  ]);
 
   return (
     /* Every seam in this frame is 64px rather than the shell's 80px editorial
@@ -66,16 +74,9 @@ const ArtworksPage = async () => {
         <ArtworkGrid artworks={artworks} />
       </div>
 
-      <ExhibitionCta
-        eyebrow="Upcoming · 12–26 September"
-        heading={["Forms of Stillness - JEMAI", "Gallery • Lagos"]}
-        copy="A focused presentation exploring texture, repetition and the quiet balance between movement and rest."
-        cta={{ label: "Register", href: "/exhibitions" }}
-        image={{
-          src: "/figma/home/ex-slide-4.jpg",
-          alt: "Visitors at a JEMAI gallery opening",
-        }}
-      />
+      {/* Nothing upcoming draws no band: the page closes on the grid rather
+          than on an invitation to a show that does not exist. */}
+      {upNext ? <ExhibitionCta exhibition={upNext} /> : null}
     </div>
   );
 };

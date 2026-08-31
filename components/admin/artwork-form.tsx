@@ -159,9 +159,9 @@ export const ArtworkForm = ({
   return (
     <form
       onSubmit={onSubmit}
-      className="border-border-default bg-background overflow-hidden rounded-xl border"
+      className="border-border-default bg-background rounded-xl border"
     >
-      <div className="border-border-default flex items-center justify-between gap-4 border-b p-4">
+      <div className="border-border-default bg-background sticky top-16 z-10 flex items-center justify-between gap-4 border-b p-4">
         <Button
           type="button"
           variant="outline"

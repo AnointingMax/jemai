@@ -273,8 +273,9 @@ Shared reference frames (not pages): `246:18783` intro, `247:18801` semantic col
   desktop because all four photographs fit at once.
   - `components/site/curator-carousel.tsx` (new, client) drives the panel and the
     framed work from one index and wraps at both ends. The gallery photograph
-    behind it stays put. Three picks in `artworks-section.tsx`; **the second and
-    third are placeholder copy** over existing images — replace with real works.
+    behind it stays put. The three picks are `curatedArtworks(3)` — whatever the
+    console has flagged as Curator's Pick, topped up with the newest when fewer
+    than three are flagged, so the arrows always have somewhere to go.
   - `components/site/photo-rail.tsx` now syncs both ways: the picker scrolls the
     rail and the rail's scroll position updates the picker.
   - **The dashes count pages, not slides.** A rail only scrolls to
@@ -282,8 +283,15 @@ Shared reference frames (not pages): `246:18783` intro, `247:18801` semantic col
     edge — one dash per photograph left the trailing dashes dead (clicking dash 6
     of 8 moved nothing). Pages also fall out responsively: 8 dashes at 390, 3 at
     768, 2 at 1440, re-measured by `ResizeObserver`.
-  - The exhibition rail runs the four photographs twice so there is something to
-    page to; swap in real photography and drop the repeat.
+  - The exhibition rail was the four exported photographs run twice, because
+    four fit at once at desktop and the picker had nowhere to go. It is
+    `highlightShots()` now — every installation view the console has uploaded,
+    round-robined a view at a time across the shows so the rail opens on the
+    breadth of the programme rather than on one room photographed eight times,
+    then topped up with the four stills so a gallery with one documented show
+    still fills the band. Deduped on the **source**, not the show: two shows can
+    be credited the same upload, and the same photograph twice in one rail reads
+    as a broken carousel however honest the two captions are.
   - Removing `lg:justify-center lg:overflow-visible` from the rail **also fixed
     the 1024–1050px horizontal overflow** noted earlier. `justify-center` on an
     overflowing flex row pushes the leading items past the scroll origin where
@@ -861,10 +869,9 @@ Shared reference frames (not pages): `246:18783` intro, `247:18801` semantic col
   fifteen cards read "Of Mind and Myth · Mixed media on canvas · 2 ft × 3 ft",
   while the pager reads "1-12 of 16 pieces" against a grid of fifteen — the same
   shape of contradiction the furniture catalogue has. The build keeps the
-  dominant visual (the fifteen cards as drawn) and derives the pager from data:
-  the fifteen run twice, so the first page is exactly the frame's grid and
-  "Load more" still has somewhere to go. Drop the repeat with the real
-  catalogue.
+  dominant visual (the fifteen cards as drawn) and derives the pager from data.
+  The doubled run that once padded the grid is gone — `listArtworks()` is the
+  catalogue, so the pager counts what is actually there.
 
 - **Two more arbitrary-value misses.** `pb-[65px]` and (earlier, on
   consultation) `h-[41px]` sat in the class list with no generated utility
@@ -1101,6 +1108,43 @@ Shared reference frames (not pages): `246:18783` intro, `247:18801` semantic col
   landmark on those pages is within 1px, so this is the only place either detail
   page departs from its frame by more than 3px.
 
+## One featured show, three pages
+
+The home page and the artworks page each hardcoded "Forms of Stillness" — its
+title, its run, its venue and a link to `/exhibitions/forms-of-stillness` — while
+`getUpNext()` had been serving the exhibitions index from the database the whole
+time. Three pages could name three different shows, and two of them named one
+that a seeded database need not contain at all.
+
+- **All three read `getUpNext()` now**, so the featured show is the next one to
+  open by its own run and cannot disagree across the site. `UpNext` gained
+  `venue` and `dates` as loose values beside its `rows`: the index draws them as
+  a labelled definition list, the other two run them as one line, and reading a
+  value back out of a row by its label would have been the brittle way to share
+  them.
+- **The status is derived, so the content turns over with the day.** Both pages
+  carry `revalidate = 3600`, the same hour the exhibitions index runs on — a
+  show that opened overnight moves with nothing having been saved.
+- **Nothing upcoming draws no block.** The home section closes on the rail and
+  the artworks page on its grid, rather than drawing an "Up Next" with no next.
+  Same rule the curator's pick already followed.
+- **The frame's link became the modal.** Home drew a `Register to Attend` button
+  routed at a slug; the exhibitions index opened the registration modal from the
+  same show. One flow, so both open `RegisterButton` — which already took a
+  `label` and a `className`, so the artworks CTA's 148 × 48 `Register` is the
+  same component at the frame's own size.
+- **The artworks CTA panel is `w-fit`, not the frame's fixed x 64 → 404.** The
+  show's name is data now, and the frame's own title overruns that panel; a
+  fixed box would clip it or wrap it onto three lines. The frame breaks the
+  heading mid-venue ("… - JEMAI" / "Gallery • Lagos"), which is a wrap artifact
+  rather than an authored break, so the run wraps on its own measure.
+- **Two photographs stay fixtures, deliberately.** The half-bleed sculpture
+  beside the home block and the two index heroes are gallery photography that no
+  show owns — the same standing as `upcomingHero` and `pastHero`. Only the
+  featured portrait comes from the show's own thumbnail.
+- Verified at 1440 / 768 / 390 on both pages: no horizontal overflow, no image
+  with `naturalWidth === 0`, and the venue · dates line wraps cleanly at 390.
+
 ## Furniture orders API
 
 The checkout was a simulation and the console's order book was a fixture array.
@@ -1145,6 +1189,18 @@ Both now run on one `Order` / `OrderItem` pair
   walking the sequence past them. Two of the twelve are deliberately unhappy —
   one abandoned at "Pending payment", one "Failed" — because those are states
   the console has to be able to read and there is no other way to see them.
+- **The form action bar is sticky, and `overflow-hidden` was in the way.** The
+  three content forms (furniture, artwork, exhibition) carry their close and
+  save buttons in a bar above the fields, which scrolled away on forms that run
+  several screens deep. The bar is now `sticky top-16` — under the console's own
+  64px header — but it only sticks once the `<form>` drops `overflow-hidden`: an
+  ancestor that clips becomes the containing block for a sticky child, and one
+  that never scrolls itself pins the child in place instead of letting it
+  travel. Nothing needed the clipping (no child of the card carries a
+  background), and the bar's own `bg-background` matches the card's, so the
+  square corners it keeps are invisible against the card's rounded ones.
+  Measured at 1440 and 390: the bar lands on exactly 64 on all three forms.
+
 - **Two buttons came out, for the same reason.** The order sheet's "Print
   order" called `window.print()`, which printed the console page — rail, header,
   table and all — rather than the order; there is no print stylesheet and no

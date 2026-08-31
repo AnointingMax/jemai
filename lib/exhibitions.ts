@@ -59,17 +59,21 @@ export type ExhibitionDetail = Exhibition & {
   artistNotes: ArtistNote[];
 };
 
-/** The featured "UP NEXT" block on the upcoming index. */
 export type UpNext = Pick<Exhibition, "slug" | "title" | "artist" | "ticket"> & {
   eyebrow: string;
   copy: string;
   image: Shot;
+  venue: string;
+  dates: string;
   rows: { label: string; value: string; }[];
   opensOn: string;
 };
 
 /** Stands in for a show whose photography has not been uploaded yet. */
 const PLACEHOLDER_HERO = "/figma/exhibitions/detail-hero.jpg";
+
+/** Where a show runs when the console left the field empty. */
+const DEFAULT_VENUE = "JEMAI Gallery, Lagos";
 
 /**
  * Three slides run behind both index heroes. These are the frames' own
@@ -81,6 +85,39 @@ export const upcomingHero: Shot[] = [
   { src: "/figma/artworks/hero.jpg", alt: "Visitors viewing framed works in the JEMAI gallery" },
   { src: "/figma/home/ex-sculpture.jpg", alt: "A sculpture on a plinth in the gallery" },
 ];
+
+const HIGHLIGHT_STILLS: Shot[] = [
+  { src: "/figma/home/ex-slide-1.jpg", alt: "Visitor viewing a painted figure study" },
+  { src: "/figma/home/ex-slide-2.jpg", alt: "A guest studying a portrait in the gallery" },
+  { src: "/figma/home/ex-slide-3.jpg", alt: "Bronze figures on a plinth" },
+  { src: "/figma/home/ex-slide-4.jpg", alt: "Painted works hung salon style" },
+];
+
+export const highlightShots = async (limit = 8): Promise<Shot[]> => {
+  const records = await prisma.exhibition.findMany({
+    where: { NOT: { gallery: { isEmpty: true } } },
+    orderBy: { startDate: "desc" },
+    select: { name: true, gallery: true },
+    take: limit,
+  });
+
+  const shots: Shot[] = [];
+  const seen = new Set<string>();
+  const deepest = Math.max(0, ...records.map((record) => record.gallery.length));
+
+  for (let view = 0; view < deepest; view += 1) {
+    for (const record of records) {
+      const src = record.gallery[view];
+      if (!src || seen.has(src)) continue;
+      seen.add(src);
+      shots.push({ src, alt: `${record.name} — installation view ${view + 1}` });
+    }
+  }
+
+  const filler = HIGHLIGHT_STILLS.filter((shot) => !seen.has(shot.src));
+
+  return [...shots, ...filler].slice(0, limit);
+};
 
 export const pastHero: Shot[] = [
   { src: "/figma/exhibitions/hero-past.jpg", alt: "Three framed paintings on a deep red gallery wall" },
@@ -272,6 +309,7 @@ export const getUpNext = async (): Promise<UpNext | null> => {
   if (!record) return null;
 
   const detail = toDetail(record);
+  const venue = record.venue || DEFAULT_VENUE;
 
   return {
     slug: detail.slug,
@@ -284,9 +322,11 @@ export const getUpNext = async (): Promise<UpNext | null> => {
       src: record.thumbnail ?? PLACEHOLDER_HERO,
       alt: detail.title,
     },
+    venue,
+    dates: detail.dates,
     rows: [
       { label: "Date", value: detail.dates },
-      { label: "Venue", value: record.venue || "JEMAI Gallery, Lagos" },
+      { label: "Venue", value: venue },
       {
         label: "Admission",
         value: detail.ticket ? `${detail.ticket.label} · ${detail.ticket.price}` : "Free",
