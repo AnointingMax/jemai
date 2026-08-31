@@ -8,7 +8,7 @@ import { describeItem, type AdminOrder } from "@/lib/admin/order-record";
 import type { Registration } from "@/lib/admin/registration-record";
 import env from "@/lib/env";
 import { renderEmail, type SummaryRow } from "@/lib/mail/render";
-import { notify, type Message } from "@/lib/mail/send";
+import { notify, sendMail, type Message } from "@/lib/mail/send";
 
 /** Every mail that points somewhere points into this site. */
 const url = (path: string) => `${env.APP_URL}${path}`;
@@ -88,6 +88,29 @@ export const sendOrderDispatched = async (order: AdminOrder) => {
   await notify({ to: order.email, subject: `Order ${order.number} is on its way`, html, text });
 };
 
+export const sendOrderPaymentFailed = async (order: AdminOrder) => {
+  const { html, text } = renderEmail({
+    preview: `We could not confirm payment for order ${order.number}. You have not been charged.`,
+    heading: "We could not confirm your payment",
+    paragraphs: [
+      `${order.customer.split(" ")[0]}, the payment for order ${order.number} did not go through, and you have not been charged.`,
+      "Nothing has been reserved and your bag is as you left it, so you can pick up where you stopped whenever you are ready.",
+    ],
+    summary: { title: `Order ${order.number}`, rows: orderLines(order) },
+    action: { label: "Finish your order", url: url("/checkout") },
+    footnotes: [
+      "If your bank tells you otherwise, reply to this message with the order number and we will trace it.",
+    ],
+  });
+
+  await notify({
+    to: order.email,
+    subject: `Your payment for order ${order.number} did not go through`,
+    html,
+    text,
+  });
+};
+
 /**
  * A place at a show, confirmed. Free places are confirmed the moment they are
  * asked for; paid ones only once Paystack says the money arrived.
@@ -124,6 +147,36 @@ export const sendRegistrationConfirmed = async (registration: Registration) => {
 };
 
 /** The acknowledgement behind the artwork enquiry modal's "we will be in touch". */
+export const sendRegistrationPaymentFailed = async (registration: Registration) => {
+  const { html, text } = renderEmail({
+    preview: `We could not confirm payment for ${registration.exhibitionTitle}. You have not been charged.`,
+    heading: "We could not confirm your payment",
+    paragraphs: [
+      `${registration.name.split(" ")[0]}, the payment for your place at ${registration.exhibitionTitle} did not go through, and you have not been charged.`,
+      "That means the place is not being held. If you would still like to come, registering again takes a minute — and it is worth doing soon, since a show can fill up.",
+    ],
+    summary: {
+      title: "The registration",
+      rows: [
+        { label: "Exhibition", value: registration.exhibitionTitle },
+        { label: "Admission", value: naira(registration.amount) },
+        { label: "Reference", value: registration.reference },
+      ],
+    },
+    action: { label: "See the programme", url: url("/exhibitions") },
+    footnotes: [
+      "If your bank tells you otherwise, reply to this message with the reference and we will trace it.",
+    ],
+  });
+
+  await notify({
+    to: registration.email,
+    subject: `Your payment for ${registration.exhibitionTitle} did not go through`,
+    html,
+    text,
+  });
+};
+
 export const sendEnquiryReceived = async (enquiry: AdminEnquiry) => {
   const { html, text } = renderEmail({
     preview: `We have your enquiry about ${enquiry.artworkTitle}.`,
@@ -196,7 +249,7 @@ export const sendSubscriptionWelcome = async (subscriber: { email: string; name:
 /**
  * What a new colleague gets when an account is opened for them. Deliberately
  * without the password: whoever opened the account typed it and reads it back
- * to them in person, and a password that has travelled by email is one that has
+ * to them in person, and a password that has traveled by email is one that has
  * been written down somewhere neither of them controls.
  */
 export const sendAdminWelcome = async (admin: { name: string; email: string; }) => {
@@ -307,4 +360,70 @@ export const notifyDeskOfConsultation = async (request: AdminConsultation) => {
     html,
     text,
   });
+};
+
+/* ---------------------------------------------------------------------------
+   Contact
+   --------------------------------------------------------------------------- */
+
+/** What the contact form collects. It has no table behind it — see below. */
+export type ContactMessage = {
+  name: string;
+  email: string;
+  phone: string;
+  company: string;
+  inquiryType: string;
+  message: string;
+};
+
+const studioInbox = () =>
+  env.MAIL_REPLY_TO ?? env.MAIL_FROM?.match(/<([^>]+)>/)?.[1] ?? env.MAIL_FROM;
+
+const contactRows = (enquiry: ContactMessage): SummaryRow[] => [
+  { label: "Name", value: enquiry.name },
+  { label: "Email", value: enquiry.email },
+  ...(enquiry.phone ? [{ label: "Phone", value: enquiry.phone }] : []),
+  ...(enquiry.company ? [{ label: "Company", value: enquiry.company }] : []),
+  { label: "Enquiry", value: enquiry.inquiryType },
+  { label: "Message", value: enquiry.message },
+];
+
+export const deliverContactMessage = async (enquiry: ContactMessage) => {
+  const to = studioInbox() ?? "the studio inbox";
+
+  const { html, text } = renderEmail({
+    preview: `${enquiry.name} sent a message from the contact page.`,
+    heading: "New message from the contact page",
+    paragraphs: [
+      `${enquiry.name} wrote in about ${enquiry.inquiryType.toLowerCase()}.`,
+      "There is no console screen for these — reply to this message and it reaches them.",
+    ],
+    summary: { title: "The message", rows: contactRows(enquiry) },
+  });
+
+  await sendMail({
+    to,
+    subject: `Contact — ${enquiry.inquiryType} — ${enquiry.name}`,
+    html,
+    text,
+    replyTo: enquiry.email,
+  });
+};
+
+export const sendContactReceived = async (enquiry: ContactMessage) => {
+  const { html, text } = renderEmail({
+    preview: "We have your message.",
+    heading: "We have your message",
+    paragraphs: [
+      `Thank you, ${enquiry.name.split(" ")[0]}. Your message is with the JEMAI team and we reply within two working days.`,
+      "This is what you sent us:",
+    ],
+    summary: { title: enquiry.inquiryType, rows: contactRows(enquiry) },
+    footnotes: [
+      "Anything to add? Reply to this message and it reaches the same team.",
+      "JEMAI will never ask for payment outside our official channels. Our only domain is jemai.co.",
+    ],
+  });
+
+  await notify({ to: enquiry.email, subject: "We have your message", html, text });
 };

@@ -13,6 +13,7 @@ import {
   notifyDeskOfOrder,
   sendOrderConfirmation,
   sendOrderDispatched,
+  sendOrderPaymentFailed,
 } from "@/lib/mail/messages";
 import { Prisma } from "@/lib/generated/prisma/client";
 import { verifyPayment } from "@/lib/paystack";
@@ -118,11 +119,11 @@ export const listOrders = async ({ search, status, payment }: OrderQuery = {}) =
       ...(payment ? { payment } : {}),
       ...(needle
         ? {
-            OR: [
-              ...searchClauses(["name", "email", "phone", "reference"], needle),
-              ...(digits ? [{ number: Number(digits) }] : []),
-            ],
-          }
+          OR: [
+            ...searchClauses(["name", "email", "phone", "reference"], needle),
+            ...(digits ? [{ number: Number(digits) }] : []),
+          ],
+        }
         : {}),
     },
     include: withItems,
@@ -262,16 +263,13 @@ export const settleOrder = async (reference: string) => {
   // has to fail rather than round its way into fulfillment.
   const settled = payment.paid && payment.amount >= existing.total;
 
+  const target = settled ? "Paid" : "Failed";
+
   const record = await prisma.$transaction(async (tx) => {
-    // The webhook and the buyer's own return can arrive at the same reference
-    // at the same time. Both verify it, and both would draw the same stock down
-    // twice — so the write is conditional on the order not already being paid,
-    // and only the call that actually moved it goes on to spend anything. The
-    // second one finds nothing to update and settles for reading the row.
     const { count } = await tx.order.updateMany({
-      where: { id: existing.id, payment: { not: "Paid" } },
+      where: { id: existing.id, payment: { notIn: ["Paid", target] } },
       data: {
-        payment: settled ? "Paid" : "Failed",
+        payment: target,
         amountPaid: payment.paid ? payment.amount : null,
         paidAt: settled ? (payment.paidAt ?? new Date()) : null,
       },
@@ -289,15 +287,13 @@ export const settleOrder = async (reference: string) => {
 
   const order = toOrder(record.updated);
 
-  // The receipt hangs off the same `count === 1` the stock draw-down does. The
-  // webhook and the buyer's return both settle the same reference, and only the
-  // call that actually moved the row sends anything — so a buyer who refreshes
-  // the callback page does not collect a second receipt.
-  if (settled && record.moved) {
-    await sendOrderConfirmation(order);
-    // …and the desk that fulfills it, which is the orders section's holders and
-    // nobody else.
-    await notifyDeskOfOrder(order);
+  if (record.moved) {
+    if (settled) {
+      await sendOrderConfirmation(order);
+      await notifyDeskOfOrder(order);
+    } else {
+      await sendOrderPaymentFailed(order);
+    }
   }
 
   return order;

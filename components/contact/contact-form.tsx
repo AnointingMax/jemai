@@ -1,12 +1,15 @@
 "use client";
 
-import { useState, type ComponentProps } from "react";
+import { useState, useTransition, type ComponentProps } from "react";
 import {
   Controller,
   useForm,
   type Path,
   type UseFormRegister,
 } from "react-hook-form";
+import { toast } from "sonner";
+import { sendContactMessageAction } from "@/app/(customer)/(site)/contact/actions";
+import { inquiryTypes } from "@/lib/contact";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -29,25 +32,6 @@ type ContactFormValues = {
   message: string;
 };
 
-/**
- * The frame draws "Book a Space" as the selected value and no open menu, so
- * the rest of the list is written rather than transcribed.
- */
-const inquiryTypes = [
-  "Book a Space",
-  "Furniture Enquiry",
-  "Art & Collecting",
-  "Design Consultation",
-  "Press",
-  "Other",
-];
-
-/**
- * Field rhythm, measured off `design-reference/Container.png`: the rules sit 92px
- * apart (y=90, 182, 274, 366), each row is 34px of lead, a 14px eyebrow label,
- * 6px, then a 37px control closing on the rule. That puts the label ink at 127
- * against the frame's 127 and the input ink at ~159 against 159.
- */
 const fieldClass = "border-border-default border-b pt-8.5";
 const labelClass = "text-eyebrow text-text-secondary block uppercase";
 const controlClass =
@@ -78,12 +62,7 @@ const Field = ({ label, name, optional, register, ...props }: FieldProps) => (
 );
 
 export const ContactForm = () => {
-  const {
-    register,
-    control,
-    handleSubmit,
-    formState: { isSubmitSuccessful },
-  } = useForm<ContactFormValues>({
+  const { register, control, handleSubmit, reset } = useForm<ContactFormValues>({
     defaultValues: {
       firstName: "",
       lastName: "",
@@ -96,15 +75,26 @@ export const ContactForm = () => {
   });
 
   const [sent, setSent] = useState(false);
+  const [pending, startTransition] = useTransition();
 
-  /**
-   * No endpoint exists yet and no frame draws a sent state, so the form
-   * acknowledges in place. Point this at the real handler when there is one.
-   */
-  const onSubmit = () => setSent(true);
+  const onSubmit = handleSubmit((values) =>
+    startTransition(async () => {
+      const result = await sendContactMessageAction(values);
+
+      if (result.error) {
+        toast.error(result.message);
+        setSent(false);
+        return;
+      }
+
+      toast.success(result.data);
+      reset();
+      setSent(true);
+    }),
+  );
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate>
+    <form onSubmit={onSubmit} noValidate>
       <p className="text-eyebrow text-text-secondary uppercase">01 &middot; The Brief</p>
       <div className="border-border-default mt-5.5 border-t" />
 
@@ -174,21 +164,19 @@ export const ContactForm = () => {
       <Button
         type="submit"
         variant="jemai"
+        disabled={pending}
         className="text-label mt-11.75 h-12 border-0 px-7.5"
       >
-        Send Message
+        {pending ? "Sending…" : "Send Message"}
       </Button>
 
-      {(sent || isSubmitSuccessful) && (
+      {sent && (
         <p className="text-body-sm text-action-primary mt-4" role="status">
           Thank you — your message is on its way. We reply within two working
           days.
         </p>
       )}
 
-      {/* max-w-172 (688px), not the column's 732: the frame breaks this after
-          "Our only domain is" and drops "jemai.co." to a second line, which a
-          full-width measure does not do (the whole run is 713). */}
       <p className="text-body-xs text-text-secondary mt-10.25 max-w-172">
         JEMAI International will never contact you from a personal email or ask
         for payment outside of our official channels. Our only domain is

@@ -149,7 +149,7 @@ export const SiteFooter = () => (
             buttonClassName="h-14 w-full"
           >
             <p className="text-body-xs text-text-inverse mt-2">
-              By clicking the button you agree to the Privacy Policy
+              By clicking the button you agree to the Terms and Conditions of Service
             </p>
           </SubscribeForm>
         </div>

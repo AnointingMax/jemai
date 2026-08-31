@@ -1237,6 +1237,102 @@ as **plain text**. The link was removed when `/privacy` was found to 404, so the
 copy now asks for agreement to a document the reader cannot open. `/terms` has a
 page; `/privacy` does not.
 
+## The contact form sends
+
+It was a no-op: `onSubmit = () => setSent(true)`. A visitor filled it in, read
+"your message is on its way", and nothing left the browser. It was the last
+storefront form that dropped what someone typed — every other one files a row
+and mails.
+
+- **No table behind it, and that is the design.** A contact message is addressed
+  to JEMAI rather than to a section, and there is no console screen that would
+  read it. A `contact` permission would put a row in the rail with nothing
+  behind it — the mistake `admins` was for its first few passes — so the mail is
+  the record and it goes to the studio inbox (`MAIL_REPLY_TO`, else the bare
+  address out of `MAIL_FROM`, which may carry a display name).
+- **Which inverts the send discipline.** Everywhere else the row is the record
+  and mail is a courtesy, so `notify` swallows a provider failure. Here there is
+  no row: `deliverContactMessage` uses `sendMail`, which throws, and the action
+  turns that into an error the sender can act on. The acknowledgement back to
+  the sender is the courtesy — it runs after, on `notify`, because by then the
+  message is already with the studio and telling someone it failed when it did
+  not is the worse mistake.
+- **The reply-to is the sender's own address**, so answering the notification
+  answers the person who wrote it.
+- **`sendMail` owns the unconfigured case, not the caller.** An early throw on a
+  missing inbox made this the one form that could not be walked locally: every
+  other flow logs and carries on in development. `studioInbox()` is empty only
+  when `MAIL_FROM` is unset, which is exactly when `sendMail` is unconfigured
+  and already knows what to do — log in development, throw in production. Caught
+  by driving the form, not by the typechecker.
+- **`inquiryTypes` moved to `lib/contact.ts`.** Both sides need it — the select
+  draws it, the action checks what arrives against it — and a `"use server"`
+  module may only export async functions, so the action cannot hold the list.
+  This typechecks either way and fails at build; `lib/` is the shared read side
+  for exactly this reason.
+- **`sent` now means sent.** It flipped on submit regardless of outcome, so the
+  acknowledgement showed even when nothing had happened. It is set from the
+  action's result, cleared on failure, and the button reads "Sending…" while the
+  transition is in flight.
+- Verified by driving the real form: a complete message toasts the
+  acknowledgement, shows the line under the button and clears the fields; the
+  action only reaches `ok` after both messages have rendered and gone through
+  `sendMail`, so a broken template would have surfaced as the error toast.
+
+**Not fixed, and not new:** a missing required field still does nothing visible.
+`register(name, { required: true })` blocks the submit client-side and no field
+draws an error, so the reader gets silence. The consultation form behaves
+identically — it is the project's pattern, and no frame draws an error state —
+so this matches it rather than diverging. Worth solving once, across both forms.
+
+## A payment that fails now says so
+
+Confirmation and dispatch had mail; a payment Paystack refused had none. The row
+moved to `Failed`, the buyer watched a modal, and if they closed the tab that was
+the whole of what they were told — about the one outcome where they most need to
+hear something, because a declined card mid-checkout leaves someone not knowing
+whether they have been charged.
+
+- **Both messages lead with "you have not been charged."** That is the question
+  the reader actually has; the invitation to try again comes after it. The
+  order's bag is deliberately left whole, so its way back is a real one.
+- **The registration note carries one thing the order's does not**: a place that
+  was never paid for was never held, and a show can fill up while the attendee
+  assumes otherwise. `Registration` has no slug, so it links to the programme
+  rather than guessing at the show.
+- **Nothing goes to the desk for a payment that did not happen.** An order
+  nobody paid for is not work, and a queue that fills with them stops being read.
+
+### The duplicate the failure path would have sent
+
+Wiring the mail exposed a latent bug in both settle functions. `moved` was
+`count === 1` on a write conditional on `payment: { not: "Paid" }` — which
+excludes the *paid* state, not the state being written. A failed row re-verified
+by a redelivered webhook or a refreshed callback matched again, counted as a
+move, and moved `Failed → Failed`. Harmless while only the paid branch sent
+anything; a second "your payment did not go through" the moment the failed
+branch did.
+
+The condition now excludes the target as well: `payment: { notIn: ["Paid",
+target] }`. `Paid` stays excluded outright so a settled order is terminal, and
+`Failed → Paid` still moves — the one transition that has to survive, since a
+retry mints a fresh reference and the old one may yet be settled late.
+`settleRegistration` had the identical shape and took the identical fix.
+
+Proved in SQL against the real schema, in a rolled-back transaction:
+
+| step | old `<> 'Paid'` | new `NOT IN ('Paid', target)` |
+| --- | --- | --- |
+| 1st settle, unpaid → Failed | UPDATE 1 | UPDATE 1 |
+| redelivered webhook → Failed | **UPDATE 1** (duplicate) | UPDATE 0 |
+| later retry succeeds → Paid | — | UPDATE 1 |
+| redelivered success → Paid | — | UPDATE 0 |
+
+Both templates were rendered and checked for unresolved holes rather than
+assumed. The settle path itself was not driven end to end: `verifyPayment` calls
+Paystack, and the only way to exercise it here would have been to fire live
+credentials at their API over a fabricated reference.
+
 ## Furniture orders API
 
 The checkout was a simulation and the console's order book was a fixture array.
