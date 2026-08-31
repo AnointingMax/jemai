@@ -1200,6 +1200,41 @@ four **404'd**. Furniture had no menu at all.
   keeps it, Clear empties the param, and the Art menu lands on a medium with the
   pick panel correctly absent.
 
+## Dead anchors
+
+Nine links pointed at `/about#…` anchors that exist on no page — the About page
+defines only `art`, `design`, `exhibitions` and `furniture`, the four
+disciplines. Every one of them dropped the reader at the top of a page that
+never answered the question they clicked on, and they sat on the two
+highest-traffic pages. All nine are gone.
+
+- `#delivery`, `#returns`, `#payment` — the three "learn more" buttons under the
+  furniture catalogue's assurance row, and two of the three on the home row.
+  `Assurance.cta` is optional now, so a column with nowhere to send the reader
+  draws its icon, title and copy alone.
+- `#projects` — "Explore past projects" on the home Architecture intro.
+- `#lanier-house`, `#soho-ballroom`, `#bathhouse-studios`,
+  `#house-in-the-woods` — the four project cards in the Architecture rail. There
+  is no project model and no project page behind them, so the cards are
+  photographs now rather than links. **Their hover lift went with the link**: a
+  card that grows under the cursor promises a click that no longer happens.
+- These were invisible to a first sweep because most of them are object-literal
+  `href:` values passed as props, not `href="…"` attributes. Grep for both.
+
+**The home assurance row now draws one button where the frame draws three.**
+"Contact our team" was the only one of the three with a real destination, so it
+survived while its neighbours did not, and the column it sits in makes the row
+~100px taller than the other two need. It reads as an oversight rather than as a
+deliberate single action. Two ways out, both a design call: drop that button too
+and let the row match the catalogue's, or give delivery and payment real pages
+to point at. Left as-is rather than quietly removing a working link.
+
+Still standing, and worse than the broken link it replaced: the footer's
+subscribe consent reads "By clicking the button you agree to the Privacy Policy"
+as **plain text**. The link was removed when `/privacy` was found to 404, so the
+copy now asks for agreement to a document the reader cannot open. `/terms` has a
+page; `/privacy` does not.
+
 ## Furniture orders API
 
 The checkout was a simulation and the console's order book was a fixture array.

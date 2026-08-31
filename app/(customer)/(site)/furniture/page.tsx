@@ -11,24 +11,29 @@ export const metadata: Metadata = {
     "Each collection we release reflects our dedication to innovative design and exceptional craftsmanship.",
 };
 
+/**
+ * The frame draws a "learn more" button under each column, pointing at
+ * `/about#delivery`, `#returns` and `#payment`. None of those anchors exists —
+ * the About page defines only `art`, `design`, `exhibitions` and `furniture` —
+ * so all three buttons dropped the reader at the top of a page that never
+ * answers the question. The copy stands on its own until there is a shipping,
+ * returns or payment page to point at.
+ */
 const assurances: Assurance[] = [
   {
     icon: <GlobeIcon className="text-icon-action size-8" />,
     title: "Free Shipping",
     copy: "All orders over ₦1,818,510 are delivered to your doorstep at no extra charge.",
-    cta: { label: "Shipping Details", href: "/about#delivery" },
   },
   {
     icon: <ReturnIcon className="text-icon-action size-8" />,
     title: "30-Days Free Returns",
     copy: "Enjoy the freedom of stress-free shopping with our hassle-free and return policy.",
-    cta: { label: "Return Policy", href: "/about#returns" },
   },
   {
     icon: <LockIcon className="text-icon-action size-8" />,
     title: "Secure Payment",
     copy: "Shop with confidence knowing your information is safeguarded.",
-    cta: { label: "More About Payment", href: "/about#payment" },
   },
 ];
 

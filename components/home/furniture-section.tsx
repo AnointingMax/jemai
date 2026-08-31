@@ -3,12 +3,17 @@ import { SectionIntro } from "@/components/site/section-intro";
 import { ProductCard, type Product } from "@/components/site/product-card";
 import { AssuranceRow, type Assurance } from "@/components/site/assurance-row";
 
+/**
+ * Two of the three "learn more" buttons pointed at `/about#delivery` and
+ * `#payment`, anchors that exist on no page, so they are gone — see the note on
+ * the furniture catalogue's own row. Only "Contact our team" had a real
+ * destination, which is why this row now draws one button rather than three.
+ */
 const assurances: Assurance[] = [
   {
     icon: <Image src="/figma/icons/delivery.svg" alt="" width={48} height={48} unoptimized />,
     title: "Considered Delivery",
     copy: "Delivery options designed around the scale, care and destination of your order.",
-    cta: { label: "Delivery information", href: "/about#delivery" },
   },
   {
     icon: <Image src="/figma/icons/guidance.svg" alt="" width={48} height={48} unoptimized />,
@@ -20,7 +25,6 @@ const assurances: Assurance[] = [
     icon: <Image src="/figma/icons/secure.svg" alt="" width={48} height={48} unoptimized />,
     title: "Secure checkout",
     copy: "Complete your purchase through a protected online payment process.",
-    cta: { label: "Payment information", href: "/about#payment" },
   },
 ];
 

@@ -7,7 +7,8 @@ export type Assurance = {
   icon: ReactNode;
   title: string;
   copy: string;
-  cta: { label: string; href: string };
+  /** Omitted where the column has nowhere of its own to send the reader. */
+  cta?: { label: string; href: string };
 };
 
 type AssuranceRowProps = {
@@ -50,12 +51,14 @@ export const AssuranceRow = ({ items, className }: AssuranceRowProps) => (
               <h3 className="text-h4 text-text-primary">{title}</h3>
               <p className="text-body text-text-secondary">{copy}</p>
             </div>
-            <Link
-              href={cta.href}
-              className="border-border-default text-label text-text-secondary hover:border-border-strong flex min-h-10 min-w-12.5 items-center justify-center rounded-[4px] border px-5 py-3 transition-colors"
-            >
-              {cta.label}
-            </Link>
+            {cta ? (
+              <Link
+                href={cta.href}
+                className="border-border-default text-label text-text-secondary hover:border-border-strong flex min-h-10 min-w-12.5 items-center justify-center rounded-[4px] border px-5 py-3 transition-colors"
+              >
+                {cta.label}
+              </Link>
+            ) : null}
           </div>
         </Fragment>
       ))}
