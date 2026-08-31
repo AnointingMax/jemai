@@ -23,14 +23,10 @@ type CheckoutModalProps = {
   pieceCount: number;
   onContinueShopping: () => void;
   onReturnToPayment: () => void;
+  /** The failed outcome's way back to a bag that still has everything in it. */
   onReviewOrder: () => void;
 };
 
-/**
- * The 1120 x 560 wrapper the three payment outcomes share: a 544px photograph
- * on the left with a caption block inset 32px from its edges, and a 576px
- * surface-page panel on the right padded 48px all round.
- */
 export const CheckoutModal = ({
   status,
   onOpenChange,
@@ -86,7 +82,6 @@ export const CheckoutModal = ({
             orderReference={orderReference}
             pieceCount={pieceCount}
             onContinueShopping={onContinueShopping}
-            onReviewOrder={onReviewOrder}
           />
         )}
         {status === "failed" && (
@@ -143,12 +138,10 @@ const SuccessState = ({
   orderReference,
   pieceCount,
   onContinueShopping,
-  onReviewOrder,
 }: {
   orderReference: string;
   pieceCount: number;
   onContinueShopping: () => void;
-  onReviewOrder: () => void;
 }) => (
   <div className="flex h-full flex-col pt-16.5">
     <OutcomeSeal />
@@ -179,7 +172,6 @@ const SuccessState = ({
 
     <OutcomeActions
       primary={{ label: "Continue shopping", onClick: onContinueShopping }}
-      secondary={{ label: "View order summary", onClick: onReviewOrder }}
     />
   </div>
 );
@@ -226,7 +218,8 @@ const OutcomeActions = ({
   secondary,
 }: {
   primary: Action;
-  secondary: Action;
+  /** Only the failed outcome has somewhere useful to go back to. */
+  secondary?: Action;
 }) => (
   <div className="mt-6.25 flex flex-wrap gap-3">
     <Button
@@ -238,13 +231,15 @@ const OutcomeActions = ({
     >
       {primary.label}
     </Button>
-    <Button
-      type="button"
-      size="cta"
-      onClick={secondary.onClick}
-      className="border-border-strong text-action-primary text-body h-12 rounded-none border bg-transparent px-6.5 font-normal hover:bg-transparent"
-    >
-      {secondary.label}
-    </Button>
+    {secondary ? (
+      <Button
+        type="button"
+        size="cta"
+        onClick={secondary.onClick}
+        className="border-border-strong text-action-primary text-body h-12 rounded-none border bg-transparent px-6.5 font-normal hover:bg-transparent"
+      >
+        {secondary.label}
+      </Button>
+    ) : null}
   </div>
 );

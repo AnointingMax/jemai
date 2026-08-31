@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 
 import { visibleAdminNav } from "@/components/admin/nav";
+import { hasPermission } from "@/lib/admin/auth/permissions";
 import { SignOutItem } from "@/components/admin/sign-out-item";
 import {
   Collapsible,
@@ -141,17 +142,18 @@ export const AdminSidebar = ({ account, permissions, ...props }: AdminSidebarPro
       </SidebarContent>
 
       <SidebarFooter className="gap-3 px-2 pb-4">
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              tooltip="Invite Team"
-              className="text-text-primary"
-            >
-              <Plus />
-              <span>Invite Team</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+        {hasPermission(permissions, "admins") ? (
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild tooltip="Invite Team" className="text-text-primary">
+                <Link href="/admin/admins?invite=1">
+                  <Plus />
+                  <span>Invite Team</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        ) : null}
 
         <SidebarMenu>
           <SidebarMenuItem>

@@ -232,9 +232,6 @@ const OrderSheetBody = ({
       </div>
 
       <SheetFooter className="border-border-default flex-row justify-end gap-3 border-t p-4">
-        <Button variant="outline" className="h-11 px-5" onClick={() => window.print()}>
-          Print order
-        </Button>
         <SheetClose asChild>
           <Button
             className="h-11 px-5"

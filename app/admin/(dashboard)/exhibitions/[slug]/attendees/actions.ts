@@ -4,7 +4,7 @@ import * as Yup from "yup";
 
 import { failWith, fail, ok, validate, type ActionResult } from "@/lib/action-result";
 import { hasPermission } from "@/lib/admin/auth/permissions";
-import { readAdminSession } from "@/lib/admin/auth/session";
+import { readActiveAdmin } from "@/lib/admin/auth/session";
 import { formatUpdatedAt, naira } from "@/lib/admin/content";
 import { csvExport, type CsvExport } from "@/lib/admin/csv";
 import { getExhibition } from "@/lib/admin/exhibitions";
@@ -29,7 +29,7 @@ const exportPayload = () =>
 export const exportAttendeesAction = async (
   values: unknown,
 ): Promise<ActionResult<CsvExport>> => {
-  const session = await readAdminSession();
+  const session = await readActiveAdmin();
   if (!session) return fail("Your session has expired. Sign in again.");
   if (!hasPermission(session.permissions, "exhibitions"))
     return fail("You do not have access to the exhibition programme.");

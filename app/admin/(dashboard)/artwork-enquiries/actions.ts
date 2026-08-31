@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import * as Yup from "yup";
 
 import { failWith, fail, ok, validate, type ActionResult } from "@/lib/action-result";
-import { readAdminSession } from "@/lib/admin/auth/session";
+import { readActiveAdmin } from "@/lib/admin/auth/session";
 import { hasPermission } from "@/lib/admin/auth/permissions";
 import { csvExport, type CsvExport } from "@/lib/admin/csv";
 import { listEnquiries } from "@/lib/admin/enquiries";
@@ -30,7 +30,7 @@ const statusPayload = () =>
 export const updateEnquiryStatusAction = async (
   values: unknown,
 ): Promise<ActionResult<string>> => {
-  const session = await readAdminSession();
+  const session = await readActiveAdmin();
   if (!session) return fail("Your session has expired. Sign in again.");
   if (!hasPermission(session.permissions, "artwork-enquiries"))
     return fail("You do not have access to artwork enquiries.");
@@ -67,7 +67,7 @@ const exportPayload = () =>
 export const exportEnquiriesAction = async (
   values: unknown,
 ): Promise<ActionResult<CsvExport>> => {
-  const session = await readAdminSession();
+  const session = await readActiveAdmin();
   if (!session) return fail("Your session has expired. Sign in again.");
   if (!hasPermission(session.permissions, "artwork-enquiries"))
     return fail("You do not have access to artwork enquiries.");

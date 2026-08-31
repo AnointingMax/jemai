@@ -1,7 +1,9 @@
+import { cache } from "react";
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 import { forbidden, redirect } from "next/navigation";
 
+import { findActiveAdmin } from "@/lib/admin/admins";
 import { hasPermission, type AdminPermission } from "@/lib/admin/auth/permissions";
 import env from "@/lib/env";
 
@@ -45,6 +47,7 @@ export const createAdminSession = async (session: AdminSession) => {
   });
 };
 
+/** Who the cookie says this is. It does not say whether they are still allowed in. */
 export const readAdminSession = async () => {
   const token = (await cookies()).get(ADMIN_SESSION_COOKIE)?.value;
   return token ? verifySessionToken(token) : null;
@@ -54,14 +57,20 @@ export const destroyAdminSession = async () => {
   (await cookies()).delete(ADMIN_SESSION_COOKIE);
 };
 
-export const requireAdminSession = async () => {
+export const readActiveAdmin = cache(async () => {
   const session = await readAdminSession();
-  if (!session) redirect("/admin/login");
-  return session;
+  if (!session) return null;
+  return findActiveAdmin(session.sub);
+});
+
+export const requireAdminSession = async () => {
+  const admin = await readActiveAdmin();
+  if (!admin) redirect("/admin/login");
+  return admin;
 };
 
 export const requireAdminPermission = async (permission: AdminPermission) => {
-  const session = await requireAdminSession();
-  if (!hasPermission(session.permissions, permission)) forbidden();
-  return session;
+  const admin = await requireAdminSession();
+  if (!hasPermission(admin.permissions, permission)) forbidden();
+  return admin;
 };

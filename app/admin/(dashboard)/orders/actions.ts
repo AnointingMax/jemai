@@ -5,7 +5,7 @@ import * as Yup from "yup";
 
 import { failWith, fail, ok, validate, type ActionResult } from "@/lib/action-result";
 import { hasPermission } from "@/lib/admin/auth/permissions";
-import { readAdminSession } from "@/lib/admin/auth/session";
+import { readActiveAdmin } from "@/lib/admin/auth/session";
 import { csvExport, type CsvExport } from "@/lib/admin/csv";
 import {
   describeItem,
@@ -18,7 +18,7 @@ import {
 import { listOrders, setFulfillmentStatus } from "@/lib/admin/orders";
 
 const guard = async () => {
-  const session = await readAdminSession();
+  const session = await readActiveAdmin();
   if (!session) return fail("Your session has expired. Sign in again.");
   if (!hasPermission(session.permissions, "orders"))
     return fail("You do not have access to furniture orders.");

@@ -123,6 +123,40 @@ Notes on the admin drops:
   field on that same row, the rail and the gate can never disagree about which
   screens an admin may reach.
 
+- **Administrators are a section now.** `/admin/admins` — the `admins`
+  permission had existed since the first auth pass with nothing behind it, so
+  an account could only be opened by re-running the seed. The index lists every
+  account with the sections it holds, and one dialog opens a new one: name,
+  address, the password it will first sign in with, and the permission
+  checkboxes.
+  - **The inviter sets the password because there is nothing to email one
+    through.** `lib/admin/auth/mailer.ts` is still a `console.info`, so a set-up
+    link would go nowhere. The field is deliberately *not* masked — whoever
+    types it has to read it back to the person it belongs to — and the copy
+    says so.
+  - **You cannot grant what you do not hold.** Without that rule `admins` is
+    every other permission: hold it alone and you could open an account with the
+    run of the console and sign straight into it. The action refuses the excess
+    and the form does not draw a box that would bounce.
+  - **Suspending, not deleting.** An admin is on the other end of orders they
+    have moved and enquiries they have answered, so the row stays and the
+    sign-in stops. Two accounts it will not close: your own, which would sign
+    you out of the screen you are standing on, and the last one that can still
+    sign in, which would leave the seed script as the only way back in.
+
+- **The cookie identifies; the row authorises.** The session is a 30-day signed
+  JWT, so until now suspending an account did nothing until it expired, and a
+  revoked permission kept working just as long. `readActiveAdmin` reads the live
+  row behind the cookie — React-`cache`d, so the shell, a section's gate and an
+  action share one query — and every gate and every write action goes through
+  it. Verified the way it matters: an admin signed in on one screen, suspended
+  from outside, is on the sign-in frame at their next request.
+  - **Both sides of the door have to ask the same question.** The sign-in shell
+    still trusted the cookie while the console had moved to the row, which
+    bounced a suspended admin between `/admin` and `/admin/login` forever. It is
+    a redirect loop rather than a wrong answer, so nothing typechecks or lints
+    its way out of it — the browser found it on the first navigation.
+
 - **Permissions gate reads, not just writes.** Every write action already
   checked `hasPermission` for itself; the screens did not, so an admin without
   the `orders` permission could still open `/admin/orders` and read the whole
@@ -1111,6 +1145,16 @@ Both now run on one `Order` / `OrderItem` pair
   walking the sequence past them. Two of the twelve are deliberately unhappy —
   one abandoned at "Pending payment", one "Failed" — because those are states
   the console has to be able to read and there is no other way to see them.
+- **Two buttons came out, for the same reason.** The order sheet's "Print
+  order" called `window.print()`, which printed the console page — rail, header,
+  table and all — rather than the order; there is no print stylesheet and no
+  packing-slip view behind it. The checkout success modal's "View order summary"
+  opened the cart drawer, which a paid order has just emptied, and dismissed the
+  panel that was the buyer's only record on the way. Both are gone until there
+  is something real to point them at: a receipt route, a receipt email, or a
+  print layout. The failed outcome keeps its "Review order" — that bag is
+  deliberately left whole.
+
 - **Fulfillment stamps a column per stage.** Reaching a stage stamps any earlier
   one still blank, so an order sent straight to Delivered does not draw a
   timeline with a hole in it; moving back clears what is now ahead of it.

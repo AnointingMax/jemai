@@ -40,3 +40,11 @@ export const ALLOWED_IMAGE_ACCEPT = ALLOWED_IMAGE_TYPES.join(",");
 
 /** "JPEG, PNG or WebP" — the line under the drop zone. */
 export const ALLOWED_IMAGE_LABEL = "JPEG, PNG or WebP";
+
+/**
+ * The shortest password the console will open an admin account on. Here rather
+ * than beside the account queries because the invite dialog reads it for its
+ * placeholder, and that module carries Prisma — which has no business in a
+ * browser bundle.
+ */
+export const MIN_ADMIN_PASSWORD_LENGTH = 8;

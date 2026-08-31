@@ -1,7 +1,7 @@
 "use server";
 
 import { fail, failWith, ok, type ActionResult } from "@/lib/action-result";
-import { readAdminSession } from "@/lib/admin/auth/session";
+import { readActiveAdmin } from "@/lib/admin/auth/session";
 import { uploadImage } from "@/lib/cloudinary";
 import { ALLOWED_IMAGE_LABEL, MAX_IMAGE_SIZE_MB } from "@/lib/constants";
 import { imageFileValidation } from "@/lib/image-upload";
@@ -22,7 +22,7 @@ import { imageFileValidation } from "@/lib/image-upload";
 export const uploadImageAction = async (
   formData: FormData,
 ): Promise<ActionResult<string>> => {
-  const session = await readAdminSession();
+  const session = await readActiveAdmin();
   if (!session) return fail("Your session has expired. Sign in again.");
 
   const file = formData.get("file");

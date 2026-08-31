@@ -7,6 +7,7 @@ import {
   Mail,
   MessageSquare,
   ShoppingBag,
+  UsersRound,
   type LucideIcon,
 } from "lucide-react";
 
@@ -58,6 +59,17 @@ export const adminNav: AdminNavGroup[] = [
       { title: "Newsletter", url: "/admin/newsletter", icon: Mail, permission: "newsletter" },
     ],
   },
+  {
+    title: "Team",
+    items: [
+      {
+        title: "Administrators",
+        url: "/admin/admins",
+        icon: UsersRound,
+        permission: "admins",
+      },
+    ],
+  },
 ];
 
 /** The nav entry a pathname sits under, used for the breadcrumb tail. */
@@ -79,3 +91,10 @@ export const visibleAdminNav = (permissions: readonly string[]): AdminNavGroup[]
       ),
     }))
     .filter((group) => group.items.length);
+
+export const adminPermissionLabels: Record<AdminPermission, string> = Object.fromEntries(
+  adminNav
+    .flatMap((group) => group.items)
+    .filter((item) => item.permission)
+    .map((item) => [item.permission, item.title]),
+) as Record<AdminPermission, string>;

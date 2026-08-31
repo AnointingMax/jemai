@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import * as Yup from "yup";
 
 import { failWith, ok, validate, fail, type ActionResult } from "@/lib/action-result";
-import { readAdminSession } from "@/lib/admin/auth/session";
+import { readActiveAdmin } from "@/lib/admin/auth/session";
 import { hasPermission } from "@/lib/admin/auth/permissions";
 import {
   createExhibition,
@@ -16,11 +16,11 @@ import {
 import { imageAssetSchema } from "@/lib/cloudinary";
 
 const requireExhibitionAccess = async (): Promise<ActionResult<string>> => {
-  const session = await readAdminSession();
+  const session = await readActiveAdmin();
   if (!session) return fail("Your session has expired. Sign in again.");
   if (!hasPermission(session.permissions, "exhibitions"))
     return fail("You do not have access to the exhibition programme.");
-  return ok(session.sub);
+  return ok(session.id);
 };
 
 const exhibitionPayload = () => {
