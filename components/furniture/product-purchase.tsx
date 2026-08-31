@@ -36,12 +36,6 @@ export const ProductPurchase = ({ product }: ProductPurchaseProps) => {
     return (c: string, s: string) => table.get(`${c}/${s}`) ?? 0;
   }, [variants]);
 
-  /**
-   * Each axis is gated by the other: with a colour picked, only sizes that are
-   * in stock in that colour stay selectable, and with a size picked, only the
-   * colours that carry it. With neither picked, anything with stock somewhere
-   * is fair game.
-   */
   const colourInStock = (name: string) =>
     size
       ? stockOf(name, size) > 0
@@ -57,18 +51,12 @@ export const ProductPurchase = ({ product }: ProductPurchaseProps) => {
     colour && size
       ? stockOf(colour, size)
       : variants
-          .filter((v) => (colour ? v.colour === colour : true))
-          .filter((v) => (size ? v.size === size : true))
-          .reduce((total, v) => total + v.stock, 0);
+        .filter((v) => (colour ? v.colour === colour : true))
+        .filter((v) => (size ? v.size === size : true))
+        .reduce((total, v) => total + v.stock, 0);
 
   const complete = Boolean(colour && size);
 
-  /**
-   * `ToggleGroup` in single mode hands back "" when the current item is
-   * re-clicked, which is the clearing behaviour this picker needs anyway:
-   * gating both axes can otherwise strand a selection — every other colour
-   * disabled by the size you picked, and no way back.
-   */
   const choose = (set: (value: string) => void) => (value: string) => {
     set(value);
     setQuantity(1);
@@ -154,11 +142,6 @@ export const ProductPurchase = ({ product }: ProductPurchaseProps) => {
           max={available || 1}
         />
 
-        {/* The frame draws this live with nothing selected, which no real
-            variant picker can honour — the label is kept and the button is
-            disabled until a colour and size are chosen. `flex-1` is scoped to
-            the row layout; in the stacked column it would resolve flex-basis
-            against the height and flatten the button. */}
         <Button
           type="button"
           size="cta"

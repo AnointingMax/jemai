@@ -7,7 +7,8 @@ type MediaBandProps = {
   eyebrow: string;
   heading: string;
   copy: string;
-  cta: { label: string; href: string };
+  /** Omitted where the band has nowhere of its own to send the reader. */
+  cta?: { label: string; href: string };
   image: { src: string; alt: string };
   /** Which half the image occupies on desktop. Mobile always stacks image-first. */
   mediaSide?: "left" | "right";
@@ -59,11 +60,13 @@ export const MediaBand = ({
           </h3>
         </div>
         <p className="text-body text-text-secondary">{copy}</p>
-        <div className="pt-3.75">
-          <Button asChild size="cta" className="min-w-37">
-            <Link href={cta.href}>{cta.label}</Link>
-          </Button>
-        </div>
+        {cta ? (
+          <div className="pt-3.75">
+            <Button asChild size="cta" className="min-w-37">
+              <Link href={cta.href}>{cta.label}</Link>
+            </Button>
+          </div>
+        ) : null}
       </div>
     </div>
   </div>

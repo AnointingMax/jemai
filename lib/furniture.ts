@@ -11,20 +11,9 @@ import {
 } from "@/lib/products";
 import type { Product } from "@/components/site/product-card";
 
-/**
- * The storefront's read side of the furniture catalogue. Everything here runs
- * on the server — `lib/products` keeps the types and the formatters, so the
- * client components that share them never pull the database in behind them.
- */
-
 /** Stands in for a product whose imagery has not been uploaded yet. */
 const PLACEHOLDER_IMAGE = "/figma/home/p-mila.png";
 
-/**
- * Swatch fills for the colour names the catalogue actually uses. A variant can
- * carry its own hex, and anything unrecognised without one falls back to the
- * frame's cream rather than dropping the swatch out of the row.
- */
 const SWATCHES: Record<string, string> = {
   cream: "#efe7db",
   tan: "#d1a97f",
@@ -74,7 +63,7 @@ const toCatalogueProduct = (record: FurnitureRecord): CatalogueProduct => ({
   name: record.name,
   category: record.category,
   collection: record.category,
-  colours: [...new Set(record.variants.map((variant) => variant.colour).filter(Boolean))],
+  colors: [...new Set(record.variants.map((variant) => variant.colour).filter(Boolean))],
   inStock: inStock(record),
   amount: record.price,
   price: naira(record.price),
@@ -106,8 +95,22 @@ export const loadCatalogue = async () => {
   return {
     products,
     collections: [...new Set(products.map((product) => product.collection))].sort(),
-    colours: [...new Set(products.flatMap((product) => product.colours))].sort(),
+    colors: [...new Set(products.flatMap((product) => product.colors))].sort(),
   };
+};
+
+/**
+ * Every category the catalogue actually holds, for the header's Furniture menu.
+ * Same rule as the Art menu's mediums: drawn from the pieces on sale, so the
+ * menu can never lead to an empty grid.
+ */
+export const listFurnitureCategories = async (): Promise<string[]> => {
+  const rows = await prisma.furniture.findMany({
+    distinct: ["category"],
+    select: { category: true },
+    orderBy: { category: "asc" },
+  });
+  return rows.map((row) => row.category).filter(Boolean);
 };
 
 /** The four pieces the home page leads with — the newest in the catalogue. */

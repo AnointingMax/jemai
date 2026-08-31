@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Eyebrow } from "@/components/site/eyebrow";
 import { SubscribeForm } from "@/components/site/subscribe-form";
 
@@ -37,11 +36,7 @@ export const Newsletter = () => (
               >
                 <p className="text-body-xs text-text-secondary">
                   By subscribing, you agree to receive news and updates from
-                  JEMAI. You can unsubscribe at any time. View our{" "}
-                  <Link href="/privacy" className="underline-offset-2 hover:underline">
-                    Privacy Policy
-                  </Link>
-                  .
+                  JEMAI. You can unsubscribe at any time.
                 </p>
               </SubscribeForm>
             </div>

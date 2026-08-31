@@ -32,8 +32,14 @@ const assurances: Assurance[] = [
   },
 ];
 
-const FurniturePage = async () => {
-  const { products, collections, colours } = await loadCatalogue();
+const FurniturePage = async ({ searchParams }: PageProps<"/furniture">) => {
+  const { collection: raw } = await searchParams;
+  const { products, collections, colors } = await loadCatalogue();
+
+  // An unknown or stale `?collection=` falls back to "All" rather than to an
+  // empty grid — the tab rail then shows All as current, which is the truth.
+  const requested = typeof raw === "string" ? raw : undefined;
+  const collection = requested && collections.includes(requested) ? requested : "All";
 
   return (
     <>
@@ -56,7 +62,12 @@ const FurniturePage = async () => {
           </div>
         </div>
 
-        <Catalogue products={products} collections={collections} colours={colours} />
+        <Catalogue
+          products={products}
+          collections={collections}
+          colors={colors}
+          collection={collection}
+        />
 
         <div className="mt-4 w-full px-4 sm:px-6 lg:px-page-gutter">
           <AssuranceRow items={assurances} className="mx-auto max-w-432" />

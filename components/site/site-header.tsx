@@ -7,26 +7,25 @@ import { Menu, X } from "lucide-react";
 import { BagIcon, SearchIcon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/lib/cart";
+import type { MenuLink, SiteMenus } from "@/lib/navigation";
 
 type NavItem = {
   label: string;
   href: string;
-  children?: { label: string; href: string; }[];
+  children?: MenuLink[];
   mobileOnly?: boolean;
 };
 
-const navItems: NavItem[] = [
-  { label: "Furniture", href: "/furniture" },
+const buildNav = (menus: SiteMenus): NavItem[] => [
+  {
+    label: "Furniture",
+    href: "/furniture",
+    children: menus.furniture.length > 1 ? menus.furniture : undefined,
+  },
   {
     label: "Art",
     href: "/artworks",
-    children: [
-      { label: "Shop All", href: "/artworks" },
-      { label: "Architecture", href: "/artworks/architecture" },
-      { label: "Fashion", href: "/artworks/fashion" },
-      { label: "Line", href: "/artworks/line" },
-      { label: "Paintings", href: "/artworks/paintings" },
-    ],
+    children: menus.art.length > 1 ? menus.art : undefined,
   },
   { label: "Exhibitions", href: "/exhibitions" },
   { label: "About", href: "/about", mobileOnly: true },
@@ -34,11 +33,12 @@ const navItems: NavItem[] = [
   { label: "Contact", href: "/contact", mobileOnly: true },
 ];
 
-const desktopNavItems = navItems.filter((item) => !item.mobileOnly);
-
-export const SiteHeader = () => {
+export const SiteHeader = ({ menus }: { menus: SiteMenus; }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { count, setOpen } = useCart();
+
+  const navItems = buildNav(menus);
+  const desktopNavItems = navItems.filter((item) => !item.mobileOnly);
 
   return (
     <div className="w-full px-4 sm:px-6 lg:px-page-gutter">
@@ -57,7 +57,7 @@ export const SiteHeader = () => {
                 {item.children && (
                   <ul className="invisible absolute top-full left-2 z-20 w-50 max-w-75 min-w-50 rounded-b-[4px] bg-white py-4 opacity-0 shadow-[0_20px_20px_rgba(0,0,0,0.1)] transition-opacity group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
                     {item.children.map((child) => (
-                      <li key={child.label}>
+                      <li key={child.href}>
                         <Link
                           href={child.href}
                           className="text-label text-text-primary hover:text-action-link block px-6 py-2 transition-colors"
@@ -144,7 +144,7 @@ export const SiteHeader = () => {
                 {item.children && (
                   <ul className="pb-2 pl-4">
                     {item.children.map((child) => (
-                      <li key={child.label}>
+                      <li key={child.href}>
                         <Link
                           href={child.href}
                           onClick={() => setMobileOpen(false)}

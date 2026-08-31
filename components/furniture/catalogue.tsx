@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useCallback, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import { ProductCard } from "@/components/site/product-card";
 import { Button } from "@/components/ui/button";
@@ -59,27 +60,45 @@ const Field = ({ label, value, onChange, children }: FieldProps) => (
 );
 
 type CatalogueProps = {
-  /** The whole catalogue: every filter below runs on the client, over this list. */
   products: CatalogueProduct[];
-  /** The tab rail and the colour select, drawn from what the catalogue holds. */
   collections: string[];
-  colours: string[];
+  colors: string[];
+  collection: string;
 };
 
-export const Catalogue = ({ products, collections, colours }: CatalogueProps) => {
-  const [collection, setCollection] = useState("All");
+export const Catalogue = ({
+  products,
+  collections,
+  colors,
+  collection,
+}: CatalogueProps) => {
+  const router = useRouter();
+  const pathname = usePathname();
   const [query, setQuery] = useState("");
   const [availability, setAvailability] = useState("in-stock");
   const [colour, setColour] = useState("all");
   const [sort, setSort] = useState<SortKey>("featured");
   const [visible, setVisible] = useState(PAGE_SIZE);
 
+  const setCollection = useCallback(
+    (value: string) => {
+      const params = new URLSearchParams(window.location.search);
+      if (value === "All") params.delete("collection");
+      else params.set("collection", value);
+
+      const query = params.toString();
+      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+      setVisible(PAGE_SIZE);
+    },
+    [pathname, router],
+  );
+
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
     const matches = products.filter(
       (product) =>
         (collection === "All" || product.collection === collection) &&
-        (colour === "all" || product.colours.includes(colour)) &&
+        (colour === "all" || product.colors.includes(colour)) &&
         product.inStock === (availability === "in-stock") &&
         (needle === "" ||
           product.name.toLowerCase().includes(needle) ||
@@ -99,25 +118,23 @@ export const Catalogue = ({ products, collections, colours }: CatalogueProps) =>
   /** Every filter change restarts paging, so "Load more" never skips a page. */
   const repage =
     <T,>(set: (value: T) => void) =>
-    (value: T) => {
-      set(value);
-      setVisible(PAGE_SIZE);
-    };
+      (value: T) => {
+        set(value);
+        setVisible(PAGE_SIZE);
+      };
 
   const reset = () => {
-    setCollection("All");
     setQuery("");
     setAvailability("in-stock");
     setColour("all");
     setSort("featured");
     setVisible(PAGE_SIZE);
+    // Last, because it repages and navigates on its own.
+    setCollection("All");
   };
 
   return (
     <>
-      {/* The tabs are one-of-many, so `ToggleGroup` in single mode gets the
-          roving tab stop and arrow-key nav for free. "All" is the floor —
-          re-clicking the active tab hands back "" and must not clear the rail. */}
       <nav
         aria-label="Product categories"
         className="mt-8 w-full px-4 sm:px-6 lg:mt-9 lg:px-page-gutter"
@@ -128,7 +145,7 @@ export const Catalogue = ({ products, collections, colours }: CatalogueProps) =>
           size="tab"
           spacing={5}
           value={collection}
-          onValueChange={(value) => repage(setCollection)(value || "All")}
+          onValueChange={(value) => setCollection(value || "All")}
           className="mx-auto w-full max-w-432 justify-start overflow-x-auto lg:justify-center [&::-webkit-scrollbar]:hidden scrollbar-none"
         >
           {["All", ...collections].map((item) => (
@@ -176,7 +193,7 @@ export const Catalogue = ({ products, collections, colours }: CatalogueProps) =>
 
               <Field label="Colour" value={colour} onChange={repage(setColour)}>
                 <SelectItem value="all">Color</SelectItem>
-                {colours.map((item) => (
+                {colors.map((item) => (
                   <SelectItem key={item} value={item}>
                     {item}
                   </SelectItem>

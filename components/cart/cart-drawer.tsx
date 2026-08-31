@@ -18,14 +18,6 @@ import { QuantityStepper } from "@/components/shared/quantity-stepper";
 import { useCart, type CartLine } from "@/lib/cart";
 import { nairaExact } from "@/lib/products";
 
-/**
- * Three colours in this frame sit outside the JEMAI palette — the same story as
- * the catalogue's Load-more block. The rules and the secondary copy are a cool
- * neutral grey, and the primary copy a cool near-black, none of which is within
- * reach of a token (`--color-border-default` composites warm, at #dcd7d7). They
- * are literal hex with this comment rather than invented tokens; worth raising
- * with the designer.
- */
 const rule = "#dee2e6";
 const inkStrong = "#202025";
 const inkMuted = "#636366";

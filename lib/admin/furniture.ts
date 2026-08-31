@@ -10,7 +10,7 @@ export { naira };
 
 /**
  * One buyable combination. The frames drew variants as two free-text tag rails
- * (sizes, then colours); stock is tracked per combination instead, so a row
+ * (sizes, then colors); stock is tracked per combination instead, so a row
  * carries its own count and the product's total is their sum.
  */
 export type FurnitureVariant = {
@@ -51,13 +51,13 @@ export const totalStock = (item: Pick<Furniture, "stock" | "variants">) =>
     ? item.variants.reduce((sum, variant) => sum + variant.quantity, 0)
     : item.stock;
 
-/** "2 colours · 1 size" — the index's Options column. */
+/** "2 colors · 1 size" — the index's Options column. */
 export const describeVariants = (variants: FurnitureVariant[]) => {
   const count = (values: string[]) => new Set(values.filter(Boolean)).size;
-  const colours = count(variants.map((variant) => variant.colour));
+  const colors = count(variants.map((variant) => variant.colour));
   const sizes = count(variants.map((variant) => variant.size));
   const parts = [
-    colours ? `${colours} ${colours === 1 ? "colour" : "colours"}` : "",
+    colors ? `${colors} ${colors === 1 ? "colour" : "colors"}` : "",
     sizes ? `${sizes} ${sizes === 1 ? "size" : "sizes"}` : "",
   ].filter(Boolean);
   return parts.length ? parts.join(" · ") : "No variants";

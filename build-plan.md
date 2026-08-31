@@ -210,7 +210,7 @@ Shared reference frames (not pages): `246:18783` intro, `247:18801` semantic col
   the 600 heading token resolves to the bold file. Body copy is Assistant from
   Google Fonts.
 - **Tokens.** The Figma variables live in the `@theme` block at the bottom of
-  `app/globals.css` (colours, type scale, layout spacing), and the shadcn/ui semantic
+  `app/globals.css` (colors, type scale, layout spacing), and the shadcn/ui semantic
   variables are re-pointed at them so primitives inherit the brand.
   Figma reports `letterSpacing` as a **percentage** of font size — those are stored as
   `em` values, not `px`.
@@ -222,7 +222,7 @@ Shared reference frames (not pages): `246:18783` intro, `247:18801` semantic col
 
 - **Newsletter & Footer.** The Figma MCP quota (Starter tier = 20 calls/month)
   ran out before these two could be pulled, so they were built from 1x PNG frame
-  exports in `design-reference/` instead: colours sampled and geometry measured
+  exports in `design-reference/` instead: colors sampled and geometry measured
   out of the pixels with `sharp`. Both are within a few px of their frames.
   Re-derive from Figma directly if the plan is ever upgraded.
 - **Divider rule.** Measured at exactly **3px of `#98908f`** — i.e.
@@ -243,7 +243,7 @@ Shared reference frames (not pages): `246:18783` intro, `247:18801` semantic col
   (see the Furniture notes); both now use `sm:text-h2`, which carries
   `--text-h2--font-weight: 700`, as the Newsletter always did.
 - **Footer pattern.** `public/figma/brand/footer-pattern.png` — a 300 × 514 tile
-  (11 KB, 37 colours) recovered from the export rather than re-drawn: the motif
+  (11 KB, 37 colors) recovered from the export rather than re-drawn: the motif
   repeats every 300px horizontally (autocorrelation 0.94), so median-stacking the
   ~4.8 repeats while masking overlaid content reconstructs a clean tile. It
   renders pixel-identical to the frame (matching min/max/mean per channel). No
@@ -337,7 +337,7 @@ Shared reference frames (not pages): `246:18783` intro, `247:18801` semantic col
 - **The empty state is invented.** No frame draws one, and functional filters
   need one. It is deliberately minimal — one line of body copy and a "Clear
   filters" action.
-- **Three colours in this frame are off-palette.** The Load more button is a
+- **Three colors in this frame are off-palette.** The Load more button is a
   solid `#333639`, the pager text and progress fill `#3c4347`, the progress
   track `#eaeaea`. None is within reach of a JEMAI token (the CTA language
   everywhere else is `action-primary` maroon), so they are literal hex with a
@@ -416,7 +416,7 @@ Shared reference frames (not pages): `246:18783` intro, `247:18801` semantic col
 - **Variants cross-filter both ways** (`components/furniture/product-purchase.tsx`).
   `ProductVariant` is a colour × size × stock row. With a colour picked, only
   sizes in stock in that colour stay selectable; with a size picked, only the
-  colours that carry it. Re-clicking the current chip clears it — without that
+  colors that carry it. Re-clicking the current chip clears it — without that
   escape, gating both axes can strand a selection with no way back. The stock
   matrix is placeholder but deliberately uneven (Amber runs in 14/15 only,
   Custom in Cream only, Olive down to a single 12) and **sums to 14, so the pill
@@ -477,7 +477,7 @@ Shared reference frames (not pages): `246:18783` intro, `247:18801` semantic col
   `--color-surface-page`. The export's alpha shows a soft ~16px shadow on the
   left and bottom only.
 - **This frame is a second block pasted in from another design system.** Four of
-  its colours are cool neutrals with no JEMAI counterpart: rules `#dee2e6`,
+  its colors are cool neutrals with no JEMAI counterpart: rules `#dee2e6`,
   primary copy `#202025`, secondary copy `#636366`. They are literal hex
   constants at the top of the component rather than invented tokens — same call
   as the catalogue's Load-more block. The badge, the empty-state CTA border, the
@@ -590,7 +590,7 @@ Shared reference frames (not pages): `246:18783` intro, `247:18801` semantic col
   the frame, which is most of the page's 4px total drift once the prose block's
   short wrap (below) is netted off it.
 
-- **Outside the founder note, colours are inferred from the site's own language,
+- **Outside the founder note, colors are inferred from the site's own language,
   not measured.** The hero's
   copy half and the two mosaic copy panels are `surface-subtle`, on the
   precedent of the consultation panel, which is the same shape of block. The
@@ -862,7 +862,7 @@ Shared reference frames (not pages): `246:18783` intro, `247:18801` semantic col
 - **The pager block is now shared.** `components/shared/load-more-pager.tsx` —
   the "1-n of m" count, its 160px bar and the charcoal Load more button — is
   drawn identically here and on the furniture catalogue, so it was lifted out of
-  `catalogue.tsx` and both pages use it. The three off-palette colours travel
+  `catalogue.tsx` and both pages use it. The three off-palette colors travel
   with it.
 
 - **The frame's card data is placeholder, and its own numbers disagree.** All
@@ -1144,6 +1144,61 @@ that a seeded database need not contain at all.
   featured portrait comes from the show's own thumbnail.
 - Verified at 1440 / 768 / 390 on both pages: no horizontal overflow, no image
   with `naturalWidth === 0`, and the venue · dates line wraps cleanly at 390.
+
+## Catalogue filtering from the header
+
+The header's Art menu drew five hardcoded entries — Architecture, Fashion, Line,
+Paintings — pointing at `/artworks/architecture` and its siblings. Those resolve
+against `/artworks/[slug]`, so a medium and a work's slug share one space and all
+four **404'd**. Furniture had no menu at all.
+
+- **Both menus are the catalogue's own vocabulary now.** `siteMenus()`
+  (`lib/navigation.ts`) reads the distinct mediums and categories actually on
+  sale, so a menu entry can never lead to an empty grid and never goes stale
+  when the console adds a category. It is React-`cache`d because both the
+  editorial shell and the checkout shell render the header, and a page under one
+  of them must not pay for the two queries twice in a request.
+- **A search param, not a path segment** — `?medium=` and `?collection=`. That
+  is what sidesteps the `[slug]` collision, and it lets the menu and the page's
+  own tab rail write the same place instead of disagreeing about what the page
+  is showing. Both survive a reload and can be linked to.
+- **The two pages filter on opposite sides of the wire, deliberately.** The Next
+  docs draw the line and the pages fall on either side of it: artworks narrows a
+  database query, so the page reads `searchParams` on the server; furniture
+  narrows a list already sent to the client, so it *could* have used
+  `useSearchParams` + `history.replaceState` and stayed static.
+  - It does not, because `useSearchParams` in a prerendered route pushes
+    everything up to the nearest Suspense boundary to client-only rendering —
+    and that boundary would have to contain the product grid, which is the
+    page's primary content. A commerce catalogue keeping its grid in the initial
+    HTML is worth more than saving one indexed query per tab click, so the page
+    reads `searchParams` and the rail navigates with `router.replace`.
+  - `replace`, not `push`: paging through tabs must not bury the page the reader
+    arrived from under a dozen history entries. `scroll: false` keeps the grid
+    where it is.
+- **An unknown or stale param falls back to the whole catalogue**, not to an
+  empty grid, and the rail then draws All as current — a link that has outlived
+  its medium should still land the reader somewhere true.
+- **Filtered, only a real curator's pick counts.** Unfiltered, `curatedArtworks`
+  tops the flagged works up with the newest so the carousel is never short.
+  Doing that inside a medium would present whatever happens to be there as the
+  curator's choice — a claim nobody made — so the filtered query returns flagged
+  works alone and a medium with none draws no panel.
+- **The medium rail on `/artworks` is invented**; no frame draws one. It exists
+  because the menu can now land a reader on a narrowed catalogue, and a filtered
+  page that says nothing about being filtered reads as a page with hardly any
+  work in it. Plain links in the furniture rail's underline-tab treatment — the
+  medium is a location, so each tab already *is* one, which keeps the row
+  server-rendered and gives back/forward their ordinary meaning.
+- **"Meet The Artist" is gone from the home Artist Spotlight band.** It pointed
+  at `/about#artists`, an anchor that exists on no page, and there is no artist
+  page to send the reader to instead. `MediaBand`'s `cta` is optional now; the
+  band keeps its copy until there is somewhere to go.
+- Verified at 1440 / 768 / 390 across home, both catalogues filtered and
+  unfiltered, and checkout: no horizontal overflow, no broken images. Driven in
+  a browser end to end — tab click writes the URL and narrows the grid, reload
+  keeps it, Clear empties the param, and the Art menu lands on a medium with the
+  pick panel correctly absent.
 
 ## Furniture orders API
 

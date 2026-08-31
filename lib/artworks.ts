@@ -2,12 +2,6 @@ import { prisma } from "@/lib/prisma";
 import type { Artwork, ArtworkDetail, CuratedArtwork } from "@/lib/gallery";
 import type { Prisma } from "@/lib/generated/prisma/client";
 
-/**
- * The storefront's read side of the gallery catalogue. Everything here runs on
- * the server — `lib/gallery` keeps the types and the page size, so the client
- * components that share them never pull the database in behind them.
- */
-
 /** Every read pulls the artist the work is attributed to. */
 const withArtist = { artist: { select: { name: true } } } satisfies Prisma.ArtworkInclude;
 
@@ -35,22 +29,30 @@ const toArtwork = (record: ArtworkRecord): Artwork => ({
   src: images(record)[0],
 });
 
-/** The whole catalogue, newest first — what the grid pages through. */
-export const listArtworks = async (): Promise<Artwork[]> => {
+export const listArtworkMediums = async (): Promise<string[]> => {
+  const rows = await prisma.artwork.findMany({
+    distinct: ["medium"],
+    select: { medium: true },
+    orderBy: { medium: "asc" },
+  });
+  return rows.map((row) => row.medium).filter(Boolean);
+};
+
+export const listArtworks = async (medium?: string): Promise<Artwork[]> => {
   const records = await prisma.artwork.findMany({
+    where: medium ? { medium } : undefined,
     include: withArtist,
     orderBy: { createdAt: "desc" },
   });
   return records.map(toArtwork);
 };
 
-/**
- * The curated introduction above the grid, and the home page's carousel. Works
- * flagged in the console come first; the newest top the list up when there are
- * fewer flagged than the frame draws, so the carousel is never short.
- */
-export const curatedArtworks = async (limit = 3): Promise<CuratedArtwork[]> => {
+export const curatedArtworks = async (
+  limit = 3,
+  medium?: string,
+): Promise<CuratedArtwork[]> => {
   const records = await prisma.artwork.findMany({
+    where: medium ? { medium, curatorsPick: true } : undefined,
     include: withArtist,
     orderBy: [{ curatorsPick: "desc" }, { createdAt: "desc" }],
     take: limit,
@@ -82,8 +84,6 @@ export const getArtworkDetail = async (slug: string): Promise<ArtworkDetail | nu
     lead: record.summary,
     story: record.story,
     hero,
-    // The frame draws six documentation shots below the rule; a work with fewer
-    // simply draws fewer cells rather than repeating one to fill the grid.
     gallery: rest.slice(0, 6).map((src, index) => ({
       src,
       alt: `${record.title} — view ${index + 2}`,

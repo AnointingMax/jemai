@@ -10,7 +10,6 @@ import {
 } from "@/components/icons";
 
 const explore = [
-  { label: "Design", href: "/about#design" },
   { label: "Furniture", href: "/furniture" },
   { label: "Art", href: "/artworks" },
   { label: "Exhibitions", href: "/exhibitions" },
@@ -19,7 +18,7 @@ const explore = [
 const company = [
   { label: "About", href: "/about" },
   { label: "Contact Us", href: "/contact" },
-  { label: "JEMAI Journal", href: "/journal" },
+  // { label: "JEMAI Journal", href: "/journal" },
 ];
 
 const contacts = [
@@ -150,10 +149,7 @@ export const SiteFooter = () => (
             buttonClassName="h-14 w-full"
           >
             <p className="text-body-xs text-text-inverse mt-2">
-              By clicking the button you agree to the{" "}
-              <Link href="/privacy" className="underline-offset-2 hover:underline">
-                Privacy Policy
-              </Link>
+              By clicking the button you agree to the Privacy Policy
             </p>
           </SubscribeForm>
         </div>
@@ -163,12 +159,10 @@ export const SiteFooter = () => (
 
       <div className="mt-stack-default flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-body-sm text-text-inverse">
-          &copy; 2026 JEMAI INTERNATIONAL LIMITED. All rights reserved.
+          &copy; {new Date().getFullYear()} JEMAI INTERNATIONAL LIMITED. All
+          rights reserved.
         </p>
         <div className="flex items-center gap-3">
-          <Link href="/privacy" className="text-body-sm text-text-inverse underline underline-offset-2">
-            Privacy Policy
-          </Link>
           <Link href="/terms" className="text-body-sm text-text-inverse underline underline-offset-2">
             Terms of Service
           </Link>
