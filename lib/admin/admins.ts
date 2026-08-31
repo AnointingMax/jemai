@@ -36,6 +36,20 @@ export const listAdmins = async (search?: string) => {
   return records.map(toAccount);
 };
 
+/**
+ * Who is entitled to hear about a section's work — every active account holding
+ * that permission, and nobody else. An internal notice carries a customer's
+ * name, address and money, so it goes to the desks that already read those in
+ * the console and stops there.
+ */
+export const adminsWithPermission = async (permission: AdminPermission) => {
+  const records = await prisma.admin.findMany({
+    where: { isActive: true, permissions: { has: permission } },
+    orderBy: { name: "asc" },
+  });
+  return records.map(toAccount);
+};
+
 export const findActiveAdmin = async (id: string) => {
   const record = await prisma.admin.findUnique({ where: { id } });
   if (!record || !record.isActive) return null;

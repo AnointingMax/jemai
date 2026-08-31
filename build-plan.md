@@ -129,9 +129,11 @@ Notes on the admin drops:
   account with the sections it holds, and one dialog opens a new one: name,
   address, the password it will first sign in with, and the permission
   checkboxes.
-  - **The inviter sets the password because there is nothing to email one
-    through.** `lib/admin/auth/mailer.ts` is still a `console.info`, so a set-up
-    link would go nowhere. The field is deliberately *not* masked — whoever
+  - **The inviter sets the password, and the mail does not carry it.** Opening
+    an account writes to the new admin — that it exists, and where to sign in —
+    but a password that has travelled by email has been written down somewhere
+    neither party controls, so it goes by voice or the account holder sets their
+    own through recovery. The field is deliberately *not* masked — whoever
     types it has to read it back to the person it belongs to — and the copy
     says so.
   - **You cannot grant what you do not hold.** Without that rule `admins` is
@@ -1304,7 +1306,11 @@ Both now run on one `Order` / `OrderItem` pair
 - **Fulfillment stamps a column per stage.** Reaching a stage stamps any earlier
   one still blank, so an order sent straight to Delivered does not draw a
   timeline with a hole in it; moving back clears what is now ahead of it.
-- **Still a stand-in:** nothing emails the buyer. There is no mail provider in
-  the project (`lib/admin/auth/mailer.ts` is the same seam), so an order
-  confirmation, a dispatch note and a failed-payment nudge all have nowhere to
-  go yet.
+- **The buyer is written to twice, and the desk once.** A settled order sends a
+  receipt, and the move into `Ready for dispatch` sends a dispatch note; both
+  hang off the transition rather than the call, so the webhook and the buyer's
+  own return cannot produce two of either. The same settlement notifies the
+  admins holding `orders` and nobody else — an internal notice carries a
+  customer's address and spend, so it goes only to the desks that already read
+  those in the console. Nothing goes out on a failed payment: the buyer is on
+  the screen that just told them.

@@ -62,6 +62,12 @@ export type SubscriberInput = {
 export const subscribe = async (input: SubscriberInput) => {
   const email = input.email.trim().toLowerCase();
 
+  // Asked before the upsert rather than inferred from it: the row carries only
+  // `subscribedAt`, which a repeat sign-up refreshes, so afterwards there is
+  // nothing left to tell a new address from one that was already on the list —
+  // and only a new one is owed a welcome.
+  const existing = await prisma.subscriber.findUnique({ where: { email }, select: { id: true } });
+
   const record = await prisma.subscriber.upsert({
     where: { email },
     update: {
@@ -72,5 +78,5 @@ export const subscribe = async (input: SubscriberInput) => {
     create: { email, name: input.name, source: input.source },
   });
 
-  return toSubscriber(record);
+  return { subscriber: toSubscriber(record), isNew: !existing };
 };

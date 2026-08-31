@@ -9,6 +9,11 @@ import {
   type PaymentStatus,
 } from "@/lib/admin/order-record";
 import { searchClauses } from "@/lib/admin/table-query";
+import {
+  notifyDeskOfOrder,
+  sendOrderConfirmation,
+  sendOrderDispatched,
+} from "@/lib/mail/messages";
 import { Prisma } from "@/lib/generated/prisma/client";
 import { verifyPayment } from "@/lib/paystack";
 import { prisma } from "@/lib/prisma";
@@ -279,10 +284,23 @@ export const settleOrder = async (reference: string) => {
 
     if (settled && count === 1) await drawDownStock(tx, updated.items);
 
-    return updated;
+    return { updated, moved: count === 1 };
   });
 
-  return toOrder(record);
+  const order = toOrder(record.updated);
+
+  // The receipt hangs off the same `count === 1` the stock draw-down does. The
+  // webhook and the buyer's return both settle the same reference, and only the
+  // call that actually moved the row sends anything — so a buyer who refreshes
+  // the callback page does not collect a second receipt.
+  if (settled && record.moved) {
+    await sendOrderConfirmation(order);
+    // …and the desk that fulfills it, which is the orders section's holders and
+    // nobody else.
+    await notifyDeskOfOrder(order);
+  }
+
+  return order;
 };
 
 /** Which stamp column each stage of the lifecycle writes. "New" writes none — that is `placedAt`. */
@@ -319,5 +337,12 @@ export const setFulfillmentStatus = async (id: string, status: FulfillmentStatus
   }
 
   const record = await prisma.order.update({ where: { id }, data, include: withItems });
-  return toOrder(record);
+  const order = toOrder(record);
+
+  // Only the move into dispatch writes to the buyer, and only when it is a move:
+  // re-picking the status an order already holds is a no-op, not a second note.
+  if (status === "Ready for dispatch" && existing.status !== status)
+    await sendOrderDispatched(order);
+
+  return order;
 };

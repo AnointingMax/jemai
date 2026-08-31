@@ -17,6 +17,7 @@ import {
 } from "@/lib/admin/auth/permissions";
 import { readActiveAdmin } from "@/lib/admin/auth/session";
 import { MIN_ADMIN_PASSWORD_LENGTH } from "@/lib/constants";
+import { sendAdminWelcome } from "@/lib/mail/messages";
 
 const invitePayload = () =>
   Yup.object({
@@ -62,6 +63,10 @@ export const inviteAdminAction = async (
   try {
     const admin = await inviteAdmin({ ...parsed.data, permissions });
     if (!admin) return fail("An account already exists on that email address.");
+
+    // Tells them the account exists and where to sign in — never the password,
+    // which the inviter typed and reads back to them.
+    await sendAdminWelcome(admin);
 
     revalidatePath("/admin/admins");
     return ok(admin);

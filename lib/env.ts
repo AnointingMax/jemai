@@ -15,6 +15,10 @@ const schema = Yup.object({
 
   PAYSTACK_SECRET_KEY: Yup.string().matches(/^sk_(test|live)_/, "PAYSTACK_SECRET_KEY must be a Paystack secret key (sk_test_… or sk_live_…)"),
 
+  RESEND_API_KEY: Yup.string().matches(/^re_/, "RESEND_API_KEY must be a Resend API key (re_…)"),
+  MAIL_FROM: Yup.string().matches(/^(.+<)?[^@<>\s]+@[^@<>\s]+(>)?$/, "MAIL_FROM must be an address, optionally as \"Name <address>\""),
+  MAIL_REPLY_TO: Yup.string().email("MAIL_REPLY_TO must be an email address"),
+
   CLOUDINARY_URL: Yup.string().matches(/^cloudinary:\/\/[^:@/]+:[^:@/]+@[^:@/]+$/, "CLOUDINARY_URL must look like cloudinary://<api_key>:<api_secret>@<cloud_name>"),
 });
 

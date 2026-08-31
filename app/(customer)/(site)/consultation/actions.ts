@@ -6,6 +6,10 @@ import * as Yup from "yup";
 import { fail, failWith, ok, validate, type ActionResult } from "@/lib/action-result";
 import { budgets, projectTypes } from "@/lib/admin/consultation-record";
 import { createConsultation } from "@/lib/admin/consultations";
+import {
+  notifyDeskOfConsultation,
+  sendConsultationReceived,
+} from "@/lib/mail/messages";
 
 const consultationPayload = () =>
   Yup.object({
@@ -53,7 +57,13 @@ export const requestConsultationAction = async (
     return fail("The end date cannot come before the start date.");
 
   try {
-    await createConsultation(parsed.data);
+    const request = await createConsultation(parsed.data);
+
+    // The brief is filed either way; this is the copy that goes back to whoever
+    // wrote it, so they have their reference and can see what we read.
+    await sendConsultationReceived(request);
+    // …and the desk that triages it: the consultation-requests holders only.
+    await notifyDeskOfConsultation(request);
 
     revalidatePath("/admin/consultation-requests");
     revalidatePath("/admin");

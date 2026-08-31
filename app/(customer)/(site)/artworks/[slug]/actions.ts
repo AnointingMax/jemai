@@ -6,6 +6,7 @@ import * as Yup from "yup";
 import { failWith, fail, ok, validate, type ActionResult } from "@/lib/action-result";
 import { getArtwork } from "@/lib/admin/artworks";
 import { createEnquiry } from "@/lib/admin/enquiries";
+import { sendEnquiryReceived } from "@/lib/mail/messages";
 
 const enquiryPayload = () =>
   Yup.object({
@@ -30,12 +31,17 @@ export const sendArtworkEnquiryAction = async (
     const artwork = await getArtwork(slug);
     if (!artwork) return fail("That artwork is no longer available.");
 
-    await createEnquiry({
+    const enquiry = await createEnquiry({
       artworkId: artwork.id,
       artworkTitle: artwork.title,
       artist: artwork.artist,
       ...parsed.data,
     });
+
+    // The screen says the art team has it; this is what says so in their inbox,
+    // with the reference to quote. Best-effort, so a mail outage cannot lose an
+    // enquiry that is already filed.
+    await sendEnquiryReceived(enquiry);
 
     revalidatePath("/admin/artwork-enquiries");
     revalidatePath("/admin");

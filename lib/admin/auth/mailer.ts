@@ -1,22 +1,31 @@
 import env from "@/lib/env";
+import { renderEmail } from "@/lib/mail/render";
+import { sendMail } from "@/lib/mail/send";
 
 /**
- * Delivery for the reset link. There is no mail provider wired into the project
- * yet, so this is the single seam where one goes: swap the body for the SDK call
- * and every caller keeps working.
+ * The reset link, delivered. The token is only ever put in front of the address
+ * it was minted for, so the copy says plainly what to do when the mail was not
+ * asked for: nothing. Ignoring it leaves the password where it is.
  *
- * Until then the link is logged, which is enough to drive the flow locally. In
- * production that log is the only trace, so it is loud about being a stand-in.
+ * Throws when the provider refuses; `requestPasswordResetAction` catches that
+ * and shows the reader one generic line, so nothing about the account leaks
+ * through a failure either.
  */
 export const sendPasswordResetEmail = async (email: string, token: string) => {
   const url = `${env.APP_URL}/admin/reset-password?token=${encodeURIComponent(token)}`;
 
-  if (env.NODE_ENV === "production") {
-    console.warn(
-      `[mailer] No email provider configured — password reset for ${email} was not delivered.`,
-    );
-    return;
-  }
+  const { html, text } = renderEmail({
+    preview: "Reset the password on your JEMAI admin account.",
+    heading: "Reset your password",
+    paragraphs: [
+      "Someone asked to reset the password on the JEMAI admin account registered to this address. Use the link below to choose a new one.",
+      "The link is good for one hour, and only until it has been used once.",
+    ],
+    action: { label: "Choose a new password", url },
+    footnotes: [
+      "If this was not you, ignore this message — the password stays as it is, and the link expires on its own.",
+    ],
+  });
 
-  console.info(`[mailer] Password reset link for ${email}: ${url}`);
+  await sendMail({ to: email, subject: "Reset your JEMAI admin password", html, text });
 };

@@ -1,4 +1,5 @@
 import type { Registration, RegistrationStatus } from "@/lib/admin/registration-record";
+import { notifyDeskOfRegistration, sendRegistrationConfirmed } from "@/lib/mail/messages";
 import { prisma } from "@/lib/prisma";
 import { verifyPayment } from "@/lib/paystack";
 import type { ExhibitionRegistration } from "@/lib/generated/prisma/client";
@@ -145,8 +146,12 @@ export const settleRegistration = async (reference: string) => {
   const payment = await verifyPayment(reference);
   const settled = payment.paid && payment.amount >= existing.amount;
 
-  const record = await prisma.exhibitionRegistration.update({
-    where: { id: existing.id },
+  // Conditional on the place not already being confirmed, for the same reason
+  // an order's settlement is: the webhook and the attendee's own return land on
+  // this reference at the same time, and only the call that moved the row is
+  // the one that writes to them.
+  const { count } = await prisma.exhibitionRegistration.updateMany({
+    where: { id: existing.id, status: { not: "Confirmed" } },
     data: {
       status: settled ? "Confirmed" : "Failed",
       amountPaid: payment.paid ? payment.amount : null,
@@ -154,5 +159,16 @@ export const settleRegistration = async (reference: string) => {
     },
   });
 
-  return toRegistration(record);
+  const record = await prisma.exhibitionRegistration.findUniqueOrThrow({
+    where: { id: existing.id },
+  });
+
+  const registration = toRegistration(record);
+
+  if (settled && count === 1) {
+    await sendRegistrationConfirmed(registration);
+    await notifyDeskOfRegistration(registration);
+  }
+
+  return registration;
 };

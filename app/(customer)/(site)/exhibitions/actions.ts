@@ -7,6 +7,7 @@ import { failWith, fail, ok, validate, type ActionResult } from "@/lib/action-re
 import { getExhibition, isArchived } from "@/lib/admin/exhibitions";
 import { createRegistration, settleRegistration } from "@/lib/admin/registrations";
 import env from "@/lib/env";
+import { notifyDeskOfRegistration, sendRegistrationConfirmed } from "@/lib/mail/messages";
 import { initializePayment, paymentReference } from "@/lib/paystack";
 
 const registrationPayload = () =>
@@ -46,7 +47,7 @@ export const registerForExhibitionAction = async (
     const paid = exhibition.admission.paid && exhibition.admission.price > 0;
     const reference = paymentReference("JEM-EXH");
 
-    await createRegistration({
+    const registration = await createRegistration({
       reference,
       exhibitionId: exhibition.id,
       exhibitionTitle: exhibition.name,
@@ -59,12 +60,20 @@ export const registerForExhibitionAction = async (
 
     revalidatePath("/admin");
 
-    if (!paid)
+    // A free place is confirmed on arrival, so its mail goes out here. A paid
+    // one is only a place once Paystack says so, and `settleRegistration` sends
+    // it on the move into Confirmed — whichever of the webhook or the attendee's
+    // own return gets there first.
+    if (!paid) {
+      await sendRegistrationConfirmed(registration);
+      await notifyDeskOfRegistration(registration);
+
       return ok({
         reference,
         message:
           "Thank you — your place is reserved. A confirmation is on its way to your inbox.",
       });
+    }
 
     const { authorizationUrl } = await initializePayment({
       email,
