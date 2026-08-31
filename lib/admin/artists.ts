@@ -43,11 +43,6 @@ export const listArtists = async (search?: string) => {
   return records.map(toArtist);
 };
 
-export const getArtist = async (slug: string) => {
-  const record = await prisma.artist.findUnique({ where: { slug } });
-  return record ? toArtist(record) : null;
-};
-
 /** A slug no other artist holds, suffixed `-2`, `-3`, … if one does. */
 const availableSlug = async (name: string) => {
   const base = slugify(name) || "artist";
@@ -98,6 +93,3 @@ export const upsertArtistByName = async (input: ArtistInput) => {
     },
   });
 };
-
-/** The overview could count them; the picker uses it to say "none yet". */
-export const countArtists = () => prisma.artist.count();

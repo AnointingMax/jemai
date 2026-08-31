@@ -48,24 +48,6 @@ export const createRegistration = async (input: RegistrationInput) => {
   return toRegistration(record);
 };
 
-export const getRegistration = async (reference: string) => {
-  const record = await prisma.exhibitionRegistration.findUnique({ where: { reference } });
-  return record ? toRegistration(record) : null;
-};
-
-/** Newest first — the order an index would draw. */
-export const listRegistrations = async () => {
-  const records = await prisma.exhibitionRegistration.findMany({
-    orderBy: { registeredAt: "desc" },
-  });
-  return records.map(toRegistration);
-};
-
-/**
- * One exhibition's attendees, newest first. Failed attempts are kept rather
- * than hidden: a payment that did not go through is what a name in the inbox
- * asking why they have no ticket turns out to be.
- */
 /**
  * One exhibition's attendees, newest first, narrowed to a payment status when
  * the console asks for one. The filter runs here rather than over rows already
@@ -154,10 +136,6 @@ export const registrationSummary = async (
     collected: group("Confirmed")?._sum.amountPaid ?? 0,
   };
 };
-
-export const countConfirmedRegistrations = () =>
-  prisma.exhibitionRegistration.count({ where: { status: "Confirmed" } });
-
 
 export const settleRegistration = async (reference: string) => {
   const existing = await prisma.exhibitionRegistration.findUnique({ where: { reference } });

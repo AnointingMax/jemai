@@ -38,7 +38,6 @@ const toSubscriber = (record: SubscriberRecord): Subscriber => ({
   subscribedAt: record.subscribedAt.toISOString(),
 });
 
-/** Newest first — the order the index draws before the reader sorts it. */
 /** Newest first, narrowed by the index's search box — name or address. */
 export const listSubscribers = async (search?: string) => {
   const records = await prisma.subscriber.findMany({
@@ -47,9 +46,6 @@ export const listSubscribers = async (search?: string) => {
   });
   return records.map(toSubscriber);
 };
-
-/** A count query, not a fetch of the whole list. */
-export const countSubscribers = () => prisma.subscriber.count();
 
 export type SubscriberInput = {
   email: string;

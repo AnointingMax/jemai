@@ -14,8 +14,6 @@ const connection = () => {
   return { apiKey, apiSecret, cloudName };
 };
 
-export const cloudinaryConfigured = () => connection() !== null;
-
 /** The cloud uploads live on, or null when none is configured. */
 export const cloudinaryCloudName = () => connection()?.cloudName ?? null;
 

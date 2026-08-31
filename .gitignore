@@ -44,8 +44,5 @@ next-env.d.ts
 .playwright-mcp/
 design-reference/
 
-# typescript incremental build info
-*.tsbuildinfo
-
 # prisma generated client
 /lib/generated/

@@ -8,9 +8,6 @@ export const toKobo = (naira: number) => Math.round(naira * 100);
 
 export const toNaira = (kobo: number) => Math.round(kobo / 100);
 
-/** Whether payment is configured at all — a page can hide a Pay button on this. */
-export const paystackConfigured = () => Boolean(env.PAYSTACK_SECRET_KEY);
-
 const client = () => {
   if (!env.PAYSTACK_SECRET_KEY)
     throw new Error("PAYSTACK_SECRET_KEY is not set — payments are not configured");

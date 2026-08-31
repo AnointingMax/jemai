@@ -23,10 +23,3 @@ export const searchClauses = (fields: string[], search: string) =>
 
 export const searchAcross = (fields: string[], search?: string) =>
   search ? { OR: searchClauses(fields, search) } : {};
-
-/** The same narrowing for the stores still backed by fixtures rather than rows. */
-export const matchesSearch = (values: (string | null | undefined)[], search?: string) => {
-  if (!search) return true;
-  const needle = search.toLowerCase();
-  return values.some((value) => value?.toLowerCase().includes(needle));
-};

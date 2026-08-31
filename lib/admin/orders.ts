@@ -127,16 +127,6 @@ export const listOrders = async ({ search, status, payment }: OrderQuery = {}) =
   return records.map(toOrder);
 };
 
-export const getOrder = async (id: string) => {
-  const record = await prisma.order.findUnique({ where: { id }, include: withItems });
-  return record ? toOrder(record) : null;
-};
-
-export const getOrderByReference = async (reference: string) => {
-  const record = await prisma.order.findUnique({ where: { reference }, include: withItems });
-  return record ? toOrder(record) : null;
-};
-
 /** The overview's recent-order table: the newest handful, in frame order. */
 export const recentOrders = async (limit = 7) => {
   const records = await prisma.order.findMany({

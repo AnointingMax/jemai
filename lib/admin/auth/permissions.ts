@@ -15,9 +15,6 @@ export const ADMIN_PERMISSIONS = [
 
 export type AdminPermission = (typeof ADMIN_PERMISSIONS)[number];
 
-export const isAdminPermission = (value: string): value is AdminPermission =>
-  (ADMIN_PERMISSIONS as readonly string[]).includes(value);
-
 export const hasPermission = (
   permissions: readonly string[],
   permission: AdminPermission,

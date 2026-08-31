@@ -143,10 +143,6 @@ export const uniqueSlug = (
   return slug;
 };
 
-/** Stable ids for rows that arrive from a form without them. */
-export const identifyAssets = (assets: ContentAsset[]) =>
-  assets.map((asset, index) => ({ ...asset, id: asset.id || `asset-${index}` }));
-
 /**
  * The Artwork Story is authored as HTML in a contenteditable, so it is written
  * back to the page with `dangerouslySetInnerHTML`. Everything outside these two
@@ -192,12 +188,4 @@ export const sanitizeRichText = (html: string) =>
       const style = /style\s*=\s*"([^"]*)"/i.exec(attrs) ?? /style\s*=\s*'([^']*)'/i.exec(attrs);
       return `<${tag}${style ? safeStyle(style[1]) : ""}>`;
     })
-    .trim();
-
-/** Rich text reduced to a plain string, for summaries and empty checks. */
-export const richTextToPlain = (html: string) =>
-  html
-    .replace(/<[^>]+>/g, " ")
-    .replace(/&nbsp;/g, " ")
-    .replace(/\s+/g, " ")
     .trim();
