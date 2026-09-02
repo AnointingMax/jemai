@@ -6,14 +6,6 @@ import Link from "next/link";
 import { LoadMorePager } from "@/components/shared/load-more-pager";
 import { ARTWORK_PAGE_SIZE, type Artwork } from "@/lib/gallery";
 
-/**
- * The catalogue grid: three columns of 383px cards on a 17px gutter, each a
- * 383 × 339 photograph over a caption inset 17px, closing on a 1px
- * `border-default` box. Rows repeat on a 449px pitch.
- *
- * The grid sits on its own 1183px measure (x 128 → 1310), narrower than the
- * page gutter the rule above it uses — as drawn.
- */
 export const ArtworkGrid = ({ artworks }: { artworks: Artwork[]; }) => {
   const [visible, setVisible] = useState(ARTWORK_PAGE_SIZE);
   const shown = Math.min(visible, artworks.length);
@@ -26,7 +18,7 @@ export const ArtworkGrid = ({ artworks }: { artworks: Artwork[]; }) => {
             <Link
               key={work.slug}
               href={`/artworks/${work.slug}`}
-              className="border-border-default hover:border-border-strong/60 group border transition-colors"
+              className="border-border-default hover:border-border-strong/60 group border-r border-b transition-colors"
             >
               <div className="relative aspect-383/339 w-full overflow-hidden">
                 <Image

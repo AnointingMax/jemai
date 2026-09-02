@@ -1,30 +1,24 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { ArtworkEnquiry } from "@/components/artworks/artwork-enquiry";
 
 type CuratorPickProps = {
   eyebrow: string;
   heading: string[];
   copy: string;
-  cta: { label: string; href: string };
-  secondaryCta: { label: string; href: string };
-  image: { src: string; alt: string };
+  cta: { label: string; };
+  /** The piece the enquiry modal opens on — the pick itself. */
+  artwork: { slug: string; title: string; artist: string; image: string; };
+  secondaryCta: { label: string; href: string; };
+  image: { src: string; alt: string; };
 };
 
-/**
- * The curator's pick that opens the catalogue block: a copy column at x=168
- * beside a 720 × 537 photograph at x=592, closing on the same 1px
- * `border-default` rule the page gutter carries (x 64 → 1375).
- *
- * The heading is set in letterspaced Classico caps over two lines on a 47px
- * pitch — narrower than any heading token, so it is sized here rather than
- * pulled from `--text-*`.
- */
 export const CuratorPick = ({
   eyebrow,
   heading,
   copy,
   cta,
+  artwork,
   secondaryCta,
   image,
 }: CuratorPickProps) => (
@@ -46,9 +40,12 @@ export const CuratorPick = ({
             {copy}
           </p>
           <div className="mt-7.5 flex items-center gap-6">
-            <Button asChild size="cta" className="h-12 px-8">
-              <Link href={cta.href}>{cta.label}</Link>
-            </Button>
+            <ArtworkEnquiry
+              artwork={artwork}
+              label={cta.label}
+              variant="default"
+              className="h-12 w-auto px-8"
+            />
             <Link
               href={secondaryCta.href}
               className="text-label text-action-link whitespace-nowrap"

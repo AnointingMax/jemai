@@ -10,7 +10,7 @@ import { getUpNext } from "@/lib/exhibitions";
 export const metadata: Metadata = {
   title: "Artworks | JEMAI",
   description:
-    "Explore a considered collection of contemporary works chosen for their material, emotion and ability to bring a distinct point of view into the spaces around them.",
+    "Explore a curated collection of contemporary works chosen for their material, emotion and ability to bring a distinct point of view into the spaces around them.",
 };
 
 const heroSlides = [
@@ -37,7 +37,7 @@ const ArtworksPage = async ({ searchParams }: PageProps<"/artworks">) => {
 
   const [artworks, [pick], upNext] = await Promise.all([
     listArtworks(medium),
-    curatedArtworks(1, medium),
+    curatedArtworks(1),
     getUpNext(),
   ]);
 
@@ -46,26 +46,30 @@ const ArtworksPage = async ({ searchParams }: PageProps<"/artworks">) => {
       <ArtworksHero
         eyebrow="JEMAI Art"
         heading={["Works With A Presence", "Of Their Own."]}
-        copy="Explore a considered collection of contemporary works chosen for their material, emotion and ability to bring a distinct point of view into the spaces around them."
+        copy="Explore a curated collection of contemporary works chosen for their material, emotion and ability to bring a distinct point of view into the spaces around them."
         slides={heroSlides}
       />
 
+      {pick ? (
+        <CuratorPick
+          eyebrow="Curator’s Pick"
+          heading={[pick.title]}
+          copy={pick.summary}
+          cta={{ label: "Enquire" }}
+          artwork={{
+            slug: pick.slug,
+            title: pick.title,
+            artist: pick.artist,
+            image: pick.src,
+          }}
+          secondaryCta={{ label: "View Artwork", href: `/artworks/${pick.slug}` }}
+          image={{ src: pick.src, alt: pick.title }}
+        />
+      ) : null}
+
       <ArtworkFilter mediums={mediums} active={medium} total={artworks.length} />
 
-      <div className="flex w-full flex-col gap-20">
-        {pick ? (
-          <CuratorPick
-            eyebrow="Curator’s Pick"
-            heading={[pick.title]}
-            copy={pick.summary}
-            cta={{ label: "Enquire", href: "/contact" }}
-            secondaryCta={{ label: "View Artwork", href: `/artworks/${pick.slug}` }}
-            image={{ src: pick.src, alt: pick.title }}
-          />
-        ) : null}
-
-        <ArtworkGrid artworks={artworks} />
-      </div>
+      <ArtworkGrid artworks={artworks} />
 
       {upNext ? <ExhibitionCta exhibition={upNext} /> : null}
     </div>

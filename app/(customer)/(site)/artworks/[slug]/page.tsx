@@ -55,7 +55,7 @@ const ArtworkDetailPage = async ({ params }: PageProps<"/artworks/[slug]">) => {
 
   return (
     <section className="flex w-full flex-col pb-px">
-      <div className="w-full px-4 sm:px-6 lg:px-page-gutter">
+      <div className="w-full px-4 sm:px-6 lg:px-page-gutter pt-14">
         <Breadcrumb title={artwork.title} />
       </div>
 
@@ -119,29 +119,29 @@ const ArtworkDetailPage = async ({ params }: PageProps<"/artworks/[slug]">) => {
           enquiry rather than on a rule with nothing under it. */}
       {artwork.gallery.length ? (
         <>
-        {/* Unlike every section rule on the site, this one is `border-default`
+          {/* Unlike every section rule on the site, this one is `border-default`
             rather than the 3px `border-strong`. */}
-        <div className="mt-10 w-full px-4 sm:px-6 lg:px-page-gutter">
-          <hr className="border-border-default mx-auto w-full max-w-432 border-t-2" />
-        </div>
+          <div className="mt-10 w-full px-4 sm:px-6 lg:px-page-gutter">
+            <hr className="border-border-default mx-auto w-full max-w-432 border-t-2" />
+          </div>
 
-        {/* Six-up documentation grid: three 426.67px columns on a 16px gutter,
+          {/* Six-up documentation grid: three 426.67px columns on a 16px gutter,
             rows on a 40px gutter — the frame's own two gutters. */}
-        <div className="mt-9.75 w-full px-4 sm:px-6 lg:px-page-gutter">
-          <ul className="mx-auto grid w-full max-w-432 grid-cols-1 gap-x-4 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
-            {artwork.gallery.map((shot, index) => (
-              <li key={`${shot.src}-${index}`} className="relative aspect-427/327">
-                <Image
-                  src={shot.src}
-                  alt={shot.alt}
-                  fill
-                  sizes="(min-width: 1024px) 427px, (min-width: 640px) 50vw, 100vw"
-                  className="object-cover"
-                />
-              </li>
-            ))}
-          </ul>
-        </div>
+          <div className="mt-9.75 w-full px-4 sm:px-6 lg:px-page-gutter">
+            <ul className="mx-auto grid w-full max-w-432 grid-cols-1 gap-x-4 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+              {artwork.gallery.map((shot, index) => (
+                <li key={`${shot.src}-${index}`} className="relative aspect-427/327">
+                  <Image
+                    src={shot.src}
+                    alt={shot.alt}
+                    fill
+                    sizes="(min-width: 1024px) 427px, (min-width: 640px) 50vw, 100vw"
+                    className="object-cover"
+                  />
+                </li>
+              ))}
+            </ul>
+          </div>
         </>
       ) : null}
 
