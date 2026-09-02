@@ -39,7 +39,7 @@ export const ArchitectureSection = () => (
       <div className="flex w-full flex-col items-center py-8">
         <SectionIntro
           className="max-w-270 gap-2.5"
-          eyebrow="05 / Architecture &amp; Interiors"
+          eyebrow="05 / JEMAI Designs"
           heading="Spaces Shaped by Purpose, Personality and Space"
           copy="From private homes to public spaces, discover considered environments shaped around the people, purpose and possibilities within them."
         />

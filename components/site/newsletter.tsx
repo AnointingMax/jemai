@@ -17,13 +17,12 @@ export const Newsletter = () => (
 
           <div className="flex flex-col gap-stack-heading lg:flex-row lg:gap-7.5">
             <h2 className="font-heading text-text-primary flex-1 text-3xl font-bold leading-tight sm:text-h2">
-              Stay Close To The World Of JEMAI.
+              Stay in touch with JEMAI
             </h2>
 
             <div className="flex flex-1 flex-col gap-5">
               <p className="text-body text-text-secondary">
-                Receive new furniture and artwork, exhibition invitations and
-                considered ideas for the spaces you live and work in.
+                Receive new furniture and artwork, exhibition invitations and thoughtful ideas for the spaces you live and work in.
               </p>
 
               <SubscribeForm

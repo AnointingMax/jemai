@@ -17,6 +17,7 @@ type NavItem = {
 };
 
 const buildNav = (menus: SiteMenus): NavItem[] => [
+  { label: "Design", href: "/consultation" },
   {
     label: "Furniture",
     href: "/furniture",
@@ -28,9 +29,8 @@ const buildNav = (menus: SiteMenus): NavItem[] => [
     children: menus.art.length > 1 ? menus.art : undefined,
   },
   { label: "Exhibitions", href: "/exhibitions" },
-  { label: "About", href: "/about", mobileOnly: true },
-  { label: "Consultations", href: "/consultation" },
-  { label: "Contact", href: "/contact", mobileOnly: true },
+  { label: "About", href: "/about" },
+  { label: "Contact", href: "/contact" },
 ];
 
 export const SiteHeader = ({ menus }: { menus: SiteMenus; }) => {

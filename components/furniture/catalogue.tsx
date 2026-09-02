@@ -62,14 +62,12 @@ const Field = ({ label, value, onChange, children }: FieldProps) => (
 type CatalogueProps = {
   products: CatalogueProduct[];
   collections: string[];
-  colors: string[];
   collection: string;
 };
 
 export const Catalogue = ({
   products,
   collections,
-  colors,
   collection,
 }: CatalogueProps) => {
   const router = useRouter();
@@ -164,7 +162,7 @@ export const Catalogue = ({
       <div className="border-border-default mt-1 w-full border-t border-b">
         <div className="w-full px-4 sm:px-6 lg:px-page-gutter">
           <div className="mx-auto flex w-full max-w-6xl flex-col gap-3.75 pt-3 pb-2.5">
-            <div className="grid grid-cols-1 gap-7 sm:grid-cols-2 lg:grid-cols-[repeat(4,1fr)_80px]">
+            <div className="grid grid-cols-1 gap-7 sm:grid-cols-2 lg:grid-cols-[repeat(3,1fr)_80px]">
               <div>
                 <label className="sr-only" htmlFor="catalogue-search">
                   Search catalogue
@@ -188,16 +186,7 @@ export const Catalogue = ({
                 onChange={repage(setAvailability)}
               >
                 <SelectItem value="in-stock">In Stock</SelectItem>
-                <SelectItem value="made-to-order">Made To Order</SelectItem>
-              </Field>
-
-              <Field label="Colour" value={colour} onChange={repage(setColour)}>
-                <SelectItem value="all">Color</SelectItem>
-                {colors.map((item) => (
-                  <SelectItem key={item} value={item}>
-                    {item}
-                  </SelectItem>
-                ))}
+                <SelectItem value="out-of-stock">Out Of Stock</SelectItem>
               </Field>
 
               <Field

@@ -4,7 +4,7 @@ import { ArtworksSection } from "@/components/home/artworks-section";
 import { ExhibitionsSection } from "@/components/home/exhibitions-section";
 import { ArchitectureSection } from "@/components/home/architecture-section";
 import { featuredFurniture } from "@/lib/furniture";
-import { getUpNext, highlightShots } from "@/lib/exhibitions";
+import { getUpNext } from "@/lib/exhibitions";
 
 /**
  * The featured show is derived from its run, so this page goes out of date with
@@ -14,9 +14,8 @@ import { getUpNext, highlightShots } from "@/lib/exhibitions";
 export const revalidate = 3600;
 
 const HomePage = async () => {
-  const [products, highlights, upNext] = await Promise.all([
+  const [products, upNext] = await Promise.all([
     featuredFurniture(),
-    highlightShots(),
     getUpNext(),
   ]);
 
@@ -25,7 +24,7 @@ const HomePage = async () => {
       <IntroSection />
       <FurnitureSection products={products} />
       <ArtworksSection />
-      <ExhibitionsSection highlights={highlights} upNext={upNext} />
+      <ExhibitionsSection upNext={upNext} />
       <ArchitectureSection />
     </>
   );

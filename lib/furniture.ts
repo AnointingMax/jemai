@@ -95,7 +95,6 @@ export const loadCatalogue = async () => {
   return {
     products,
     collections: [...new Set(products.map((product) => product.collection))].sort(),
-    colors: [...new Set(products.flatMap((product) => product.colors))].sort(),
   };
 };
 

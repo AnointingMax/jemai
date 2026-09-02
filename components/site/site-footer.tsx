@@ -1,6 +1,5 @@
 import Image from "next/image";
 import Link from "next/link";
-import { SubscribeForm } from "@/components/site/subscribe-form";
 import {
   HouseIcon,
   InstagramSolidIcon,
@@ -44,7 +43,7 @@ const contacts = [
 export const SiteFooter = () => (
   <footer className="bg-surface-footer text-text-inverse mt-section-gap-editorial w-full bg-[url('/figma/brand/footer-pattern.png')] bg-size-[300px_514px] bg-top-left bg-repeat">
     <div className="mx-auto flex w-full max-w-432 flex-col px-4 pt-14 pb-10 sm:px-6 lg:px-page-gutter lg:pt-footer-top lg:pb-footer-bottom">
-      <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[341fr_164fr_164fr_292fr_345fr_6fr] lg:gap-0">
+      <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-grid-gutter-editorial">
         {/* Brand */}
         <div className="flex flex-col gap-7">
           <Link href="/" aria-label="JEMAI home" className="w-fit">
@@ -131,27 +130,6 @@ export const SiteFooter = () => (
               </span>
             </li>
           </ul>
-        </div>
-
-        {/* Stay updated — alone on the last row once the grid drops to two
-            columns, so it spans both rather than leaving half the row empty. */}
-        <div className="flex flex-col gap-3 sm:col-span-2 lg:col-span-1">
-          <h2 className="text-h4 text-text-inverse">Stay Updated</h2>
-          <p className="text-body text-text-inverse">
-            Subscribe to our newsletter and never miss an update, from fresh
-            arrivals to exclusive deals tailored just for you.
-          </p>
-          <SubscribeForm
-            id="footer-email"
-            source="Footer form"
-            className="mt-5"
-            inputClassName="text-body bg-surface-tint text-text-primary placeholder:text-text-primary/60 h-14 w-full border-transparent px-4"
-            buttonClassName="h-14 w-full"
-          >
-            <p className="text-body-xs text-text-inverse mt-2">
-              By clicking the button you agree to the Terms and Conditions of Service
-            </p>
-          </SubscribeForm>
         </div>
       </div>
 

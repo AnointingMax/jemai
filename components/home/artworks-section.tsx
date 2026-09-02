@@ -1,6 +1,5 @@
 import Image from "next/image";
 import { SectionIntro } from "@/components/site/section-intro";
-import { MediaBand } from "@/components/site/media-band";
 import {
   CuratorCarousel,
   type CuratorPick,
@@ -53,30 +52,6 @@ export const ArtworksSection = async () => {
           {picks.length ? <CuratorCarousel picks={picks} /> : null}
         </div>
       </div>
-
-      <MediaBand
-        eyebrow="The Collection"
-        heading="A Collection Shaped By Texture, Movement And Memory."
-        copy="From quiet studies in repetition to expressive works led by colour and gesture, JEMAI selects pieces that reward a slower, more considered way of seeing."
-        cta={{ label: "Explore The Collection", href: "/artworks" }}
-        image={{
-          src: "/figma/home/art-collection.jpg",
-          alt: "Visitors viewing framed works in a gallery",
-        }}
-        mediaSide="right"
-        scrim
-      />
-
-      <MediaBand
-        eyebrow="Artist Spotlight"
-        heading="Meet The Voice Behind The Work."
-        copy="Discover the ideas, influences and processes that shape a distinctive creative practice."
-        image={{
-          src: "/figma/home/art-artist.jpg",
-          alt: "Portrait of a featured JEMAI artist",
-        }}
-        mediaSide="left"
-      />
     </section>
   );
 };

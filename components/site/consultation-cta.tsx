@@ -34,9 +34,7 @@ export const ConsultationCta = ({
               Let&rsquo;s Shape A Space That Feels Entirely Your Own.
             </h2>
             <p className="text-body-lg max-w-93.75 text-[#6d6d6d]">
-              From an individual room to a complete property, JEMAI brings
-              architecture, interiors, furniture and art together in one
-              considered process.
+              From an individual room to a complete property, JEMAI brings architecture, interiors, furniture and art together in one thoughtful process.
             </p>
           </div>
           <Button asChild size="cta" className="px-6">

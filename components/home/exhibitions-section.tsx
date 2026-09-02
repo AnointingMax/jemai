@@ -1,14 +1,11 @@
 import Image from "next/image";
 import { RegisterButton } from "@/components/exhibitions/register-button";
 import { SectionIntro } from "@/components/site/section-intro";
-import { PhotoRail } from "@/components/site/photo-rail";
-import type { Shot, UpNext } from "@/lib/exhibitions";
+import type { UpNext } from "@/lib/exhibitions";
 
 export const ExhibitionsSection = ({
-  highlights,
   upNext,
 }: {
-  highlights: Shot[];
   upNext: UpNext | null;
 }) => (
   <section className="flex w-full flex-col items-center pt-8 lg:pt-16">
@@ -24,15 +21,12 @@ export const ExhibitionsSection = ({
           cta={{ label: "Explore Exhibitions", href: "/exhibitions" }}
         />
 
-        <PhotoRail photos={highlights} label="Exhibition highlights" />
       </div>
     </div>
 
     {/* Up next — half-bleed photograph beside the featured exhibition */}
     {upNext ? (
-      <div className="bg-surface-subtle flex w-full flex-col lg:h-225 lg:flex-row">
-        {/* No show owns this half of the band — it is gallery photography from
-            the frame, the same way the two index heroes are. */}
+      <div className="flex w-full flex-col lg:h-225 lg:flex-row px-4 sm:px-6 lg:px-page-gutter">
         <div className="relative h-105 w-full lg:h-full lg:w-1/2">
           <Image
             src="/figma/home/ex-sculpture.jpg"
@@ -43,7 +37,7 @@ export const ExhibitionsSection = ({
           />
         </div>
 
-        <div className="flex w-full flex-col items-center justify-center px-4 py-12 sm:px-6 lg:w-1/2 lg:px-20 lg:py-0">
+        <div className="flex w-full flex-col items-center bg-surface-subtle justify-center px-4 py-12 sm:px-6 lg:w-1/2 lg:px-20 lg:py-0">
           <div className="flex w-full flex-col items-center gap-stack-default">
             <div className="flex w-full flex-col items-start gap-stack-compact py-stack-default">
               <p className="text-eyebrow-lg text-text-secondary w-full text-center uppercase">

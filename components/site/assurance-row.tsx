@@ -1,27 +1,43 @@
 import { Fragment, type ReactNode } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 export type Assurance = {
-  /** 48 × 48 mark — an `<Image>` on the home page, an icon component elsewhere. */
   icon: ReactNode;
   title: string;
   copy: string;
-  /** Omitted where the column has nowhere of its own to send the reader. */
-  cta?: { label: string; href: string };
+  cta?: { label: string; href: string; };
 };
 
+const defaultAssurances: Assurance[] = [
+  {
+    icon: <Image src="/figma/icons/delivery.svg" alt="" width={48} height={48} unoptimized />,
+    title: "Free Shipping",
+    copy: "All orders over ₦1,818,510 are delivered to your doorstep at no extra charge.",
+    cta: { label: "Shipping Details", href: "/terms" },
+  },
+  {
+    icon: <Image src="/figma/icons/guidance.svg" alt="" width={48} height={48} unoptimized />,
+    title: "30-Days Free Returns",
+    copy: "Enjoy the freedom of stress-free shopping with our hassle-free and return policy.",
+    cta: { label: "Return Policy", href: "/terms" },
+  },
+  {
+    icon: <Image src="/figma/icons/secure.svg" alt="" width={48} height={48} unoptimized />,
+    title: "Secure Payment",
+    copy: "Shop with confidence knowing your information is safeguarded.",
+    cta: { label: "More About Payment", href: "/terms" },
+  },
+];
+
 type AssuranceRowProps = {
-  items: Assurance[];
+  /** Defaults to the standard trio; pass a set to override it. */
+  items?: Assurance[];
   className?: string;
 };
 
-/**
- * The three-up reassurance band that closes both the home furniture section and
- * the catalogue. Rules top and bottom, hairline dividers between the columns at
- * desktop; two-up with the last centred beneath on tablet, one per row on mobile.
- */
-export const AssuranceRow = ({ items, className }: AssuranceRowProps) => (
+export const AssuranceRow = ({ items = defaultAssurances, className }: AssuranceRowProps) => (
   <div
     className={cn(
       "border-border-default flex w-full flex-col border-t border-b px-0 py-stack-loose lg:px-page-gutter",
@@ -41,7 +57,7 @@ export const AssuranceRow = ({ items, className }: AssuranceRowProps) => (
             className={cn(
               "flex flex-col items-start gap-stack-heading lg:flex-1",
               index === items.length - 1 &&
-                "md:col-span-2 md:max-w-[calc(50%-1.5rem)] md:justify-self-center lg:col-span-1 lg:max-w-none lg:justify-self-stretch",
+              "md:col-span-2 md:max-w-[calc(50%-1.5rem)] md:justify-self-center lg:col-span-1 lg:max-w-none lg:justify-self-stretch",
             )}
           >
             <span className="flex size-12 items-center justify-center">
@@ -54,7 +70,7 @@ export const AssuranceRow = ({ items, className }: AssuranceRowProps) => (
             {cta ? (
               <Link
                 href={cta.href}
-                className="border-border-default text-label text-text-secondary hover:border-border-strong flex min-h-10 min-w-12.5 items-center justify-center rounded-[4px] border px-5 py-3 transition-colors"
+                className="border-border-default text-label text-text-secondary hover:border-border-strong flex min-h-10 min-w-12.5 items-center justify-center rounded-lg border px-5 py-3 transition-colors"
               >
                 {cta.label}
               </Link>
