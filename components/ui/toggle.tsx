@@ -17,7 +17,7 @@ const toggleVariants = cva(
         /** JEMAI chip — the hairline-bordered swatches and size buttons on the
             product page. Selection is a border/ink change, never a fill, so
             the shadcn `bg-muted` on hover and on state must be undone. */
-        chip: "border-border-default text-text-secondary rounded-none border bg-transparent hover:border-border-strong/60 hover:bg-transparent hover:text-text-secondary aria-pressed:bg-transparent data-[state=on]:border-border-strong data-[state=on]:bg-transparent data-[state=on]:text-text-primary disabled:cursor-not-allowed disabled:opacity-35",
+        chip: "border-border-default text-text-secondary rounded-none border bg-transparent hover:border-border-strong/60 hover:bg-transparent hover:text-text-secondary aria-pressed:bg-transparent data-[state=on]:border-2 data-[state=on]:border-border-strong data-[state=on]:bg-transparent data-[state=on]:text-text-primary disabled:cursor-not-allowed disabled:opacity-35",
         /** JEMAI catalogue tab — an underline, not a pill. */
         tab: "text-text-primary/40 rounded-none border-b border-transparent bg-transparent font-normal hover:bg-transparent hover:text-text-primary/70 aria-pressed:bg-transparent data-[state=on]:border-text-primary data-[state=on]:bg-transparent data-[state=on]:text-text-primary",
       },

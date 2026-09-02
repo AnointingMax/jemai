@@ -1,3 +1,4 @@
+import { colornames } from "color-name-list";
 import { Prisma } from "@/lib/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import {
@@ -29,8 +30,20 @@ const SWATCHES: Record<string, string> = {
   walnut: "#6b4a30",
 };
 
-const swatch = (colour: string, hex: string | null) =>
-  hex ?? SWATCHES[colour.toLowerCase()] ?? SWATCHES.cream;
+const NAMED = new Map(colornames.map(({ name, hex }) => [name.toLowerCase(), hex]));
+
+const swatch = (colour: string) => {
+  const name = colour.trim().toLowerCase();
+  if (SWATCHES[name]) return SWATCHES[name];
+
+  const named = NAMED.get(name);
+  if (named) return named;
+
+  for (const word of name.split(/[\s/-]+/))
+    if (SWATCHES[word]) return SWATCHES[word];
+
+  return SWATCHES.cream;
+};
 
 /** Shipping and returns is policy, not product copy, so it is written here. */
 const SHIPPING_SECTION: ProductSection = {
@@ -139,7 +152,7 @@ export const getFurnitureDetail = async (slug: string): Promise<ProductDetail | 
     if (variant.colour && !colourway.some((colour) => colour.name === variant.colour))
       colourway.push({
         name: variant.colour,
-        hex: swatch(variant.colour, variant.colourHex),
+        hex: swatch(variant.colour),
       });
     if (variant.size && !sizes.includes(variant.size)) sizes.push(variant.size);
   }

@@ -62,6 +62,12 @@ export const ProductPurchase = ({ product }: ProductPurchaseProps) => {
     setQuantity(1);
   };
 
+  const clear = () => {
+    setColour("");
+    setSize("");
+    setQuantity(1);
+  };
+
   return (
     <>
       {/* Reads the current selection, so it lives with the chips rather than
@@ -76,9 +82,27 @@ export const ProductPurchase = ({ product }: ProductPurchaseProps) => {
           : "Out of stock"}
       </span>
 
-      <p className="text-eyebrow-lg text-text-secondary mt-11 uppercase" id="product-colour">
-        Color
-      </p>
+      {/* Radix deselects a chip when you click the active one, so this is the
+          discoverable way out of a selection — and the only obvious one for the
+          colour swatches, which carry no visible label. It heads the block
+          because it resets both axes, not the colour it sits beside. */}
+      <div className="mt-11 flex items-center justify-between gap-3">
+        <p className="text-eyebrow-lg text-text-secondary uppercase" id="product-colour">
+          Select Color
+        </p>
+        {(colour || size) && (
+          <Button
+            type="button"
+            variant="quiet"
+            size="xs"
+            aria-label="Clear selected colour and size"
+            onClick={clear}
+            className="text-eyebrow-lg text-[10px] text-text-secondary hover:text-action-link h-auto p-0 uppercase underline underline-offset-4"
+          >
+            Clear
+          </Button>
+        )}
+      </div>
       <ToggleGroup
         type="single"
         variant="chip"

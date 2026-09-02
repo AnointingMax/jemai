@@ -127,7 +127,6 @@ export const Catalogue = ({
     setColour("all");
     setSort("featured");
     setVisible(PAGE_SIZE);
-    // Last, because it repages and navigates on its own.
     setCollection("All");
   };
 

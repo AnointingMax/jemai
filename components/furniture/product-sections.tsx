@@ -8,11 +8,6 @@ type ProductSectionsProps = {
   sections: ProductSection[];
 };
 
-/**
- * The frame draws four collapsed rows, 65px each, separated by a hairline with
- * no rule above the first. No frame draws an expanded panel, so the open state
- * is built to the same rhythm rather than measured.
- */
 export const ProductSections = ({ sections }: ProductSectionsProps) => (
   <Accordion.Root type="single" collapsible className="flex w-full flex-col">
     {sections.map((section) => (
