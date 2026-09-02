@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -77,8 +76,8 @@ const CartItem = ({ line }: { line: CartLine; }) => {
 
 export const CartDrawer = () => {
   const router = useRouter();
-  const { lines, count, subtotal, open, setOpen } = useCart();
-  const [consented, setConsented] = useState(false);
+  const { lines, count, subtotal, open, setOpen, consented, setConsented } =
+    useCart();
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>

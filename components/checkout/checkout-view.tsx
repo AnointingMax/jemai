@@ -24,20 +24,23 @@ import { OrderSummary } from "@/components/checkout/order-summary";
 import { useCart } from "@/lib/cart";
 import { bagTotals } from "@/lib/orders";
 
-/**
- * The checkout, either side of Paystack.
- *
- * Pay Now places the order and hands the browser to the provider; Paystack
- * returns the buyer here with `?reference=`, which is verified server-side
- * before anything is claimed about it. The webhook settles the same order
- * whether or not anyone comes back, so this screen reports the outcome rather
- * than being the thing that decides it.
- */
+type Placed = {
+  pieceCount: number;
+  item: { name: string; image: string; };
+};
+
+type Outcome = {
+  reference: string;
+  status: Exclude<CheckoutStatus, "pending">;
+  /** The house number, once the order behind the reference has been read. */
+  number: string;
+};
+
 export const CheckoutView = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const reference = searchParams.get("reference");
-  const { lines, count, subtotal, setOpen, clear } = useCart();
+  const { lines, count, subtotal, setOpen, clear, consented } = useCart();
 
   const form = useForm<CheckoutFormValues>({
     defaultValues: emptyCheckout,
@@ -45,26 +48,8 @@ export const CheckoutView = () => {
   });
 
   const [paying, startPaying] = useTransition();
-  /**
-   * What was sent to the provider. The bag is emptied once the payment is
-   * confirmed, so the outcome modal reads its piece and its count from here
-   * rather than from the cart.
-   */
-  const [placed, setPlaced] = useState<{
-    pieceCount: number;
-    item: { name: string; image: string; };
-  } | null>(null);
-  /**
-   * What the verification answered, tagged with the reference it belongs to. A
-   * reference in the URL with no answer yet *is* the pending state, so the
-   * modal's status is derived rather than switched on by an effect.
-   */
-  const [outcome, setOutcome] = useState<{
-    reference: string;
-    status: Exclude<CheckoutStatus, "pending">;
-    /** The house number, once the order behind the reference has been read. */
-    number: string;
-  } | null>(null);
+  const [placed, setPlaced] = useState<Placed | null>(null);
+  const [outcome, setOutcome] = useState<Outcome | null>(null);
 
   const settled = outcome?.reference === reference ? outcome : null;
   const status: CheckoutStatus | null = reference ? (settled?.status ?? "pending") : null;
@@ -125,10 +110,11 @@ export const CheckoutView = () => {
 
   const totals = bagTotals(subtotal, lines.length === 0);
 
-  const canPay = form.formState.isValid && lines.length > 0 && !paying;
+  const canPay =
+    form.formState.isValid && lines.length > 0 && consented && !paying;
 
   const submit = (values: CheckoutFormValues) => {
-    if (lines.length === 0 || paying) return;
+    if (lines.length === 0 || !consented || paying) return;
 
     startPaying(async () => {
       const result = await placeOrderAction({

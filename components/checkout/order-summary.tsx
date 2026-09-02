@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   inkMuted,
   inkStrong,
@@ -26,7 +27,7 @@ export const OrderSummary = ({
   canPay,
   paying,
 }: OrderSummaryProps) => {
-  const { setOpen } = useCart();
+  const { setOpen, consented, setConsented } = useCart();
 
   return (
     <section aria-labelledby="summary-heading">
@@ -111,6 +112,25 @@ export const OrderSummary = ({
         All transactions are secure and encrypted. Card details are taken on the
         provider&apos;s page after Pay Now.
       </p>
+
+      <div className="mt-4.25 flex items-center gap-5">
+        <Checkbox
+          id="checkout-terms"
+          checked={consented}
+          onCheckedChange={(state) => setConsented(state === true)}
+          className="rounded-none border-[1.5px] border-[#202025] data-checked:border-[#202025] data-checked:bg-[#202025] data-checked:text-white"
+        />
+        <label
+          htmlFor="checkout-terms"
+          className="text-body-sm cursor-pointer"
+          style={{ color: inkStrong }}
+        >
+          I agree with the{" "}
+          <Link href="/terms" className="hover:underline" style={{ color: inkMuted }}>
+            terms and conditions
+          </Link>
+        </label>
+      </div>
 
       <Button
         type="submit"

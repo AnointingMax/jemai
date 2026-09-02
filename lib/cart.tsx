@@ -10,10 +10,6 @@ import {
   type ReactNode,
 } from "react";
 
-/**
- * One line in the bag. The id folds in the variant, so the same piece in two
- * colourways is two lines rather than a quantity of two.
- */
 export type CartLine = {
   id: string;
   slug: string;
@@ -32,6 +28,13 @@ type CartContextValue = {
   subtotal: number;
   open: boolean;
   setOpen: (open: boolean) => void;
+  /**
+   * The terms and conditions tick. It is taken in the cart sheet and carried
+   * through to checkout, so a buyer who agreed on the way out of the bag does
+   * not have to agree again in front of Pay Now.
+   */
+  consented: boolean;
+  setConsented: (consented: boolean) => void;
   add: (line: Omit<CartLine, "id" | "quantity"> & { quantity?: number; }) => void;
   setQuantity: (id: string, quantity: number) => void;
   remove: (id: string) => void;
@@ -87,6 +90,7 @@ const subscribe = (notify: () => void) => {
 export const CartProvider = ({ children }: { children: ReactNode; }) => {
   const lines = useSyncExternalStore(subscribe, readLines, () => EMPTY);
   const [open, setOpen] = useState(false);
+  const [consented, setConsented] = useState(false);
 
   const add: CartContextValue["add"] = useCallback((line) => {
     const id = lineId(line.slug, line.colour, line.size);
@@ -113,7 +117,10 @@ export const CartProvider = ({ children }: { children: ReactNode; }) => {
     [],
   );
 
-  const clear = useCallback(() => writeLines([]), []);
+  const clear = useCallback(() => {
+    writeLines([]);
+    setConsented(false);
+  }, []);
 
   const value = useMemo<CartContextValue>(() => {
     const count = lines.reduce((total, item) => total + item.quantity, 0);
@@ -127,12 +134,14 @@ export const CartProvider = ({ children }: { children: ReactNode; }) => {
       subtotal,
       open,
       setOpen,
+      consented,
+      setConsented,
       add,
       setQuantity,
       remove,
       clear,
     };
-  }, [lines, open, add, setQuantity, remove, clear]);
+  }, [lines, open, consented, add, setQuantity, remove, clear]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 };
