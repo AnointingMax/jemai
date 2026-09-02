@@ -2,7 +2,23 @@
 
 import { Accordion } from "radix-ui";
 
-export type Faq = { question: string; answer: string };
+/**
+ * An answer marks the phrases it wants emphasised with `**…**`, so the copy
+ * stays a plain string the page can hold as data rather than JSX.
+ */
+export type Faq = { question: string; answer: string; };
+
+/** Splits an answer on its `**…**` runs, emphasising every second piece. */
+const emphasise = (answer: string) =>
+  answer.split(/\*\*(.+?)\*\*/g).map((piece, index) =>
+    index % 2 === 0 ? (
+      piece
+    ) : (
+      <strong key={piece} className="text-text-primary font-bold">
+        {piece}
+      </strong>
+    ),
+  );
 
 type FaqSectionProps = {
   eyebrow: string;
@@ -13,9 +29,9 @@ type FaqSectionProps = {
 /**
  * The closing FAQ, on an 860px centred measure.
  *
- * The frame draws all three rows collapsed, so **the answers are written, not
- * transcribed** — the same call `ProductSections` and the About disciplines
- * made. Rows are 65px on a `border-default` rule, with a 20 x 20 hairline box
+ * The frame draws every row collapsed, so it settles the row chrome rather than
+ * the copy; the questions and answers come from the client's FAQ document.
+ * Rows are 65px on a `border-default` rule, with a 20 x 20 hairline box
  * carrying the toggle at the right edge; it becomes a minus when the row opens,
  * which the frame does not draw either.
  */
@@ -58,8 +74,8 @@ export const FaqSection = ({ eyebrow, heading, faqs }: FaqSectionProps) => (
               </Accordion.Trigger>
             </Accordion.Header>
             <Accordion.Content className="data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down overflow-hidden">
-              <p className="text-body-sm text-text-secondary max-w-[68ch] pb-6 pl-10.25">
-                {faq.answer}
+              <p className="text-body-sm text-text-secondary max-w-[80ch] pb-6 pl-10.25">
+                {emphasise(faq.answer)}
               </p>
             </Accordion.Content>
           </Accordion.Item>
