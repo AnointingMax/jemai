@@ -63,6 +63,18 @@ const furniturePayload = () =>
         Yup.object({
           size: Yup.string().trim().default(""),
           colour: Yup.string().trim().required("Every variant needs a colour."),
+          // Left blank, the row sells at the product's price — which is what
+          // the empty string an untouched input posts has to become.
+          price: Yup
+            .number()
+            .typeError("Enter a variant price in whole naira.")
+            .transform((value: number, original: unknown) =>
+              String(original ?? "").trim() === "" ? null : value,
+            )
+            .integer("Enter a variant price in whole naira.")
+            .moreThan(0, "Enter a variant price in whole naira.")
+            .nullable()
+            .default(null),
           quantity: Yup
             .number()
             .typeError("Variant quantities must be whole numbers.")
@@ -88,6 +100,7 @@ const toInput = (values: FurniturePayload): FurnitureInput => {
       id: "",
       size: variant.size,
       colour: variant.colour,
+      price: variant.price ?? null,
       quantity: variant.quantity,
     }));
 

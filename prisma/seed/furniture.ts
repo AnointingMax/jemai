@@ -71,7 +71,9 @@ const furnitureSeed = [
     variants: [
       { size: "Organic", colour: "Red", quantity: 2 },
       { size: "Organic", colour: "Blue", quantity: 3 },
-      { size: "Oversized fit", colour: "Green", quantity: 3 },
+      // The larger frame costs more than the piece's own price; every other
+      // seeded row sells at whatever its product costs.
+      { size: "Oversized fit", colour: "Green", price: 1_120_000, quantity: 3 },
     ],
   },
 ];

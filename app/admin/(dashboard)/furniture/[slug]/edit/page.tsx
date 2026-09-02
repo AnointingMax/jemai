@@ -25,9 +25,10 @@ const AdminFurnitureEditPage = async ({ params }: PageProps<"/admin/furniture/[s
       ? furniture.variants.map((variant) => ({
         size: variant.size,
         colour: variant.colour,
+        price: variant.price === null ? "" : String(variant.price),
         quantity: String(variant.quantity),
       }))
-      : [{ size: "", colour: "", quantity: "" }],
+      : [{ size: "", colour: "", price: "", quantity: "" }],
     description: furniture.description,
     timeline: furniture.timeline,
     customization: furniture.customization,

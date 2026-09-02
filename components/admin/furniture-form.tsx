@@ -36,7 +36,7 @@ export type FurnitureFormValues = {
   price: string;
   stock: string;
   summary: string;
-  variants: { size: string; colour: string; quantity: string; }[];
+  variants: { size: string; colour: string; price: string; quantity: string; }[];
   description: string;
   timeline: string;
   customization: string;
@@ -51,7 +51,7 @@ export const emptyFurnitureForm: FurnitureFormValues = {
   price: "",
   stock: "",
   summary: "",
-  variants: [{ size: "", colour: "", quantity: "" }],
+  variants: [{ size: "", colour: "", price: "", quantity: "" }],
   description: "",
   timeline: "",
   customization: "",
@@ -118,6 +118,7 @@ export const FurnitureForm = ({
   const media = useWatch({ control, name: "media" });
   const category = useWatch({ control, name: "category" });
   const stock = useWatch({ control, name: "stock" });
+  const price = useWatch({ control, name: "price" });
 
   /**
    * Stock is the sum of the variant counts whenever any are filled in, so the
@@ -324,13 +325,13 @@ export const FurnitureForm = ({
               value="variants"
               title="Variants"
               required
-              description="Add variations of this product. Each row is one buyable combination — its size, its colour and how many are in stock."
+              description="Add variations of this product. Each row is one buyable combination — its size, its colour, what it costs and how many are in stock."
             >
               <div className="flex flex-col gap-3">
                 {variants.fields.map((field, index) => (
                   <div
                     key={field.id}
-                    className="border-border-default grid grid-cols-1 items-end gap-3 rounded-lg border p-3 sm:grid-cols-[1fr_1fr_7rem_auto]"
+                    className="border-border-default grid grid-cols-1 items-end gap-3 rounded-lg border p-3 sm:grid-cols-[1fr_1fr_8rem_7rem_auto]"
                   >
                     <div className="flex flex-col gap-1.5">
                       <FieldLabel htmlFor={`variant-size-${field.id}`}>Size</FieldLabel>
@@ -353,6 +354,23 @@ export const FurnitureForm = ({
                           `variants.${index}.colour` as const,
                           required("Every variant needs a colour.")
                         )}
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <FieldLabel htmlFor={`variant-price-${field.id}`}>Price</FieldLabel>
+                      <Input
+                        id={`variant-price-${field.id}`}
+                        inputMode="numeric"
+                        // Blank is the common case: the row sells at the price
+                        // set in General information, which is what it shows.
+                        placeholder={price?.trim() ? price : "Product price"}
+                        className={cn(fieldChrome, "h-10 text-sm md:text-sm")}
+                        {...register(`variants.${index}.price` as const, {
+                          validate: (value) =>
+                            !value?.trim() ||
+                            (Number(value) > 0 && Number.isFinite(Number(value))) ||
+                            "Enter a price in whole naira, or leave it blank.",
+                        })}
                       />
                     </div>
                     <div className="flex flex-col gap-1.5">
@@ -386,10 +404,11 @@ export const FurnitureForm = ({
                       <Trash2 />
                     </Button>
                     {errors.variants?.[index] ? (
-                      <div className="sm:col-span-4">
+                      <div className="sm:col-span-5">
                         <FieldHint
                           error={
                             errors.variants[index]?.colour?.message ??
+                            errors.variants[index]?.price?.message ??
                             errors.variants[index]?.quantity?.message
                           }
                         />
@@ -402,7 +421,7 @@ export const FurnitureForm = ({
                 type="button"
                 variant="outline"
                 size="lg"
-                onClick={() => variants.append({ size: "", colour: "", quantity: "" })}
+                onClick={() => variants.append({ size: "", colour: "", price: "", quantity: "" })}
                 className="border-border-default mt-4 h-10"
               >
                 <Plus data-icon="inline-start" />

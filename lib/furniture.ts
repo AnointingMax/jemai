@@ -65,6 +65,27 @@ const images = (record: FurnitureRecord) => {
   return sources.length ? sources : [PLACEHOLDER_IMAGE];
 };
 
+/**
+ * The prices a piece can actually be bought at: one per variant, falling back to
+ * the product's own price for a row that carries none, and just the product's
+ * price when it has no variants at all.
+ */
+const priceRange = (record: FurnitureRecord) => {
+  const amounts = record.variants.map((variant) => variant.price ?? record.price);
+  if (!amounts.length) return { low: record.price, high: record.price };
+  return { low: Math.min(...amounts), high: Math.max(...amounts) };
+};
+
+/**
+ * What a card and the detail heading lead with. Variants that disagree on price
+ * cannot be reduced to one number before a combination is picked, so the lowest
+ * is shown as a "From".
+ */
+const headline = (record: FurnitureRecord, format: (amount: number) => string) => {
+  const { low, high } = priceRange(record);
+  return low === high ? format(low) : `From ${format(low)}`;
+};
+
 /** Anything with a variant in stock, or — for a product with none — its own count. */
 const inStock = (record: FurnitureRecord) =>
   record.variants.length
@@ -78,8 +99,8 @@ const toCatalogueProduct = (record: FurnitureRecord): CatalogueProduct => ({
   collection: record.category,
   colors: [...new Set(record.variants.map((variant) => variant.colour).filter(Boolean))],
   inStock: inStock(record),
-  amount: record.price,
-  price: naira(record.price),
+  amount: priceRange(record).low,
+  price: headline(record, naira),
   image: images(record)[0],
   href: `/furniture/${record.slug}`,
 });
@@ -88,7 +109,7 @@ const toCatalogueProduct = (record: FurnitureRecord): CatalogueProduct => ({
 const toCard = (record: FurnitureRecord): Product => ({
   name: record.name,
   category: record.category,
-  price: naira(record.price),
+  price: headline(record, naira),
   image: images(record)[0],
   href: `/furniture/${record.slug}`,
 });
@@ -165,25 +186,31 @@ export const getFurnitureDetail = async (slug: string): Promise<ProductDetail | 
   const axes = sizes.length ? sizes : ["One size"];
 
   const variants: ProductVariant[] = colourway.flatMap((colour) =>
-    axes.map((size) => ({
-      colour: colour.name,
-      size,
-      stock: record.variants
-        .filter(
-          (variant) =>
-            variant.colour === colour.name &&
-            (sizes.length ? variant.size === size : true),
-        )
-        .reduce((total, variant) => total + variant.quantity, 0),
-    })),
+    axes.map((size) => {
+      const rows = record.variants.filter(
+        (variant) =>
+          variant.colour === colour.name &&
+          (sizes.length ? variant.size === size : true),
+      );
+
+      return {
+        colour: colour.name,
+        size,
+        // The combination's own price when one of its rows sets one, the
+        // product's otherwise. Two rows collapsing into one cell is only
+        // possible on a colour-only product, where the first row wins.
+        amount: rows.find((variant) => variant.price !== null)?.price ?? record.price,
+        stock: rows.reduce((total, variant) => total + variant.quantity, 0),
+      };
+    }),
   );
 
   return {
     slug: record.slug,
     name: record.name,
     category: record.category,
-    price: nairaExact(record.price),
-    amount: record.price,
+    price: headline(record, nairaExact),
+    amount: priceRange(record).low,
     summary: record.summary,
     gallery: images(record).slice(0, 4),
     colourway,

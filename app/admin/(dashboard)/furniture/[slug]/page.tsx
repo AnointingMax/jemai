@@ -16,6 +16,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { getFurniture, naira, totalStock } from "@/lib/admin/furniture";
+import { cn } from "@/lib/utils";
 
 /**
  * A product's detail screen: the record on the left, its imagery on the right.
@@ -70,6 +71,9 @@ const AdminFurnitureDetailPage = async ({ params }: PageProps<"/admin/furniture/
                         Colour
                       </TableHead>
                       <TableHead className="text-text-secondary h-10 px-3 text-right text-xs font-normal">
+                        Price
+                      </TableHead>
+                      <TableHead className="text-text-secondary h-10 px-3 text-right text-xs font-normal">
                         Quantity
                       </TableHead>
                     </TableRow>
@@ -82,6 +86,16 @@ const AdminFurnitureDetailPage = async ({ params }: PageProps<"/admin/furniture/
                         </TableCell>
                         <TableCell className="text-text-primary px-3 py-2.5 text-sm">
                           {variant.colour || "—"}
+                        </TableCell>
+                        {/* A row without its own price sells at the product's,
+                            so that is what it shows, muted to say so. */}
+                        <TableCell
+                          className={cn(
+                            "px-3 py-2.5 text-right text-sm",
+                            variant.price === null ? "text-text-secondary" : "text-text-primary"
+                          )}
+                        >
+                          {naira(variant.price ?? furniture.price)}
                         </TableCell>
                         <TableCell className="text-text-primary px-3 py-2.5 text-right text-sm">
                           {variant.quantity}

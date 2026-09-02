@@ -17,6 +17,8 @@ export type FurnitureVariant = {
   id: string;
   size: string;
   colour: string;
+  /** Whole naira, or null when the row sells at the product's own price. */
+  price: number | null;
   quantity: number;
 };
 
@@ -51,14 +53,16 @@ export const totalStock = (item: Pick<Furniture, "stock" | "variants">) =>
     ? item.variants.reduce((sum, variant) => sum + variant.quantity, 0)
     : item.stock;
 
-/** "2 colors · 1 size" — the index's Options column. */
+/** "2 colors · 1 size · custom pricing" — the index's Options column. */
 export const describeVariants = (variants: FurnitureVariant[]) => {
   const count = (values: string[]) => new Set(values.filter(Boolean)).size;
   const colors = count(variants.map((variant) => variant.colour));
   const sizes = count(variants.map((variant) => variant.size));
+  const priced = variants.some((variant) => variant.price !== null);
   const parts = [
     colors ? `${colors} ${colors === 1 ? "colour" : "colors"}` : "",
     sizes ? `${sizes} ${sizes === 1 ? "size" : "sizes"}` : "",
+    priced ? "custom pricing" : "",
   ].filter(Boolean);
   return parts.length ? parts.join(" · ") : "No variants";
 };
@@ -83,6 +87,7 @@ const toFurniture = (record: FurnitureRecord): Furniture => ({
     id: variant.id,
     size: variant.size,
     colour: variant.colour,
+    price: variant.price,
     quantity: variant.quantity,
   })),
   description: record.description,
@@ -152,6 +157,7 @@ const variantRows = (variants: FurnitureVariant[]) =>
   variants.map((variant, position) => ({
     size: variant.size,
     colour: variant.colour,
+    price: variant.price,
     quantity: variant.quantity,
     position,
   }));

@@ -35,6 +35,10 @@ model FurnitureVariant {
   size   String @default("")
   colour String
 
+  /// Overrides the product's price for this combination. Null is the common
+  /// case — the variant sells at whatever the product costs.
+  price Int?
+
   quantity Int @default(0)
 
   position Int @default(0)

@@ -30,6 +30,8 @@ export type ProductColour = {
 export type ProductVariant = {
   colour: string;
   size: string;
+  /** Whole naira — the variant's own price, or the product's where it has none. */
+  amount: number;
   stock: number;
 };
 
@@ -42,7 +44,10 @@ export type ProductDetail = {
   slug: string;
   name: string;
   category: string;
+  /** The headline price before a combination is picked — "From ₦x" when the
+   *  variants disagree, the single formatted price when they don't. */
   price: string;
+  /** The lowest of those, so the stepper and the cart have a number to start on. */
   amount: number;
   summary: string;
   gallery: string[];

@@ -77,12 +77,6 @@ const ProductDetailPage = async ({ params }: PageProps<"/furniture/[slug]">) => 
               <h1 className="font-heading text-text-primary text-2xl sm:text-h3">
                 {product.name}
               </h1>
-              <p className="text-body-lg text-text-primary mt-5">
-                {product.price}
-              </p>
-              <p className="text-body-lg text-text-secondary mt-4 max-w-135">
-                {product.summary}
-              </p>
 
               <ProductPurchase product={product} />
 

@@ -85,7 +85,9 @@ const priceBag = async (lines: OrderLine[]): Promise<PricedBag> => {
       image: piece.thumbnail ?? piece.gallery[0] ?? "",
       colour: variant?.colour ?? line.colour,
       size: variant?.size ?? line.size,
-      unitPrice: piece.price,
+      // The variant's own price is what the storefront quoted; a row without
+      // one sells at the product's, as does a piece with no variants at all.
+      unitPrice: variant?.price ?? piece.price,
       quantity: line.quantity,
     });
   }

@@ -7,7 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { QuantityStepper } from "@/components/shared/quantity-stepper";
 import { useCart } from "@/lib/cart";
-import type { ProductDetail } from "@/lib/products";
+import { nairaExact, type ProductDetail } from "@/lib/products";
 
 type ProductPurchaseProps = {
   product: ProductDetail;
@@ -29,12 +29,13 @@ export const ProductPurchase = ({ product }: ProductPurchaseProps) => {
   const [size, setSize] = useState("");
   const [quantity, setQuantity] = useState(1);
 
-  const stockOf = useMemo(() => {
-    const table = new Map<string, number>();
-    for (const variant of variants)
-      table.set(`${variant.colour}/${variant.size}`, variant.stock);
-    return (c: string, s: string) => table.get(`${c}/${s}`) ?? 0;
+  const table = useMemo(() => {
+    const rows = new Map<string, (typeof variants)[number]>();
+    for (const variant of variants) rows.set(`${variant.colour}/${variant.size}`, variant);
+    return rows;
   }, [variants]);
+
+  const stockOf = (c: string, s: string) => table.get(`${c}/${s}`)?.stock ?? 0;
 
   const colourInStock = (name: string) =>
     size
@@ -57,6 +58,13 @@ export const ProductPurchase = ({ product }: ProductPurchaseProps) => {
 
   const complete = Boolean(colour && size);
 
+  /**
+   * A picked combination sells at its own price; before then the product's
+   * headline stands, which already reads "From …" when the variants disagree.
+   */
+  const chosen = complete ? table.get(`${colour}/${size}`) : undefined;
+  const amount = chosen?.amount ?? product.amount;
+
   const choose = (set: (value: string) => void) => (value: string) => {
     set(value);
     setQuantity(1);
@@ -70,6 +78,13 @@ export const ProductPurchase = ({ product }: ProductPurchaseProps) => {
 
   return (
     <>
+      <p className="text-body-lg text-text-primary mt-5">
+        {chosen ? nairaExact(chosen.amount) : product.price}
+      </p>
+      <p className="text-body-lg text-text-secondary mt-4 max-w-135">
+        {product.summary}
+      </p>
+
       {/* Reads the current selection, so it lives with the chips rather than
           with the static copy above it. */}
       <span
@@ -149,6 +164,7 @@ export const ProductPurchase = ({ product }: ProductPurchaseProps) => {
             key={option}
             value={option}
             disabled={!sizeInStock(option)}
+            className="w-fit px-4"
           >
             {option}
           </ToggleGroupItem>
@@ -181,7 +197,7 @@ export const ProductPurchase = ({ product }: ProductPurchaseProps) => {
               image: product.gallery[0],
               colour,
               size: size || null,
-              amount: product.amount,
+              amount,
               quantity,
             })
           }
