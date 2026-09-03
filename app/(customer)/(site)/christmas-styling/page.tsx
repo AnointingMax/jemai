@@ -5,6 +5,7 @@ import { ProcessRow } from "@/components/christmas/process-row";
 import { RequestForm } from "@/components/christmas/request-form";
 import { SeasonClosed } from "@/components/christmas/season-closed";
 import { SeasonIntro } from "@/components/christmas/season-intro";
+import { christmasSlotsLeft, currentChristmasYear } from "@/lib/admin/christmas";
 import { seasonCapacity } from "@/lib/christmas";
 
 export const metadata: Metadata = {
@@ -21,11 +22,12 @@ export const metadata: Metadata = {
  * the capacity plate reads "0 consultation spaces remaining" and the form band
  * becomes a single way onward. Sections 01–03 are identical in both.
  *
- * `available` is a constant until the campaign's records land — the count is
- * the season's allocation less what has been filed, so it becomes one query
- * without moving anything below.
+ * The count is the season's allocation less the requests that have been
+ * **paid**, not the ones that have been submitted: the form is an enquiry, and
+ * a slot is only spent once the studio has agreed a price and taken payment
+ * outside the system. A page of unanswered enquiries therefore cannot close the
+ * season on everyone.
  */
-const available = 12;
 
 const steps = [
   {
@@ -42,7 +44,8 @@ const steps = [
   },
 ];
 
-const ChristmasStylingPage = () => {
+const ChristmasStylingPage = async () => {
+  const available = await christmasSlotsLeft(currentChristmasYear());
   const open = available > 0;
 
   return (
@@ -51,7 +54,7 @@ const ChristmasStylingPage = () => {
         eyebrow={
           open
             ? "Christmas with JEMAI · Limited slots available"
-            : "Christmas with JEMAI · 2026 consultations closed"
+            : `Christmas with JEMAI · ${currentChristmasYear()} consultations closed`
         }
         heading="A Christmas Setting, Curated Around You."
         copy="From intimate interiors to expressive outdoor settings, JEMAI creates festive environments shaped around your space and the way you gather."
@@ -76,7 +79,7 @@ const ChristmasStylingPage = () => {
         cardCopy={
           open
             ? "After submitting your request, our team will contact you within 24 hours to discuss your brief, quotation, and next steps. Your consultation slot is secured once payment is received."
-            : "The Christmas 2026 request form is now closed. If you have already submitted a request, there is no need to submit again, our team will contact you directly."
+            : `The Christmas ${currentChristmasYear()} request form is now closed. If you have already submitted a request, there is no need to submit again, our team will contact you directly.`
         }
         cardCta={
           open
@@ -108,7 +111,7 @@ const ChristmasStylingPage = () => {
         <SeasonClosed
           eyebrow="04 / Your Christmas request"
           heading="This Season’s Consultation List Is Full."
-          copy="All 20 consultation spaces for Christmas 2026 have been requested, so we are no longer accepting new submissions."
+          copy={`All ${seasonCapacity} consultation spaces for Christmas ${currentChristmasYear()} have been booked, so we are no longer accepting new submissions.`}
           cta={{ label: "Explore Furniture & Art", href: "/furniture" }}
           footnote="Stay close to JEMAI for future seasonal services, exhibitions and considered ideas for the spaces you live and work in."
         />

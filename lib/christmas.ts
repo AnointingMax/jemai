@@ -53,5 +53,33 @@ export const propertyTypes = [
   "Other",
 ] as const;
 
-/** The season's fixed allocation. Availability is this less what has been filed. */
+/**
+ * The season's fixed allocation — the same twenty every year.
+ *
+ * Availability is this less the requests that have been **paid**, not the ones
+ * that have been submitted: the form is an enquiry, and a slot is only spent
+ * once the studio has agreed a price and taken payment outside the system.
+ */
 export const seasonCapacity = 20;
+
+/** One selected area on a request, with the number of rooms it covers. */
+export type RequestedArea = { area: string; quantity: number };
+
+/**
+ * Where a request has got to.
+ *
+ * Only `Paid` consumes a slot. `New` is a request nobody has picked up yet,
+ * `In conversation` is one the studio is pricing, and `Closed` is one that will
+ * not proceed — which puts its slot back.
+ */
+export const christmasStatuses = [
+  "New",
+  "In conversation",
+  "Paid",
+  "Closed",
+] as const;
+
+export type ChristmasStatus = (typeof christmasStatuses)[number];
+
+export const isChristmasStatus = (value: string): value is ChristmasStatus =>
+  (christmasStatuses as readonly string[]).includes(value);

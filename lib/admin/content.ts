@@ -69,6 +69,18 @@ const monthNames = [
 ];
 
 /**
+ * "2 September 2026 · 09:42" — the long stamp with a 24-hour clock, which the
+ * Christmas request sheet prints under its title. UTC, like the others here, so
+ * the server render and the client re-render cannot disagree.
+ */
+export const formatDateTimeLong = (iso: string) => {
+  const date = new Date(iso);
+  const hours = date.getUTCHours().toString().padStart(2, "0");
+  const minutes = date.getUTCMinutes().toString().padStart(2, "0");
+  return `${date.getUTCDate()} ${monthNames[date.getUTCMonth()]} ${date.getUTCFullYear()} · ${hours}:${minutes}`;
+};
+
+/**
  * A `yyyy-mm-dd` field value as its parts, without going through `Date` — a
  * bare date string parses as UTC midnight and prints as the day before in any
  * negative offset, which is exactly the bug a date-only field must not have.

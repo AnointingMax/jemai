@@ -81,8 +81,8 @@ One page per session. Work top-down unless told otherwise.
       Verified at 1440 / 768 / 390 and swept for overflow at 390 / 1024 / 1920.
 - [~] Christmas Styling — `/christmas-styling`, built from the four PNG drops in
       `design-reference/Christmas Consultation/` (`Available.png` 1440 × 5076,
-      `Fully Booked.png` 1440 × 4422, and the two modal frames). **Customer end
-      only; the admin console screens are not built.**
+      `Fully Booked.png` 1440 × 4422, and the two modal frames). The console
+      screens are the entry below.
       Both page states ship: while slots remain the hero carries its button and
       the band closes on the request form; at zero the hero drops the button,
       the plate reads "0 consultation spaces remaining" and the form becomes
@@ -92,10 +92,39 @@ One page per session. Work top-down unless told otherwise.
       the frame draws it) — every landmark inside them within 13px and most
       within 4. The outcome modal lands on the register modal's 1120 × 563.
       Verified at 1440 / 768 / 390 and swept for overflow at 390.
-      **Not wired:** the count is the constant `available` in the page, and
-      submitting opens the "received" panel rather than filing anything. The
-      duplicate panel is built (`OutcomeModal` takes `"duplicate"`) but nothing
-      raises it yet. No Prisma model, no server action, no console screens.
+      Wired: the count is `christmasSlotsLeft(currentChristmasYear())` and the
+      form files through `requestChristmasConsultationAction`, which decides
+      which panel closes it — a filed request opens "received", an address that
+      has already asked this year opens "duplicate" (an `ok()` outcome, not an
+      error), and a full season is the one real failure.
+- [x] Christmas requests (console) — `/admin/christmas-requests`, built from
+      `design-reference/Admin Christman Consultation/{Christmas list,sheet}.png`.
+      The index is the console's standard shape — search card, sortable table,
+      ten-row pager, side sheet — with the campaign year beside Export CSV in
+      the header, where the service being batched by year puts it. **The year
+      defaults to the current campaign**, not to everything: the queue is worked
+      one season at a time and the slot count only means anything against a
+      single allocation, so `?year=all` is the deliberate choice and the count
+      disappears in that view. The frame's tick column is deliberately not
+      built — it was dropped as a dead control once bulk export came off the
+      table. The sheet is a read: the campaign collects no payment and carries
+      no triage state, so it has the frame's four panels and a reply link in
+      place of a status control. Backed by the `ChristmasRequest` model,
+      `lib/admin/christmas*` and a seed of two batches (2026 at 12 of 20 slots,
+      2025 closed).
+      **The status is the workflow.** Submitting takes nothing: a request
+      arrives `New`, the studio prices it `In conversation`, payment happens
+      outside the system, and an administrator marking it `Paid` is what spends
+      a slot — so `christmasSlotsLeft` counts paid rows, not submissions, and
+      the status action revalidates the storefront alongside the console. The
+      sheet's select is a draft until "Update status" commits it and the table
+      moves the pill optimistically, the same as the consultation queue.
+      Search, year and status all narrow in the database and all three compose
+      in the URL.
+      Verified end to end against Postgres: a storefront submit files the row
+      and opens "received" without moving the count, the same address again
+      opens "duplicate", and marking that row `Paid` in the sheet takes the
+      count from 20 to 19 on both the console and the campaign page.
 
 - [x] Cart Drawer — empty `1:1508`, filled/consent-off `1:1588`, filled/consent-on
       `1:1527` (500 × 900). Built from the three frame exports in

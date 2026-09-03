@@ -5,6 +5,7 @@ import { prisma } from "../../lib/prisma";
 import { seedAdmin } from "./admin";
 import { seedArtists } from "./artists";
 import { seedArtworks } from "./artworks";
+import { seedChristmasRequests } from "./christmas";
 import { seedConsultations } from "./consultations";
 import { seedEnquiries } from "./enquiries";
 import { seedExhibitions } from "./exhibitions";
@@ -24,6 +25,7 @@ const main = async () => {
     { run: seedEnquiries, one: "artwork enquiry", many: "artwork enquiries", subject: "Enquiries" },
     { run: seedExhibitions, one: "exhibition", many: "exhibitions", subject: "Exhibitions" },
     { run: seedConsultations, one: "consultation request", many: "consultation requests", subject: "Consultation requests" },
+    { run: seedChristmasRequests, one: "Christmas request", many: "Christmas requests", subject: "Christmas requests" },
     // After furniture: every line is priced off the catalogue it points at.
     { run: seedOrders, one: "furniture order", many: "furniture orders", subject: "Orders" },
   ];

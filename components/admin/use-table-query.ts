@@ -21,6 +21,7 @@ export const useTableQuery = ({
   filter,
   filterKey,
   filterAll,
+  keep,
   onNarrow,
 }: {
   /** The search term the page queried with, as it stands in the URL. */
@@ -31,6 +32,12 @@ export const useTableQuery = ({
   filterKey?: string;
   /** The label that means no filter; a Select item cannot carry an empty value. */
   filterAll?: string;
+  /**
+   * Query parameters this control does not own but must not drop — a screen
+   * whose narrowings are split across two components, where each one rewrites
+   * the whole query string. An `undefined` value is left off.
+   */
+  keep?: Record<string, string | undefined>;
   /** Called whenever the narrowing changes, to send paging back to page one. */
   onNarrow?: () => void;
 }) => {
@@ -44,6 +51,8 @@ export const useTableQuery = ({
     if (nextSearch.trim()) params.set("q", nextSearch.trim());
     if (filterKey && nextFilter && nextFilter !== filterAll)
       params.set(filterKey, nextFilter);
+    for (const [key, value] of Object.entries(keep ?? {}))
+      if (value) params.set(key, value);
     const query = params.toString();
     return query ? `${pathname}?${query}` : pathname;
   };

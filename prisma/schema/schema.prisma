@@ -3,6 +3,13 @@ generator client {
   output   = "../../lib/generated/prisma"
 }
 
+/// Replaces `JsonValue` on annotated fields with the types declared in the
+/// global `PrismaJson` namespace (see `types/prisma-json.d.ts`). Generation
+/// time only — it emits no runtime code.
+generator json {
+  provider = "prisma-json-types-generator"
+}
+
 datasource db {
   provider = "postgresql"
 }

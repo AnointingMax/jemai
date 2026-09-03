@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ComponentProps } from "react";
+import { useState, useTransition, type ComponentProps } from "react";
 import Image from "next/image";
 import {
   Controller,
@@ -9,6 +9,9 @@ import {
   type UseFormRegister,
 } from "react-hook-form";
 import { Check } from "lucide-react";
+import { toast } from "sonner";
+
+import { requestChristmasConsultationAction } from "@/app/(customer)/(site)/christmas-styling/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -77,8 +80,10 @@ type RequestFormProps = {
  * a compound never asks how many of it there are. Both ends of that rule live
  * in `lib/christmas`, which the console reads too.
  *
- * Nothing is filed yet: submission opens the outcome modal the frames draw. The
- * server action goes in behind `onSubmit` without moving any of this.
+ * The action decides which panel closes the form: a filed request opens
+ * "received", an address that has already asked opens "duplicate" — that is a
+ * `ok()` outcome rather than an error, because the reader has done nothing
+ * wrong. A full season is the one real failure, and it lands in a toast.
  */
 export const RequestForm = ({
   eyebrow,
@@ -86,11 +91,12 @@ export const RequestForm = ({
   copy,
   footnote,
 }: RequestFormProps) => {
-  const { register, control, handleSubmit } = useForm<RequestValues>({
+  const { register, control, handleSubmit, reset } = useForm<RequestValues>({
     defaultValues: { propertyType: "", name: "", email: "", phone: "" },
   });
   const [areas, setAreas] = useState<Record<string, number>>({});
   const [outcome, setOutcome] = useState<Outcome | null>(null);
+  const [pending, startTransition] = useTransition();
 
   const toggleArea = (name: string) =>
     setAreas((current) => {
@@ -104,7 +110,31 @@ export const RequestForm = ({
     (area) => area.counted && area.name in areas,
   );
 
-  const onSubmit = handleSubmit(() => setOutcome("received"));
+  const onSubmit = handleSubmit((values) =>
+    startTransition(async () => {
+      const result = await requestChristmasConsultationAction({
+        ...values,
+        // Sent in the order the form offers them, not the order they were
+        // ticked, so the console reads the same list every time.
+        areas: decorationAreas
+          .filter((area) => area.name in areas)
+          .map((area) => ({ area: area.name, quantity: areas[area.name] })),
+      });
+
+      if (result.error) {
+        toast.error(result.message);
+        return;
+      }
+
+      // Only a filed request clears the form; a duplicate leaves it standing so
+      // the reader can correct the address and try again.
+      if (result.data === "received") {
+        reset();
+        setAreas({});
+      }
+      setOutcome(result.data);
+    }),
+  );
 
   return (
     <section
@@ -277,10 +307,10 @@ export const RequestForm = ({
           <Button
             type="submit"
             variant="jemai"
-            disabled={Object.keys(areas).length === 0}
+            disabled={pending || Object.keys(areas).length === 0}
             className="text-label mt-15 h-12.25 w-full border-0"
           >
-            Submit Consultation Request
+            {pending ? "Sending…" : "Submit Consultation Request"}
           </Button>
 
           <p className="text-body-xs text-text-secondary mx-auto mt-8.25 max-w-160 text-center">

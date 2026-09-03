@@ -1,0 +1,37 @@
+/// A Christmas styling consultation request from the seasonal campaign page.
+///
+/// The campaign runs every year against a fixed allocation of slots, so a
+/// request belongs to a `year` batch and the one-per-person rule is scoped to
+/// it — the same person may come back next Christmas, but not twice in one.
+///
+/// **Submitting does not take a slot.** A request arrives `New`; the studio
+/// contacts the customer, agrees a price and takes payment outside the system,
+/// and a slot is only spent when an administrator marks the request `Paid`.
+model ChristmasRequest {
+  id        String @id @default(uuid(7))
+  reference Int    @unique @default(autoincrement())
+
+  year Int
+
+  name  String
+  email String
+  phone String
+
+  propertyType String
+
+  /// The selected areas, as `[{ area, quantity }]` in the order the form
+  /// offers them. Areas that are not room-based always carry a quantity of 1.
+  /// [ChristmasAreas]
+  areas Json
+
+  /// ![PrismaJson.ChristmasStatus]
+  status String @default("New")
+
+  receivedAt DateTime @default(now())
+
+  @@unique([year, email])
+  @@index([year])
+  @@index([status])
+  @@index([receivedAt])
+  @@map("christmas_requests")
+}

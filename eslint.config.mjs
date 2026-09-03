@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Generated Prisma client. `prisma-json-types-generator` emits a namespace
+    // and a run of `@ts-ignore`s that the shared config rejects, and there is
+    // nothing to fix in a file that is rewritten on every `prisma generate`.
+    "lib/generated/**",
   ]),
 ]);
 

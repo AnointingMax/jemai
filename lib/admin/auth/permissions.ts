@@ -9,6 +9,7 @@ export const ADMIN_PERMISSIONS = [
   "orders",
   "artwork-enquiries",
   "consultation-requests",
+  "christmas-requests",
   "newsletter",
   "admins",
 ] as const;

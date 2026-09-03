@@ -1,6 +1,8 @@
 import { adminsWithPermission } from "@/lib/admin/admins";
 import type { AdminPermission } from "@/lib/admin/auth/permissions";
 import { naira } from "@/lib/admin/content";
+import type { AdminChristmasRequest } from "@/lib/admin/christmas-record";
+import { areaSummary } from "@/lib/admin/christmas-record";
 import type { AdminConsultation } from "@/lib/admin/consultation-record";
 import type { AdminEnquiry } from "@/lib/admin/enquiry-record";
 import { consultationWindow } from "@/lib/admin/consultation-record";
@@ -230,6 +232,38 @@ export const sendConsultationReceived = async (request: AdminConsultation) => {
   await notify({ to: request.email, subject: "Your JEMAI consultation request", html, text });
 };
 
+/**
+ * The acknowledgement behind the Christmas form's outcome panel.
+ *
+ * It is careful not to promise a slot: submitting is an enquiry, and the place
+ * is only held once the studio has agreed a price and taken payment.
+ */
+export const sendChristmasRequestReceived = async (request: AdminChristmasRequest) => {
+  const { html, text } = renderEmail({
+    preview: "We have your Christmas consultation request.",
+    heading: "We have your Christmas request",
+    paragraphs: [
+      `Thank you, ${request.name.split(" ")[0]}. Our team will review the spaces you selected and contact you within 24 hours to discuss your brief, confirm availability and arrange the next steps.`,
+      "Your consultation slot is secured once payment is received; nothing has been charged for this request.",
+    ],
+    summary: {
+      title: `Request ${request.reference}`,
+      rows: [
+        { label: "Property type", value: request.propertyType },
+        { label: "Decoration areas", value: areaSummary(request) },
+      ],
+    },
+    footnotes: ["Anything to add before we speak? Reply to this message."],
+  });
+
+  await notify({
+    to: request.email,
+    subject: "Your JEMAI Christmas consultation request",
+    html,
+    text,
+  });
+};
+
 /** The list's one-line welcome, sent only to an address that was not on it. */
 export const sendSubscriptionWelcome = async (subscriber: { email: string; name: string; }) => {
   const { html, text } = renderEmail({
@@ -357,6 +391,34 @@ export const notifyDeskOfConsultation = async (request: AdminConsultation) => {
 
   await notifyDesk("consultation-requests", {
     subject: `New consultation request — ${request.name}`,
+    html,
+    text,
+  });
+};
+
+/** The desk's notice that a Christmas request is waiting to be priced. */
+export const notifyDeskOfChristmasRequest = async (request: AdminChristmasRequest) => {
+  const { html, text } = renderEmail({
+    preview: `${request.name} has asked for a Christmas consultation.`,
+    heading: "New Christmas request",
+    paragraphs: [
+      `${request.name} has asked for a Christmas ${request.year} consultation. It is in the console as New — the slot is not held until it is marked Paid.`,
+    ],
+    summary: {
+      title: `Request ${request.reference}`,
+      rows: [
+        { label: "Name", value: request.name },
+        { label: "Email", value: request.email },
+        { label: "Phone", value: request.phone },
+        { label: "Property type", value: request.propertyType },
+        { label: "Decoration areas", value: areaSummary(request) },
+      ],
+    },
+    action: { label: "Open the request", url: url("/admin/christmas-requests") },
+  });
+
+  await notifyDesk("christmas-requests", {
+    subject: `New Christmas request — ${request.name}`,
     html,
     text,
   });

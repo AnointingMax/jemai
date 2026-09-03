@@ -17,7 +17,16 @@ type NavItem = {
 };
 
 const buildNav = (menus: SiteMenus): NavItem[] => [
-  { label: "Design", href: "/consultation" },
+  {
+    label: "Design",
+    href: "/consultation",
+    // Static, where the furniture and art menus are drawn from the catalogue:
+    // these two are the practice's standing services, not a list that grows.
+    children: [
+      { label: "Architecture & Interiors", href: "/consultation" },
+      { label: "Christmas Styling", href: "/christmas-styling" },
+    ],
+  },
   {
     label: "Furniture",
     href: "/furniture",
@@ -29,7 +38,6 @@ const buildNav = (menus: SiteMenus): NavItem[] => [
     children: menus.art.length > 1 ? menus.art : undefined,
   },
   { label: "Exhibitions", href: "/exhibitions" },
-  { label: "Christmas Styling", href: "/christmas-styling" },
   { label: "About", href: "/about" },
   { label: "Contact", href: "/contact" },
 ];
