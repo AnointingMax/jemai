@@ -79,6 +79,24 @@ One page per session. Work top-down unless told otherwise.
       rules at 214 / 268 / 321 / 374 / 427 against 214 / 267 / 320 / 373 / 426,
       the map at 444, 842 at 932 × 480, and the container 1322 against 1323.
       Verified at 1440 / 768 / 390 and swept for overflow at 390 / 1024 / 1920.
+- [~] Christmas Styling — `/christmas-styling`, built from the four PNG drops in
+      `design-reference/Christmas Consultation/` (`Available.png` 1440 × 5076,
+      `Fully Booked.png` 1440 × 4422, and the two modal frames). **Customer end
+      only; the admin console screens are not built.**
+      Both page states ship: while slots remain the hero carries its button and
+      the band closes on the request form; at zero the hero drops the button,
+      the plate reads "0 consultation spaces remaining" and the form becomes
+      `SeasonClosed`. Sections 01–03 are identical in both, as in the frames.
+      Section heights against the frames: hero 501/501, 01 751/753, 02 830/826,
+      03 556/549, request band 1395/1394 (measured with two areas selected, as
+      the frame draws it) — every landmark inside them within 13px and most
+      within 4. The outcome modal lands on the register modal's 1120 × 563.
+      Verified at 1440 / 768 / 390 and swept for overflow at 390.
+      **Not wired:** the count is the constant `available` in the page, and
+      submitting opens the "received" panel rather than filing anything. The
+      duplicate panel is built (`OutcomeModal` takes `"duplicate"`) but nothing
+      raises it yet. No Prisma model, no server action, no console screens.
+
 - [x] Cart Drawer — empty `1:1508`, filled/consent-off `1:1588`, filled/consent-on
       `1:1527` (500 × 900). Built from the three frame exports in
       `design-reference/`. Header, rule, item row and footer rhythm land within

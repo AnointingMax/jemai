@@ -29,6 +29,7 @@ const buildNav = (menus: SiteMenus): NavItem[] => [
     children: menus.art.length > 1 ? menus.art : undefined,
   },
   { label: "Exhibitions", href: "/exhibitions" },
+  { label: "Christmas Styling", href: "/christmas-styling" },
   { label: "About", href: "/about" },
   { label: "Contact", href: "/contact" },
 ];

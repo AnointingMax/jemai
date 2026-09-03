@@ -1,0 +1,120 @@
+import type { Metadata } from "next";
+import { ChristmasHero } from "@/components/christmas/christmas-hero";
+import { FestiveRail } from "@/components/christmas/festive-rail";
+import { ProcessRow } from "@/components/christmas/process-row";
+import { RequestForm } from "@/components/christmas/request-form";
+import { SeasonClosed } from "@/components/christmas/season-closed";
+import { SeasonIntro } from "@/components/christmas/season-intro";
+import { seasonCapacity } from "@/lib/christmas";
+
+export const metadata: Metadata = {
+  title: "Christmas Styling | JEMAI",
+  description:
+    "From intimate interiors to expressive outdoor settings, JEMAI creates festive environments shaped around your space and the way you gather.",
+};
+
+/**
+ * Christmas 2026 — `/christmas-styling`.
+ *
+ * The page has two states and the frames draw both: while slots remain it opens
+ * on a count and closes on the request form; at zero the hero drops its button,
+ * the capacity plate reads "0 consultation spaces remaining" and the form band
+ * becomes a single way onward. Sections 01–03 are identical in both.
+ *
+ * `available` is a constant until the campaign's records land — the count is
+ * the season's allocation less what has been filed, so it becomes one query
+ * without moving anything below.
+ */
+const available = 12;
+
+const steps = [
+  {
+    title: "Share Your Spaces",
+    copy: "Tell us where you would like Christmas to take shape and how many rooms are involved.",
+  },
+  {
+    title: "We Review The Brief",
+    copy: "A JEMAI consultant will contact you within 24 hours to confirm availability and understand the setting.",
+  },
+  {
+    title: "Scope, Quotation & Payment",
+    copy: "Your consultant will define the scope, prepare a quotation and arrange payment through JEMAI’s official channels.",
+  },
+];
+
+const ChristmasStylingPage = () => {
+  const open = available > 0;
+
+  return (
+    <div className="flex w-full flex-col">
+      <ChristmasHero
+        eyebrow={
+          open
+            ? "Christmas with JEMAI · Limited slots available"
+            : "Christmas with JEMAI · 2026 consultations closed"
+        }
+        heading="A Christmas Setting, Curated Around You."
+        copy="From intimate interiors to expressive outdoor settings, JEMAI creates festive environments shaped around your space and the way you gather."
+        cta={open ? { label: "Secure your slot", href: "#request" } : undefined}
+      />
+
+      <SeasonIntro
+        eyebrow="01 / The Christmas setting"
+        heading={["Christmas,", "Shaped To Feel", "At Home."]}
+        paragraphs={
+          open
+            ? [
+                "It all starts with how you live, the rooms where life happens, the spaces you share with family and friends, and the feeling you want your home to create. Tell us which spaces you’d like us to work on.",
+                "Once you submit your request, our team will get in touch to understand your needs better and discuss the next steps.",
+              ]
+            : [
+                "Each request begins with the way you live: the rooms you open to family, the entrance that welcomes guests and the atmosphere you want to remember. Select the spaces you would like us to consider.",
+                "Our team will refine the brief with you after submission.",
+              ]
+        }
+        capacity={{ available, total: seasonCapacity }}
+        cardCopy={
+          open
+            ? "After submitting your request, our team will contact you within 24 hours to discuss your brief, quotation, and next steps. Your consultation slot is secured once payment is received."
+            : "The Christmas 2026 request form is now closed. If you have already submitted a request, there is no need to submit again, our team will contact you directly."
+        }
+        cardCta={
+          open
+            ? { label: "Request a Consultation", href: "#request" }
+            : { label: "Explore JEMAI", href: "/furniture" }
+        }
+      />
+
+      <FestiveRail
+        eyebrow="02 / Decorate your spaces"
+        heading={["A Festive Setting, Thoughtfully", "Composed."]}
+        copy="We bring together festive styling, lighting, greenery and thoughtful details to create Christmas spaces that feel warm, beautiful and unique to their surroundings."
+      />
+
+      <ProcessRow
+        eyebrow="03 / From request to setting"
+        heading="A Personal Process, From The First Conversation."
+        steps={steps}
+      />
+
+      {open ? (
+        <RequestForm
+          eyebrow="04 / Your Christmas request"
+          heading="Request A Christmas Consultation"
+          copy="Submit your details and selected spaces. This is a consultation request, not a confirmed appointment or payment."
+          footnote="Our team will contact you within 24 hours to discuss your brief, confirm the scope and arrange quotation and payment. No payment is collected on this page."
+        />
+      ) : (
+        <SeasonClosed
+          eyebrow="04 / Your Christmas request"
+          heading="This Season’s Consultation List Is Full."
+          copy="All 20 consultation spaces for Christmas 2026 have been requested, so we are no longer accepting new submissions."
+          cta={{ label: "Explore Furniture & Art", href: "/furniture" }}
+          footnote="Stay close to JEMAI for future seasonal services, exhibitions and considered ideas for the spaces you live and work in."
+        />
+      )}
+    </div>
+  );
+};
+
+export default ChristmasStylingPage;
