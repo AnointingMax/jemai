@@ -99,7 +99,7 @@ const faqs: Faq[] = [
 const ConsultationPage = () => (
   <div className="flex w-full flex-col gap-16 pt-16">
     <ProjectsRail
-      eyebrow="Architecture & Interiors"
+      eyebrow="JEMAI Designs"
       heading={["Spaces Shaped by", "Purpose, &\u00a0 Personality"]}
       copy="From private homes to public spaces, discover considered environments shaped around the people, purpose and possibilities within them."
       projects={projects}
@@ -108,7 +108,7 @@ const ConsultationPage = () => (
     <InquiryForm
       eyebrow="Inquire"
       heading="Tell us about your space"
-      copy="Share the essentials and our team will arrange a considered first conversation."
+      copy="Share a few essentials, and our team will be in touch to begin the conversation."
       email="consultations@jemai.co"
     />
 
