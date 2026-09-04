@@ -10,6 +10,7 @@ import {
   type ProductSection,
   type ProductVariant,
 } from "@/lib/products";
+import { furnitureCategoryNames } from "@/lib/taxonomy";
 import type { Product } from "@/components/site/product-card";
 
 /** Stands in for a product whose imagery has not been uploaded yet. */
@@ -133,17 +134,23 @@ export const loadCatalogue = async () => {
 };
 
 /**
- * Every category the catalogue actually holds, for the header's Furniture menu.
- * Same rule as the Art menu's mediums: drawn from the pieces on sale, so the
- * menu can never lead to an empty grid.
+ * The header's Furniture menu, in the order the console arranges the categories
+ * in. Same rule as the Art menu's mediums: only the ones the catalogue actually
+ * holds pieces under, so the menu can never lead to an empty grid — a category
+ * opened ahead of the products that will fill it stays out of the storefront
+ * until one arrives.
  */
 export const listFurnitureCategories = async (): Promise<string[]> => {
-  const rows = await prisma.furniture.findMany({
-    distinct: ["category"],
-    select: { category: true },
-    orderBy: { category: "asc" },
-  });
-  return rows.map((row) => row.category).filter(Boolean);
+  const [names, rows] = await Promise.all([
+    furnitureCategoryNames(),
+    prisma.furniture.findMany({
+      distinct: ["category"],
+      select: { category: true },
+    }),
+  ]);
+
+  const stocked = new Set(rows.map((row) => row.category).filter(Boolean));
+  return names.filter((name) => stocked.has(name));
 };
 
 /** The four pieces the home page leads with — the newest in the catalogue. */

@@ -2,8 +2,9 @@ import { notFound } from "next/navigation";
 
 import { updateFurnitureAction } from "@/app/admin/(dashboard)/furniture/actions";
 import { FurnitureForm, type FurnitureFormValues } from "@/components/admin/furniture-form";
-import { furnitureCategories, getFurniture } from "@/lib/admin/furniture";
+import { getFurniture } from "@/lib/admin/furniture";
 import { toContentAsset } from "@/lib/admin/content";
+import { furnitureCategoryNames } from "@/lib/taxonomy";
 
 /**
  * Edit — the same form, handed the product as defaults. The action is the update
@@ -39,7 +40,7 @@ const AdminFurnitureEditPage = async ({ params }: PageProps<"/admin/furniture/[s
   return (
     <FurnitureForm
       furniture={values}
-      categories={furnitureCategories}
+      categories={await furnitureCategoryNames()}
       action={updateFurnitureAction.bind(null, furniture.slug)}
       cancelHref={`/admin/furniture/${furniture.slug}`}
       heading={`Edit ${furniture.name}`}

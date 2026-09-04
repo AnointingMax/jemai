@@ -8,6 +8,7 @@ import {
   Mail,
   MessageSquare,
   ShoppingBag,
+  Tags,
   UsersRound,
   type LucideIcon,
 } from "lucide-react";
@@ -19,6 +20,13 @@ export type AdminNavItem = {
   url: string;
   icon: LucideIcon;
   permission?: AdminPermission;
+  /**
+   * For a screen that is not a section of its own: shown to anyone holding one
+   * of these. Kept out of `permission` so it stays ungrantable — nobody is
+   * given "categories" on the administrators screen, they are given the
+   * catalogue whose vocabulary it is.
+   */
+  anyOf?: AdminPermission[];
 };
 
 export type AdminNavGroup = {
@@ -34,6 +42,12 @@ export const adminNav: AdminNavGroup[] = [
       { title: "Furniture", url: "/admin/furniture", icon: Armchair, permission: "furniture" },
       { title: "Artworks", url: "/admin/artworks", icon: Frame, permission: "artworks" },
       { title: "Exhibitions", url: "/admin/exhibitions", icon: CalendarDays, permission: "exhibitions" },
+      {
+        title: "Categories & mediums",
+        url: "/admin/taxonomy",
+        icon: Tags,
+        anyOf: ["furniture", "artworks"],
+      },
     ],
   },
   {
@@ -93,9 +107,11 @@ export const visibleAdminNav = (permissions: readonly string[]): AdminNavGroup[]
   adminNav
     .map((group) => ({
       ...group,
-      items: group.items.filter(
-        (item) => !item.permission || hasPermission(permissions, item.permission),
-      ),
+      items: group.items.filter((item) => {
+        if (item.permission) return hasPermission(permissions, item.permission);
+        if (item.anyOf) return item.anyOf.some((slug) => hasPermission(permissions, slug));
+        return true;
+      }),
     }))
     .filter((group) => group.items.length);
 

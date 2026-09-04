@@ -12,6 +12,7 @@ import { seedExhibitions } from "./exhibitions";
 import { seedFurniture } from "./furniture";
 import { seedSubscribers } from "./newsletter";
 import { seedOrders } from "./orders";
+import { seedTaxonomy } from "./taxonomy";
 
 const main = async () => {
   const admin = await seedAdmin();
@@ -19,6 +20,8 @@ const main = async () => {
 
   const seeds = [
     { run: seedArtists, one: "artist", many: "artists", subject: "Artists" },
+    // Before the two catalogues: they file their records under these names.
+    { run: seedTaxonomy, one: "catalogue term", many: "catalogue terms", subject: "Categories and mediums" },
     { run: seedFurniture, one: "furniture product", many: "furniture products", subject: "Furniture" },
     { run: seedArtworks, one: "artwork", many: "artworks", subject: "Artworks" },
     { run: seedSubscribers, one: "newsletter subscriber", many: "newsletter subscribers", subject: "Subscribers" },
