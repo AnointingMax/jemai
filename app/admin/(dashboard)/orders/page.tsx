@@ -22,12 +22,12 @@ const AdminOrdersPage = async ({ searchParams }: PageProps<"/admin/orders">) => 
         <div className="flex flex-col gap-1">
           <h1 className="text-text-primary text-2xl font-semibold">Furniture orders</h1>
           <p className="text-text-secondary max-w-[70ch] text-sm">
-            Every checkout that reached Paystack, settled or not. Open one to read the order and
-            move it through fulfillment.
+            Every checkout Paystack settled. Open one to read the order and move it through
+            fulfillment.
           </p>
         </div>
         <ExportCsvButton
-          onExport={exportOrdersAction.bind(null, { search, status: status ?? "", payment: "" })}
+          onExport={exportOrdersAction.bind(null, { search, status: status ?? "" })}
         />
       </header>
 

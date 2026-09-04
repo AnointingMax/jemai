@@ -11,9 +11,7 @@ import {
   describeItem,
   formatOrderDate,
   fulfillmentStatuses,
-  paymentStatuses,
   type FulfillmentStatus,
-  type PaymentStatus,
 } from "@/lib/admin/order-record";
 import { listOrders, setFulfillmentStatus } from "@/lib/admin/orders";
 
@@ -36,9 +34,10 @@ const statusPayload = () =>
   });
 
 /**
- * Fulfillment's one write. Payment is deliberately not on this action: it moves
- * on what Paystack says about the order's reference and nowhere else, so the
- * console cannot mark something paid that never was.
+ * Fulfillment's one write, and only for an order that has been paid for.
+ * Payment itself is deliberately not on this action: it moves on what Paystack
+ * says about the order's reference and nowhere else, so the console cannot mark
+ * something paid that never was.
  */
 export const updateOrderStatusAction = async (
   values: unknown,
@@ -55,6 +54,7 @@ export const updateOrderStatusAction = async (
       parsed.data.status as FulfillmentStatus,
     );
     if (!order) return fail("That order no longer exists.");
+    if (order === "unpaid") return fail("Only paid orders move through fulfillment.");
 
     revalidatePath("/admin/orders");
     revalidatePath("/admin");
@@ -69,7 +69,6 @@ const exportPayload = () =>
   Yup.object({
     search: Yup.string().trim().default(""),
     status: Yup.string().trim().oneOf(["", ...fulfillmentStatuses]).default(""),
-    payment: Yup.string().trim().oneOf(["", ...paymentStatuses]).default(""),
   });
 
 /**
@@ -94,7 +93,6 @@ export const exportOrdersAction = async (
     const orders = await listOrders({
       search: parsed.data.search,
       status: (parsed.data.status || undefined) as FulfillmentStatus | undefined,
-      payment: (parsed.data.payment || undefined) as PaymentStatus | undefined,
     });
 
     return ok(

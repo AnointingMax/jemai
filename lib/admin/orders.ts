@@ -6,7 +6,6 @@ import {
   type AdminOrder,
   type FulfillmentStatus,
   type HistoryStep,
-  type PaymentStatus,
 } from "@/lib/admin/order-record";
 import { searchClauses } from "@/lib/admin/table-query";
 import {
@@ -92,21 +91,20 @@ export type OrderQuery = {
   /** Matched against the customer, their email and the order's own number. */
   search?: string;
   status?: FulfillmentStatus;
-  payment?: PaymentStatus;
 };
 
 /**
  * Newest first — the order the index and the overview both want them in.
  *
- * Both narrowings run in the database rather than over rows already sent, which
- * is also what makes the export honest: it carries this query's orders, not the
- * subset a page happened to have fetched.
+ * Search and the status filter run in the database rather than over rows already
+ * sent, which is also what makes the export honest: it carries this query's
+ * orders, not the subset a page happened to have fetched.
  *
- * Unpaid and failed attempts sit beside the settled ones. An abandoned checkout
- * is what the buyer writing in to ask where their chair is turns out to be, and
- * hiding it would leave the console with no answer for them.
+ * Settled orders only. A checkout that never paid is an attempt rather than an
+ * order, and the console has nothing to do with one: it cannot be searched,
+ * exported or fulfilled here, and `settleOrder` is what brings it into view.
  */
-export const listOrders = async ({ search, status, payment }: OrderQuery = {}) => {
+export const listOrders = async ({ search, status }: OrderQuery = {}) => {
   const needle = search?.trim();
   // The number is what a buyer quotes, and they quote it as "#JM-2048" or as
   // "2048" — so the "#JM-" the display carries is stripped before it is matched
@@ -115,8 +113,8 @@ export const listOrders = async ({ search, status, payment }: OrderQuery = {}) =
 
   const records = await prisma.order.findMany({
     where: {
+      payment: "Paid",
       ...(status ? { status } : {}),
-      ...(payment ? { payment } : {}),
       ...(needle
         ? {
           OR: [
@@ -133,9 +131,10 @@ export const listOrders = async ({ search, status, payment }: OrderQuery = {}) =
   return records.map(toOrder);
 };
 
-/** The overview's recent-order table: the newest handful, in frame order. */
+/** The overview's recent-order table: the newest paid handful, in frame order. */
 export const recentOrders = async (limit = 7) => {
   const records = await prisma.order.findMany({
+    where: { payment: "Paid" },
     include: withItems,
     orderBy: { placedAt: "desc" },
     take: limit,
@@ -310,6 +309,10 @@ const stampColumn: Record<FulfillmentStatus, "processingAt" | "dispatchedAt" | "
 /**
  * Moves an order through fulfillment, stamping the timeline to match.
  *
+ * Only a paid order moves. The console cannot reach an unsettled one — nothing
+ * but `payment: "Paid"` is read into it — but this write is addressed by id, so
+ * it answers "unpaid" rather than trusting the screen the id came off.
+ *
  * Reaching a stage means having passed through the ones before it, so any
  * earlier stage still unstamped is stamped with the same moment — otherwise an
  * order sent straight to Delivered would draw a timeline with a hole in it.
@@ -319,6 +322,7 @@ const stampColumn: Record<FulfillmentStatus, "processingAt" | "dispatchedAt" | "
 export const setFulfillmentStatus = async (id: string, status: FulfillmentStatus) => {
   const existing = await prisma.order.findUnique({ where: { id } });
   if (!existing) return null;
+  if (existing.payment !== "Paid") return "unpaid" as const;
 
   const reached = fulfillmentStatuses.indexOf(status);
   const now = new Date();
