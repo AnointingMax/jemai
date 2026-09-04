@@ -3,8 +3,9 @@ import { notFound } from "next/navigation";
 import { updateArtworkAction } from "@/app/admin/(dashboard)/artworks/actions";
 import { ArtworkForm, type ArtworkFormValues } from "@/components/admin/artwork-form";
 import { listArtists } from "@/lib/admin/artists";
-import { artworkMediums, artworkYears, getArtwork } from "@/lib/admin/artworks";
+import { artworkYears, getArtwork } from "@/lib/admin/artworks";
 import { toContentAsset } from "@/lib/admin/content";
+import { artworkMediumNames } from "@/lib/taxonomy";
 
 /**
  * Edit — the same form, handed the artwork as defaults. The action is the update
@@ -40,7 +41,7 @@ const AdminArtworkEditPage = async ({ params }: PageProps<"/admin/artworks/[slug
     <ArtworkForm
       artwork={values}
       artists={artists}
-      mediums={artworkMediums}
+      mediums={await artworkMediumNames()}
       years={artworkYears}
       action={updateArtworkAction.bind(null, artwork.slug)}
       cancelHref={`/admin/artworks/${artwork.slug}`}

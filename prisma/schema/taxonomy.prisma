@@ -1,0 +1,25 @@
+model FurnitureCategory {
+  id   String @id @default(uuid(7))
+  name String @unique
+
+  position Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([position])
+  @@map("furniture_categories")
+}
+
+model ArtworkMedium {
+  id   String @id @default(uuid(7))
+  name String @unique
+
+  position Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([position])
+  @@map("artwork_mediums")
+}

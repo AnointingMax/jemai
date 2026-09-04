@@ -7,13 +7,13 @@ import { failWith, ok, validate, fail, type ActionResult } from "@/lib/action-re
 import { readActiveAdmin } from "@/lib/admin/auth/session";
 import { hasPermission } from "@/lib/admin/auth/permissions";
 import {
-  artworkMediums,
   createArtwork,
   deleteArtwork,
   updateArtwork,
   type ArtworkInput,
 } from "@/lib/admin/artworks";
 import { imageAssetSchema } from "@/lib/cloudinary";
+import { artworkMediumNames } from "@/lib/taxonomy";
 
 
 const requireArtworkAccess = async (): Promise<ActionResult<string>> => {
@@ -24,7 +24,7 @@ const requireArtworkAccess = async (): Promise<ActionResult<string>> => {
   return ok(session.id);
 };
 
-const artworkPayload = () =>
+const artworkPayload = (mediums: string[]) =>
   Yup.object({
     title: Yup.string().trim().required("An artwork title is required."),
     slug: Yup.string().trim().default(""),
@@ -40,7 +40,7 @@ const artworkPayload = () =>
       .string()
       .trim()
       .default("")
-      .oneOf(["", ...artworkMediums], "Pick a medium from the list."),
+      .oneOf(["", ...mediums], "Pick a medium from the list."),
     year: Yup
       .string()
       .trim()
@@ -91,7 +91,7 @@ export const createArtworkAction = async (
   const access = await requireArtworkAccess();
   if (access.error) return access;
 
-  const parsed = await validate(artworkPayload(), values);
+  const parsed = await validate(artworkPayload(await artworkMediumNames()), values);
   if (parsed.error) return parsed;
 
   try {
@@ -111,7 +111,7 @@ export const updateArtworkAction = async (
   const access = await requireArtworkAccess();
   if (access.error) return access;
 
-  const parsed = await validate(artworkPayload(), values);
+  const parsed = await validate(artworkPayload(await artworkMediumNames()), values);
   if (parsed.error) return parsed;
 
   try {

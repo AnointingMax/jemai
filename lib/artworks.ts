@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import type { Artwork, ArtworkDetail, CuratedArtwork } from "@/lib/gallery";
 import type { Prisma } from "@/lib/generated/prisma/client";
+import { artworkMediumNames } from "@/lib/taxonomy";
 
 /** Every read pulls the artist the work is attributed to. */
 const withArtist = { artist: { select: { name: true } } } satisfies Prisma.ArtworkInclude;
@@ -29,13 +30,20 @@ const toArtwork = (record: ArtworkRecord): Artwork => ({
   src: images(record)[0],
 });
 
+/**
+ * The header's Art menu, in the order the console arranges the mediums in, and
+ * narrowed to the ones the gallery actually holds work under — a medium opened
+ * ahead of the works that will fill it stays out of the storefront until one
+ * arrives.
+ */
 export const listArtworkMediums = async (): Promise<string[]> => {
-  const rows = await prisma.artwork.findMany({
-    distinct: ["medium"],
-    select: { medium: true },
-    orderBy: { medium: "asc" },
-  });
-  return rows.map((row) => row.medium).filter(Boolean);
+  const [names, rows] = await Promise.all([
+    artworkMediumNames(),
+    prisma.artwork.findMany({ distinct: ["medium"], select: { medium: true } }),
+  ]);
+
+  const exhibited = new Set(rows.map((row) => row.medium).filter(Boolean));
+  return names.filter((name) => exhibited.has(name));
 };
 
 export const listArtworks = async (medium?: string): Promise<Artwork[]> => {
