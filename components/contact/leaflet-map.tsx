@@ -15,9 +15,9 @@ import "leaflet/dist/leaflet.css";
  * one-line change.
  */
 export const LOCATION = {
-  lat: 6.4541,
-  lng: 3.3947,
-  zoom: 13,
+  lat: 8.9978,
+  lng: 7.5087,
+  zoom: 17.5,
   label: "JEMAI, Lagos Island, Lagos",
 };
 

@@ -21,7 +21,7 @@ type DirectoryRow = {
 const directory: DirectoryRow[] = [
   {
     label: "General",
-    links: [{ label: "hello@jemai.co", href: "mailto:hello@jemai.co" }],
+    links: [{ label: "admin@jemai.co", href: "mailto:admin@jemai.co" }],
   },
   { label: "Visit", text: "Plot 1194, Hamza Sakwa Close, Guzape, Abuja" },
   {

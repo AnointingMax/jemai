@@ -29,7 +29,7 @@ const contacts = [
     label: socials.whatsapp.handle,
     href: socials.whatsapp.href,
   },
-  { Icon: MailIcon, label: "hello@jemai.co", href: "mailto:hello@jemai.co" },
+  { Icon: MailIcon, label: "admin@jemai.co", href: "mailto:admin@jemai.co" },
   {
     Icon: InstagramSolidIcon,
     label: socials.instagram.handle,

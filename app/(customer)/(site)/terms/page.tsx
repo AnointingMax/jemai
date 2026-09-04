@@ -122,7 +122,7 @@ const sections: Section[] = [
     id: "contact",
     title: "13. Contact us",
     paragraphs: [
-      "Questions about these terms, an order or a return can go to hello@jemai.co or +234 902 586 6760, or through the contact page.",
+      "Questions about these terms, an order or a return can go to admin@jemai.co or +234 902 586 6760, or through the contact page.",
     ],
   },
 ];
