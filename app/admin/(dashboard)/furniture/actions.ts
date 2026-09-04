@@ -9,11 +9,11 @@ import { hasPermission } from "@/lib/admin/auth/permissions";
 import {
   createFurniture,
   deleteFurniture,
-  furnitureCategories,
   updateFurniture,
   type FurnitureInput,
 } from "@/lib/admin/furniture";
 import { imageAssetSchema } from "@/lib/cloudinary";
+import { furnitureCategoryNames } from "@/lib/taxonomy";
 
 /**
  * The console's own layout already turns an unauthenticated visitor away, but a
@@ -32,8 +32,12 @@ const requireFurnitureAccess = async (): Promise<ActionResult<string>> => {
  * The payload both writes accept. Declared once here rather than inline in each
  * action because the create and the edit are the same form posting the same
  * shape — it stays in this file, next to its only two callers.
+ *
+ * `categories` is read per call rather than closed over: the vocabulary is
+ * managed at /admin/taxonomy, so a category added a moment ago has to be
+ * acceptable to the very next save.
  */
-const furniturePayload = () =>
+const furniturePayload = (categories: string[]) =>
   Yup.object({
     name: Yup.string().trim().required("A product name is required."),
     slug: Yup.string().trim().default(""),
@@ -42,8 +46,8 @@ const furniturePayload = () =>
       .trim()
       // The select opens on its placeholder, so an untouched form posts "" —
       // which is the same as the author not having narrowed it down.
-      .transform((value: string) => value || furnitureCategories[0])
-      .oneOf(furnitureCategories, "Pick a category from the list.")
+      .transform((value: string) => value || categories[0])
+      .oneOf(categories, "Pick a category from the list.")
       .required("Pick a category from the list."),
     price: Yup
       .number()
@@ -145,7 +149,11 @@ export const createFurnitureAction = async (
   const access = await requireFurnitureAccess();
   if (access.error) return access;
 
-  const parsed = await validate(furniturePayload(), values);
+  const categories = await furnitureCategoryNames();
+  if (!categories.length)
+    return fail("Add a furniture category before saving a product.");
+
+  const parsed = await validate(furniturePayload(categories), values);
   if (parsed.error) return parsed;
 
   try {
@@ -165,7 +173,11 @@ export const updateFurnitureAction = async (
   const access = await requireFurnitureAccess();
   if (access.error) return access;
 
-  const parsed = await validate(furniturePayload(), values);
+  const categories = await furnitureCategoryNames();
+  if (!categories.length)
+    return fail("Add a furniture category before saving a product.");
+
+  const parsed = await validate(furniturePayload(categories), values);
   if (parsed.error) return parsed;
 
   try {

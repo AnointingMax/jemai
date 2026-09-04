@@ -2,9 +2,10 @@ import Link from "next/link";
 
 import { ALL_MEDIUMS, ArtworkTable, type ArtworkRow } from "@/components/admin/artwork-table";
 import { Button } from "@/components/ui/button";
-import { artworkMediums, listArtworks } from "@/lib/admin/artworks";
+import { listArtworks } from "@/lib/admin/artworks";
 import { formatUpdatedAt } from "@/lib/admin/content";
 import { param, paramOneOf } from "@/lib/admin/table-query";
+import { artworkMediumNames } from "@/lib/taxonomy";
 
 /**
  * Artworks — the gallery index. The store is read here and flattened to the
@@ -17,7 +18,10 @@ const AdminArtworksPage = async ({ searchParams }: PageProps<"/admin/artworks">)
   // in the query below rather than over rows already sent.
   const query = await searchParams;
   const search = param(query, "q") ?? "";
-  const medium = paramOneOf(query, "medium", artworkMediums);
+  // The vocabulary is managed at /admin/taxonomy, so the filter is read against
+  // whatever is in the list now rather than a fixed set compiled into the page.
+  const mediums = await artworkMediumNames();
+  const medium = paramOneOf(query, "medium", mediums);
 
   const artworks = await listArtworks({ search, medium });
   const rows: ArtworkRow[] = artworks.map((item) => ({
@@ -48,7 +52,7 @@ const AdminArtworksPage = async ({ searchParams }: PageProps<"/admin/artworks">)
 
       <ArtworkTable
         rows={rows}
-        mediums={artworkMediums}
+        mediums={mediums}
         search={search}
         medium={medium ?? ALL_MEDIUMS}
       />

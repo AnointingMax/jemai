@@ -31,17 +31,6 @@ export type Artwork = {
   updatedAt: string;
 };
 
-/** The mediums the index filter and the form's field offer. */
-export const artworkMediums = [
-  "Textile installation",
-  "Bronze sculpture",
-  "Mixed media",
-  "Oil Painting",
-  "Textile",
-  "Sculpture",
-  "Photography",
-];
-
 /** Newest first, so a work made this year is the top of the year select. */
 export const artworkYears = Array.from({ length: 30 }, (_, i) =>
   String(new Date().getUTCFullYear() - i)

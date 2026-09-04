@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 type DirectoryRow = {
   label: string;
-  links?: { label: string; href: string }[];
+  links?: { label: string; href: string; }[];
   text?: string;
 };
 
@@ -27,7 +27,7 @@ const directory: DirectoryRow[] = [
       { label: "partnerships@jemai.co", href: "mailto:partnerships@jemai.co" },
     ],
   },
-  { label: "Visit", text: "875 Washington St, New York, NY 10014" },
+  { label: "Visit", text: "Plot 1194, Hamza Sakwa Close, Guzape, Abuja" },
   {
     label: "Follow",
     links: [
@@ -128,7 +128,7 @@ const ContactPage = () => (
           <p className="text-body-lg text-text-primary">Lagos</p>
 
           <a
-            href="https://maps.google.com/?q=875+Washington+St,+New+York,+NY+10014"
+            href="https://maps.google.com/?q=Plot+1194,+Hamza+Sakwa+Close,+Guzape,+Abuja"
             target="_blank"
             rel="noreferrer"
             className="text-eyebrow text-text-primary hover:text-action-link border-border-default mt-5.75 inline-flex items-center gap-2.5 border-b pb-1 uppercase transition-colors"

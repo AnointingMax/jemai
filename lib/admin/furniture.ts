@@ -44,9 +44,6 @@ export type Furniture = {
   updatedAt: string;
 };
 
-/** The catalogue groups the index filter and the form's category select share. */
-export const furnitureCategories = ["Lounge", "Table", "Sofa", "Setee", "Bed", "Storage"];
-
 /** The product's stock: the sum of its variant counts, or its own field if bare. */
 export const totalStock = (item: Pick<Furniture, "stock" | "variants">) =>
   item.variants.length

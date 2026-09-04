@@ -8,12 +8,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { formatUpdatedAt } from "@/lib/admin/content";
 import { param, paramOneOf } from "@/lib/admin/table-query";
-import {
-  describeVariants,
-  furnitureCategories,
-  listFurniture,
-  totalStock,
-} from "@/lib/admin/furniture";
+import { describeVariants, listFurniture, totalStock } from "@/lib/admin/furniture";
+import { furnitureCategoryNames } from "@/lib/taxonomy";
 
 /**
  * Furniture — the catalogue index. The store is read here and flattened to the
@@ -25,7 +21,10 @@ const AdminFurniturePage = async ({ searchParams }: PageProps<"/admin/furniture"
   // query below rather than over rows already sent.
   const query = await searchParams;
   const search = param(query, "q") ?? "";
-  const category = paramOneOf(query, "category", furnitureCategories);
+  // The vocabulary is managed at /admin/taxonomy, so the filter is read against
+  // whatever is in the list now rather than a fixed set compiled into the page.
+  const categories = await furnitureCategoryNames();
+  const category = paramOneOf(query, "category", categories);
 
   const furniture = await listFurniture({ search, category });
   const rows: FurnitureRow[] = furniture.map((item) => ({
@@ -57,7 +56,7 @@ const AdminFurniturePage = async ({ searchParams }: PageProps<"/admin/furniture"
 
       <FurnitureTable
         rows={rows}
-        categories={furnitureCategories}
+        categories={categories}
         search={search}
         category={category ?? ALL_CATEGORIES}
       />

@@ -712,7 +712,7 @@ Shared reference frames (not pages): `246:18783` intro, `247:18801` semantic col
     335, where Regular measures 359. Not a larger display size.
   - "Where to find us" is `text-h3` — 28px Bold, 188.3 against 188.
   - The intro copy, the directory rows and the input text are all `text-body-sm`
-    (14/20); "875 Washington St, New York, NY 10014" measures 225 against 225.
+    (14/20); "Plot 1194, Hamza Sakwa Close, Guzape, Abuja" measures 225 against 225.
   - **The message placeholder is `text-body` (16px) while the input placeholders
     are 14px** — the one place the form changes size. Its run measures 455
     against 450, where 14px gives 398.

@@ -27,7 +27,7 @@ const contacts = [
     label: "+234 902 586 6760",
     href: "https://wa.me/2349025866760",
   },
-  { Icon: MailIcon, label: "Jemai@hello.com", href: "mailto:Jemai@hello.com" },
+  { Icon: MailIcon, label: "hello@jemai.co", href: "mailto:hello@jemai.co" },
   {
     Icon: InstagramSolidIcon,
     label: "@jemaidesigns",
