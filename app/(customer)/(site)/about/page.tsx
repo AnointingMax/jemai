@@ -41,7 +41,7 @@ const disciplines: Discipline[] = [
   {
     id: "design",
     title: "Design",
-    body: "Architecture and interiors are where a project begins. We work through light, material, movement and proportion before a single object is chosen, so the space has a structure to hold everything that follows.",
+    body: "Designs are where a project begins. We work through light, material, movement and proportion before a single object is chosen, so the space has a structure to hold everything that follows.",
   },
   {
     id: "furniture",

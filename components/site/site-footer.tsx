@@ -7,6 +7,8 @@ import {
   PhoneIcon,
   WhatsAppIcon,
 } from "@/components/icons";
+import { phone, socials } from "@/lib/contact";
+import { externalLink } from "@/lib/utils";
 
 const explore = [
   { label: "Furniture", href: "/furniture" },
@@ -21,17 +23,17 @@ const company = [
 ];
 
 const contacts = [
-  { Icon: PhoneIcon, label: "+234 902 586 6760", href: "tel:+2349025866760" },
+  { Icon: PhoneIcon, label: phone.label, href: phone.tel },
   {
     Icon: WhatsAppIcon,
-    label: "+234 902 586 6760",
-    href: "https://wa.me/2349025866760",
+    label: socials.whatsapp.handle,
+    href: socials.whatsapp.href,
   },
-  { Icon: MailIcon, label: "Jemai@hello.com", href: "mailto:Jemai@hello.com" },
+  { Icon: MailIcon, label: "hello@jemai.co", href: "mailto:hello@jemai.co" },
   {
     Icon: InstagramSolidIcon,
-    label: "@jemaidesigns",
-    href: "https://instagram.com/jemaidesigns",
+    label: socials.instagram.handle,
+    href: socials.instagram.href,
   },
 ];
 
@@ -116,6 +118,7 @@ export const SiteFooter = () => (
               <li key={`${label}-${href}`}>
                 <a
                   href={href}
+                  {...externalLink(href)}
                   className="text-body-sm text-text-inverse group flex items-start gap-2.5"
                 >
                   <Icon className="mt-0.5 size-4 shrink-0" />

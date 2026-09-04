@@ -3,6 +3,8 @@ import Link from "next/link";
 import { ArrowUpRight, ExternalLink } from "lucide-react";
 import { ContactForm } from "@/components/contact/contact-form";
 import { LocationMap } from "@/components/contact/location-map";
+import { socials } from "@/lib/contact";
+import { externalLink } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Contact | JEMAI",
@@ -12,7 +14,7 @@ export const metadata: Metadata = {
 
 type DirectoryRow = {
   label: string;
-  links?: { label: string; href: string }[];
+  links?: { label: string; href: string; }[];
   text?: string;
 };
 
@@ -21,19 +23,12 @@ const directory: DirectoryRow[] = [
     label: "General",
     links: [{ label: "hello@jemai.co", href: "mailto:hello@jemai.co" }],
   },
-  {
-    label: "Partnerships",
-    links: [
-      { label: "partnerships@jemai.co", href: "mailto:partnerships@jemai.co" },
-    ],
-  },
-  { label: "Visit", text: "875 Washington St, New York, NY 10014" },
+  { label: "Visit", text: "Plot 1194, Hamza Sakwa Close, Guzape, Abuja" },
   {
     label: "Follow",
     links: [
-      { label: "Instagram", href: "https://instagram.com/jemaidesigns" },
-      { label: "TikTok", href: "https://tiktok.com/@jemaidesigns" },
-      { label: "Whatsapp", href: "https://wa.me/2349025866760" },
+      { label: socials.instagram.label, href: socials.instagram.href },
+      { label: socials.whatsapp.label, href: socials.whatsapp.href },
     ],
   },
 ];
@@ -90,6 +85,7 @@ const ContactPage = () => (
                     <a
                       key={link.href}
                       href={link.href}
+                      {...externalLink(link.href)}
                       className="hover:text-action-link inline-flex items-center gap-1 transition-colors"
                     >
                       {link.label}
@@ -128,7 +124,7 @@ const ContactPage = () => (
           <p className="text-body-lg text-text-primary">Lagos</p>
 
           <a
-            href="https://maps.google.com/?q=875+Washington+St,+New+York,+NY+10014"
+            href="https://maps.google.com/?q=Plot+1194,+Hamza+Sakwa+Close,+Guzape,+Abuja"
             target="_blank"
             rel="noreferrer"
             className="text-eyebrow text-text-primary hover:text-action-link border-border-default mt-5.75 inline-flex items-center gap-2.5 border-b pb-1 uppercase transition-colors"

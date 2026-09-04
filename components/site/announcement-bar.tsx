@@ -1,30 +1,25 @@
 import Link from "next/link";
-import {
-  FacebookIcon,
-  InstagramIcon,
-  TikTokIcon,
-  XIcon,
-} from "@/components/icons";
+import { InstagramIcon, WhatsAppIcon } from "@/components/icons";
+import { socials } from "@/lib/contact";
 
-const socials = [
-  { label: "Facebook", href: "https://facebook.com", Icon: FacebookIcon },
-  { label: "X", href: "https://x.com", Icon: XIcon },
-  { label: "Instagram", href: "https://instagram.com", Icon: InstagramIcon },
-  { label: "TikTok", href: "https://tiktok.com", Icon: TikTokIcon },
+/** The two channels JEMAI publishes, in the order the bar draws them. */
+const bar = [
+  { ...socials.instagram, Icon: InstagramIcon },
+  { ...socials.whatsapp, Icon: WhatsAppIcon },
 ];
 
 export const AnnouncementBar = () => (
   <div className="bg-surface-subtle w-full py-[9.6px]">
-    {/* Gutter outside the max width, mirroring SiteHeader, so the socials keep
-        their alignment with the nav on screens wider than the 1440 frame. */}
     <div className="w-full px-4 sm:px-6 lg:px-page-gutter">
       <div className="mx-auto flex w-full max-w-432 items-center">
         <ul className="hidden flex-1 items-center gap-grid-gutter pt-1.25 pb-[2.4px] sm:flex">
-          {socials.map(({ label, href, Icon }) => (
+          {bar.map(({ label, href, Icon }) => (
             <li key={label}>
               <Link
                 href={href}
                 aria-label={label}
+                target="_blank"
+                rel="noreferrer"
                 className="text-icon-primary hover:text-icon-action block transition-colors"
               >
                 <Icon className="size-4" />
