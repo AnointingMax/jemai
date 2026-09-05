@@ -3,15 +3,15 @@ import "dotenv/config";
 
 import { prisma } from "../../lib/prisma";
 import { seedAdmin } from "./admin";
-import { seedArtists } from "./artists";
-import { seedArtworks } from "./artworks";
-import { seedChristmasRequests } from "./christmas";
-import { seedConsultations } from "./consultations";
-import { seedEnquiries } from "./enquiries";
-import { seedExhibitions } from "./exhibitions";
-import { seedFurniture } from "./furniture";
-import { seedSubscribers } from "./newsletter";
-import { seedOrders } from "./orders";
+// import { seedArtists } from "./artists";
+// import { seedArtworks } from "./artworks";
+// import { seedChristmasRequests } from "./christmas";
+// import { seedConsultations } from "./consultations";
+// import { seedEnquiries } from "./enquiries";
+// import { seedExhibitions } from "./exhibitions";
+// import { seedFurniture } from "./furniture";
+// import { seedSubscribers } from "./newsletter";
+// import { seedOrders } from "./orders";
 import { seedTaxonomy } from "./taxonomy";
 
 const main = async () => {
@@ -19,18 +19,16 @@ const main = async () => {
   console.log(`Seeded admin ${admin.email} (${admin.permissions.length} permissions)`);
 
   const seeds = [
-    { run: seedArtists, one: "artist", many: "artists", subject: "Artists" },
-    // Before the two catalogues: they file their records under these names.
+    // { run: seedArtists, one: "artist", many: "artists", subject: "Artists" },
     { run: seedTaxonomy, one: "catalogue term", many: "catalogue terms", subject: "Categories and mediums" },
-    { run: seedFurniture, one: "furniture product", many: "furniture products", subject: "Furniture" },
-    { run: seedArtworks, one: "artwork", many: "artworks", subject: "Artworks" },
-    { run: seedSubscribers, one: "newsletter subscriber", many: "newsletter subscribers", subject: "Subscribers" },
-    { run: seedEnquiries, one: "artwork enquiry", many: "artwork enquiries", subject: "Enquiries" },
-    { run: seedExhibitions, one: "exhibition", many: "exhibitions", subject: "Exhibitions" },
-    { run: seedConsultations, one: "consultation request", many: "consultation requests", subject: "Consultation requests" },
-    { run: seedChristmasRequests, one: "Christmas request", many: "Christmas requests", subject: "Christmas requests" },
-    // After furniture: every line is priced off the catalogue it points at.
-    { run: seedOrders, one: "furniture order", many: "furniture orders", subject: "Orders" },
+    // { run: seedFurniture, one: "furniture product", many: "furniture products", subject: "Furniture" },
+    // { run: seedArtworks, one: "artwork", many: "artworks", subject: "Artworks" },
+    // { run: seedSubscribers, one: "newsletter subscriber", many: "newsletter subscribers", subject: "Subscribers" },
+    // { run: seedEnquiries, one: "artwork enquiry", many: "artwork enquiries", subject: "Enquiries" },
+    // { run: seedExhibitions, one: "exhibition", many: "exhibitions", subject: "Exhibitions" },
+    // { run: seedConsultations, one: "consultation request", many: "consultation requests", subject: "Consultation requests" },
+    // { run: seedChristmasRequests, one: "Christmas request", many: "Christmas requests", subject: "Christmas requests" },
+    // { run: seedOrders, one: "furniture order", many: "furniture orders", subject: "Orders" },
   ];
 
   for (const seed of seeds) {
