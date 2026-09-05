@@ -1,4 +1,4 @@
-export const SHIPPING = 25000;
+export const SHIPPING = 0;
 
 export type OrderTotals = {
   subtotal: number;
@@ -6,7 +6,8 @@ export type OrderTotals = {
   total: number;
 };
 
-export const bagTotals = (subtotal: number, empty: boolean): OrderTotals => {
-  const shipping = empty ? 0 : SHIPPING;
-  return { subtotal, shipping, total: subtotal + shipping };
-};
+export const bagTotals = (subtotal: number): OrderTotals => ({
+  subtotal,
+  shipping: SHIPPING,
+  total: subtotal + SHIPPING,
+});

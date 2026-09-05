@@ -2,6 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { TriangleAlert } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -91,7 +93,6 @@ export const OrderSummary = ({
 
       <dl className="mt-10.25">
         <TotalRow label="Subtotal" value={nairaExact(totals.subtotal)} />
-        <TotalRow label="Shipping" value={nairaExact(totals.shipping)} />
         <div className="mt-7.5 flex items-baseline justify-between gap-4">
           <dt className="text-body" style={{ color: inkStrong }}>
             Total
@@ -104,6 +105,15 @@ export const OrderSummary = ({
           </dd>
         </div>
       </dl>
+
+      <Alert variant="warning" className="mt-6">
+        <TriangleAlert />
+        <AlertTitle>Shipping is not included</AlertTitle>
+        <AlertDescription>
+          The total above covers your items only. We will contact you after this
+          order to arrange delivery and confirm the shipping cost.
+        </AlertDescription>
+      </Alert>
 
       <h2 className="font-heading text-text-primary text-h4 mt-11.25 font-normal">
         Payment

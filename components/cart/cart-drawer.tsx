@@ -152,7 +152,7 @@ export const CartDrawer = () => {
                   </span>
                 </div>
                 <p className="text-body-xs mt-2.75" style={{ color: inkMuted }}>
-                  Taxes and shipping calculated at checkout
+                  Shipping is not included — we will contact you to arrange it
                 </p>
 
                 <div className="mt-4.25 flex items-center gap-5">

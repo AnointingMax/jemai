@@ -38,7 +38,7 @@ const orderLines = (order: AdminOrder): SummaryRow[] => {
   return [
     ...described,
     { label: "Subtotal", value: naira(order.subtotal) },
-    { label: "Delivery", value: naira(order.shipping) },
+    ...(order.shipping ? [{ label: "Delivery", value: naira(order.shipping) }] : []),
     { label: "Total", value: naira(order.total), strong: true },
   ];
 };
@@ -53,6 +53,7 @@ export const sendOrderConfirmation = async (order: AdminOrder) => {
     heading: "Your order is confirmed",
     paragraphs: [
       `Thank you, ${order.customer.split(" ")[0]}. We have your payment, and order ${order.number} is now with our makers.`,
+      "Shipping is not included in this total. We will be in touch to arrange delivery and confirm what it costs.",
       "We will write again the moment it leaves us. Keep this message — the order number is what to quote if you need us.",
     ],
     summary: { title: `Order ${order.number}`, rows: orderLines(order) },

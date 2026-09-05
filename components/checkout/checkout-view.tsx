@@ -108,7 +108,7 @@ export const CheckoutView = () => {
     router.replace("/checkout");
   }, [router]);
 
-  const totals = bagTotals(subtotal, lines.length === 0);
+  const totals = bagTotals(subtotal);
 
   const canPay =
     form.formState.isValid && lines.length > 0 && consented && !paying;
