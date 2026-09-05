@@ -67,13 +67,13 @@ const ChristmasStylingPage = async () => {
         paragraphs={
           open
             ? [
-                "It all starts with how you live, the rooms where life happens, the spaces you share with family and friends, and the feeling you want your home to create. Tell us which spaces you’d like us to work on.",
-                "Once you submit your request, our team will get in touch to understand your needs better and discuss the next steps.",
-              ]
+              "It all starts with how you live, the rooms where life happens, the spaces you share with family and friends, and the feeling you want your home to create. Tell us which spaces you’d like us to work on.",
+              "Once you submit your request, our team will get in touch to understand your needs better and discuss the next steps.",
+            ]
             : [
-                "Each request begins with the way you live: the rooms you open to family, the entrance that welcomes guests and the atmosphere you want to remember. Select the spaces you would like us to consider.",
-                "Our team will refine the brief with you after submission.",
-              ]
+              "Each request begins with the way you live: the rooms you open to family, the entrance that welcomes guests and the atmosphere you want to remember. Select the spaces you would like us to consider.",
+              "Our team will refine the brief with you after submission.",
+            ]
         }
         capacity={{ available, total: seasonCapacity }}
         cardCopy={
@@ -113,7 +113,7 @@ const ChristmasStylingPage = async () => {
           heading="This Season’s Consultation List Is Full."
           copy={`All ${seasonCapacity} consultation spaces for Christmas ${currentChristmasYear()} have been booked, so we are no longer accepting new submissions.`}
           cta={{ label: "Explore Furniture & Art", href: "/furniture" }}
-          footnote="Stay close to JEMAI for future seasonal services, exhibitions and considered ideas for the spaces you live and work in."
+          footnote="Stay close to JEMAI for future seasonal services, exhibitions and ideas for the spaces you live and work in."
         />
       )}
     </div>

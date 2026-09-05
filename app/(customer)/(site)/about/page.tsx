@@ -143,7 +143,7 @@ const AboutPage = () => (
       heading="A Note From Our Founder"
       paragraphs={[
         "I have always believed that the spaces around us quietly influence how we feel, how we connect and how we imagine what comes next.",
-        "JEMAI grew from a desire to make those spaces more considered\u2014to bring Design, furniture and art into one conversation, and to create an experience that feels personal rather than prescriptive. We are not here to impose a finished look. We are here to listen, to recognise what matters to you and to help shape an environment that feels honest, expressive and enduring.",
+        "JEMAI grew from a desire to make those spaces more beautiful\u2014to bring Design, furniture and art into one conversation, and to create an experience that feels personal rather than prescriptive. We are not here to impose a finished look. We are here to listen, to recognise what matters to you and to help shape an environment that feels honest, expressive and enduring.",
       ]}
       closing="With warmth,"
       signature="Esther Akin-Ajayi"

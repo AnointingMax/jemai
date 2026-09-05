@@ -84,7 +84,7 @@ export const IntroSection = () => (
 
             <div className="flex flex-1 flex-col gap-5">
               <p className="text-body text-text-secondary">
-                Explore considered furniture, contemporary artwork, exhibitions
+                Explore furniture, contemporary artwork, exhibitions
                 and design services—brought together by a shared belief that
                 every space should reflect the people who live and work within
                 it.

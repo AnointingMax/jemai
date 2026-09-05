@@ -9,7 +9,7 @@ import {
 export const metadata: Metadata = {
   title: "Consultation | JEMAI",
   description:
-    "From private homes to public spaces, discover considered environments shaped around the people, purpose and possibilities within them.",
+    "From private homes to public spaces, discover environments shaped around the people, purpose and possibilities within them.",
 };
 
 const projects: Project[] = [
@@ -101,7 +101,7 @@ const ConsultationPage = () => (
     <ProjectsRail
       eyebrow="JEMAI Designs"
       heading={["Spaces Shaped by", "Purpose, &\u00a0 Personality"]}
-      copy="From private homes to public spaces, discover considered environments shaped around the people, purpose and possibilities within them."
+      copy="From private homes to public spaces, discover environments shaped around the people, purpose and possibilities within them."
       projects={projects}
     />
 

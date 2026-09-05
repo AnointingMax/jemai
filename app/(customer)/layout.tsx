@@ -6,7 +6,7 @@ import { CartProvider } from "@/lib/cart";
 export const metadata: Metadata = {
   title: "JEMAI — Signature style for every square inch",
   description:
-    "Considered furniture, contemporary artwork, exhibitions and design services, brought together by a belief that every space should reflect the people within it.",
+    "Furniture, contemporary artwork, exhibitions and design services, brought together by a belief that every space should reflect the people within it.",
 };
 
 /**

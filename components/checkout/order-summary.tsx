@@ -46,7 +46,7 @@ export const OrderSummary = ({
           className="text-body-xs cursor-pointer hover:underline"
           style={{ color: linkBlue }}
         >
-          edit cart
+          Edit cart
         </button>
       </div>
 

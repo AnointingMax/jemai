@@ -13,7 +13,7 @@ export const FurnitureSection = ({ products }: { products: Product[]; }) => (
           className="max-w-270"
           eyebrow="02 / JEMAI Furniture"
           heading="New Pieces For The Way You Live Now"
-          copy="Meet the latest additions to JEMAI, selected to bring comfort, character and a considered presence to everyday living."
+          copy="Meet the latest additions to JEMAI, selected to bring comfort, character and a presence to everyday living."
           cta={{ label: "Discover The Collection", href: "/furniture" }}
         />
 

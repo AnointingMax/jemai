@@ -56,7 +56,7 @@ export const CheckoutModal = ({
         <div className="bg-surface-inverse absolute inset-x-8 bottom-8 px-4 py-4">
           <Eyebrow className="text-text-inverse">JEMAI FURNITURE</Eyebrow>
           <p className="text-body text-text-inverse mt-0.5">
-            {feature.name} · Crafted for considered living.
+            {feature.name} · Crafted for living.
           </p>
         </div>
       </div>

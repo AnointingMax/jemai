@@ -82,10 +82,13 @@ const TextField = ({
   label,
   name,
   className,
+  optional,
   ...props
 }: ComponentProps<typeof Input> & {
   label: string;
   name: Path<CheckoutFormValues>;
+  /** Leaves the field unvalidated — the payload treats it as a blank string. */
+  optional?: boolean;
 }) => {
   const { register } = useFormContext<CheckoutFormValues>();
   return (
@@ -95,7 +98,7 @@ const TextField = ({
         placeholder={label}
         className={cn(controlClass, className)}
         style={{ borderColor: fieldBorder, color: inkStrong }}
-        {...register(name, required)}
+        {...register(name, optional ? undefined : required)}
         {...props}
       />
     </label>
@@ -201,6 +204,7 @@ export const DeliveryForm = () => {
               label="Postal code"
               name="postalCode"
               autoComplete="postal-code"
+              optional
             />
           </div>
           <PickerField
